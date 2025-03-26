@@ -26,7 +26,7 @@ export function NavAccount({
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
-        <SidebarGroupLabel>Data Alamat Pengiriman</SidebarGroupLabel>
+        <SidebarGroupLabel>Data Akun</SidebarGroupLabel>
         <SidebarMenu>
           {items.map((item) => {
             const isActive = pathname === item.url;
