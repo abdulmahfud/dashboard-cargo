@@ -54,7 +54,7 @@ type DeliveryReport = {
     | "Dibatalkan";
 };
 
-export const dataReport: DeliveryReport[] = [
+const dataReport: DeliveryReport[] = [
   {
     createdAt: "2025-03-21",
     shipmentNo: "KP-100001",
