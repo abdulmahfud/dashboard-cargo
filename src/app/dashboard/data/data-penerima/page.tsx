@@ -2,7 +2,6 @@
 
 import InputFormPenerima from "@/components/Data/InputFormPenerima";
 import RecipientList from "@/components/Data/RecipientList";
-import { useEffect, useState } from "react";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { NavUserTop } from "@/components/nav-user-top";
@@ -20,16 +19,14 @@ const dataProfil = {
   },
 };
 
-const DataPenerima = () => {  
-
+const DataPenerima = () => {
   // Initialize the 'framer-motion' module for animations
-  useEffect(() => {
-    // This is just to ensure framer-motion is properly initialized
-    const container = document.getElementById("app-container");
-    if (container) {
-      container.classList.add("motion-safe");
-    }
-  }, []);
+  // useEffect(() => {
+  //   const container = document.getElementById("app-container");
+  //   if (container) {
+  //     container.classList.add("motion-safe");
+  //   }
+  // }, []);
 
   const isMobile = useIsMobile();
 

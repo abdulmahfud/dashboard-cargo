@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import CurrencyInput from "@/lib/CurrencyInput";
 import {
   Dialog,
   DialogContent,
@@ -11,13 +10,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
@@ -32,7 +31,7 @@ import {
   businessRecipients,
   itemTypes,
 } from "@/lib/dataRegulerForm";
-import { Package, PenLine, Send, User, Search } from "lucide-react";
+import { Package, PenLine, Search, Send, User } from "lucide-react";
 import { useState } from "react";
 
 interface RegularPackageFormProps {

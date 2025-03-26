@@ -33,16 +33,18 @@ import { Input } from "@/components/ui/input";
 import { Printer, Filter } from "lucide-react";
 
 import { DataTablePagination } from './pagination';
+import { Pengiriman } from "./columns";
+
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];  
   data: TData[];
 }
 
-export function DataTable<TData, TValue>({
+export function DataTable<TValue>({
   columns,
   data,
-}: DataTableProps<TData, TValue>) {
+}: DataTableProps<Pengiriman, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -63,35 +65,34 @@ export function DataTable<TData, TValue>({
       columnFilters,
     },
     onGlobalFilterChange: setGlobalFilter,
-    globalFilterFn: "includesString",    
+    globalFilterFn: "includesString",
   });
 
   const statusOptions = Array.from(
-    new Set(data.map((item: any) => item.status))
+    new Set(data.map((item: Pengiriman) => item.status))
   );
 
   const selectedStatuses =
     (table.getColumn("status")?.getFilterValue() as string[]) ?? [];
 
-    const handleStatusChange = (status: string) => {
-      const column = table.getColumn("status");
-      if (!column) return;
+  const handleStatusChange = (status: string) => {
+    const column = table.getColumn("status");
+    if (!column) return;
 
-      let newSelectedStatuses = [...selectedStatuses];
+    let newSelectedStatuses = [...selectedStatuses];
 
-      if (selectedStatuses.includes(status)) {
-        // Kalau udah ada, hapus
-        newSelectedStatuses = newSelectedStatuses.filter((s) => s !== status);
-      } else {
-        // Kalau belum, tambahin
-        newSelectedStatuses.push(status);
-      }
+    if (selectedStatuses.includes(status)) {
+      // Kalau udah ada, hapus
+      newSelectedStatuses = newSelectedStatuses.filter((s) => s !== status);
+    } else {
+      // Kalau belum, tambahin
+      newSelectedStatuses.push(status);
+    }
 
-      column.setFilterValue(
-        newSelectedStatuses.length ? newSelectedStatuses : undefined
-      );
-    };
- 
+    column.setFilterValue(
+      newSelectedStatuses.length ? newSelectedStatuses : undefined
+    );
+  };
 
   return (
     <div>
@@ -106,7 +107,10 @@ export function DataTable<TData, TValue>({
           {/* ✅ Status Filter Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2 ml-2">
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 ml-2"
+              >
                 <Filter className="h-4 w-4" />
                 Filter Status
               </Button>

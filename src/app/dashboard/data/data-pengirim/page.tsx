@@ -1,8 +1,7 @@
 "use client";
 
-import ListSender from "@/components/Data/ListSender";
 import InputFormPengirim from "@/components/Data/InputFormPengirim";
-import { useEffect, useState } from "react";
+import ListSender from "@/components/Data/ListSender";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { NavUserTop } from "@/components/nav-user-top";
@@ -21,27 +20,6 @@ const dataProfil = {
 };
 
 const DataPengirim = () => {
-  const [isSearching, setIsSearching] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSearch = () => {
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsSearching(true);
-      setIsLoading(false);
-    }, 800);
-  };
-
-  // Initialize the 'framer-motion' module for animations
-  useEffect(() => {
-    // This is just to ensure framer-motion is properly initialized
-    const container = document.getElementById("app-container");
-    if (container) {
-      container.classList.add("motion-safe");
-    }
-  }, []);
-
   const isMobile = useIsMobile();
 
   return (
@@ -69,7 +47,7 @@ const DataPengirim = () => {
                   className="grid grid-cols-1 md:grid-cols-3 gap-6"
                 >
                   <div className="flex flex-col">
-                    <InputFormPengirim onSearch={handleSearch} />
+                    <InputFormPengirim />
                   </div>
                   <div className="flex flex-col col-span-2">
                     <ListSender />

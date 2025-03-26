@@ -10,14 +10,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import React, { useState } from "react";
 import { SearchInput } from "./../ui/search-input";
+import { useState } from "react";
 
-interface ShippingFormProps {
-  onSearch: () => void;
-}
-
-export default function ShippingForm({ onSearch }: ShippingFormProps) {
+export default function ShippingForm() {
   const [formData, setFormData] = useState({
     businessName: "",
     businessAddress: "",
@@ -35,7 +31,6 @@ export default function ShippingForm({ onSearch }: ShippingFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch();
   };
 
   return (
