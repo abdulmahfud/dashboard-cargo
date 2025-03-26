@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -6,20 +6,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { SearchInput } from "./../ui/search-input.tsx";
-import { Checkbox } from "@/components/ui/checkbox";
-import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
+import React, { useState } from "react";
+import { SearchInput } from "./../ui/search-input";
 
 interface InputFormPenerimaProps {
   onSearch: () => void;
 }
 
-export default function InputFormPenerima({ onSearch }: InputFormPenerimaProps) {
+export default function InputFormPenerima({
+  onSearch,
+}: InputFormPenerimaProps) {
   const [formData, setFormData] = useState({
     recipientName: "",
     phoneNumber: "",
@@ -47,7 +46,6 @@ export default function InputFormPenerima({ onSearch }: InputFormPenerimaProps) 
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
-
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="recipientName" className="text-shipping-label">
@@ -107,7 +105,6 @@ export default function InputFormPenerima({ onSearch }: InputFormPenerimaProps) 
               />
             </div>
           </div>
-          
         </CardContent>
         <CardFooter>
           <Button
