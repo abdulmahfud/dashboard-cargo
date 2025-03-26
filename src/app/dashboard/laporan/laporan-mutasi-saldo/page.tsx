@@ -21,7 +21,7 @@ type BalanceHistory = {
   releasedAt: string;
 };
 
-export const data: BalanceHistory[] = [
+const data: BalanceHistory[] = [
   {
     mutation: "Penambahan Saldo dari Pesanan #DID-812343",
     value: 150000,
