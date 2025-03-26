@@ -12,13 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import React, { useState } from "react";
 import { SearchInput } from "./../ui/search-input";
 
-interface InputFormPenerimaProps {
-  onSearch: () => void;
-}
-
-export default function InputFormPenerima({
-  onSearch,
-}: InputFormPenerimaProps) {
+export default function InputFormPenerima() {
   const [formData, setFormData] = useState({
     recipientName: "",
     phoneNumber: "",
@@ -34,7 +28,6 @@ export default function InputFormPenerima({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch();
   };
 
   return (

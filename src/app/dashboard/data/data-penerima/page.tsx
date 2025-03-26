@@ -55,7 +55,7 @@ const DataPenerima = () => {
                   className="grid grid-cols-1 md:grid-cols-3 gap-6"
                 >
                   <div className="flex flex-col">
-                    <InputFormPenerima onSearch={handleSearch} />
+                    <InputFormPenerima />
                   </div>
                   <div className="flex flex-col col-span-2">
                     <RecipientList />
