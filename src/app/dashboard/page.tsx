@@ -36,7 +36,7 @@ export default function Dashboard() {
           <div className="flex items-center flex-shrink-0">
             <Button
               variant="outline"
-              className="mr-2 rounded-2xl px-6 py-4 text-lg border-blue-500 text-blue-500 hover:bg-blue-700 hover:text-white"
+              className="bg-gradient-to-r h-12 from-blue-500 to-blue-700 mr-2 rounded-full px-6 py-4 text-lg border-blue-500 text-white hover:bg-blue-700 hover:text-white"
             >
               <CirclePlus />
               Kirim Paket

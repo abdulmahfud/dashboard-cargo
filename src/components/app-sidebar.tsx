@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ArrowUpCircleIcon,
   Calculator,
   CameraIcon,
   ClipboardListIcon,
@@ -12,7 +11,7 @@ import {
   FileText,
   FileTextIcon,
   HelpCircleIcon,
-  LayoutDashboardIcon,
+  House,
   MessageCircleCode,
   Package,
   PackageSearch,
@@ -37,10 +36,8 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import Image from "next/image";
 
 const data = {
   user: {
@@ -52,7 +49,7 @@ const data = {
     {
       title: "Beranda",
       url: "/dashboard",
-      icon: LayoutDashboardIcon,
+      icon: House,
     },
     {
       title: "Cek Ongkir",
@@ -194,21 +191,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
-            >
-              <a href="#">
-                <ArrowUpCircleIcon className="h-5 w-5" />
-                <span className="text-xl text-blue-500 font-semibold">
-                  Global Logistic.
-                </span>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <Image
+          src="/image/bisakirim.png"
+          alt="Logo Bisakirim"
+          width={100}
+          height={200}
+        />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />

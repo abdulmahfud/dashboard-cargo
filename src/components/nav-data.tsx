@@ -26,7 +26,7 @@ export function NavData({
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
-        <SidebarGroupLabel>Data Alamat Pengiriman</SidebarGroupLabel>
+        <SidebarGroupLabel>Data Alamat</SidebarGroupLabel>
         <SidebarMenu>
           {items.map((item) => {
             const isActive = pathname === item.url;

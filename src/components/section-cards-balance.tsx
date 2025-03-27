@@ -35,9 +35,10 @@ export function SectionCardsBalance() {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 px-2 lg:px-4">
           <Card
-            className="p-4 col-span-2 flex justify-between items-start 
-                 bg-gradient-to-r from-yellow-100 to-yellow-300 
-                 relative overflow-hidden rounded-2xl shadow-none border-none"
+            className="p-4 grid grid-cols-1 md:grid-cols-2 items-center 
+            bg-gradient-to-r from-yellow-100 to-yellow-300 
+            relative overflow-hidden rounded-2xl shadow-none border-none 
+            col-span-1 md:col-span-2"
           >
             {/* Background Image */}
             <div
@@ -47,11 +48,11 @@ export function SectionCardsBalance() {
 
             {/* Konten */}
             <div className="flex items-center p-4 relative z-10">
-              <Wallet size={55} className="text-yellow-500 p-1 rounded-full" />
+              <Wallet size={55} className="text-yellow-700 p-1 rounded-full" />
               <div className="ml-2">
                 <CardHeader className="relative mt-0 mb-0 p-2">
                   <CardDescription className="text-xl text-yellow-700 font-bold">
-                    Total Saldo Aktif
+                    Total Saldo
                   </CardDescription>
                   <CardTitle className="text-xl text-yellow-700 md:text-lg font-bold tabular-nums">
                     0
@@ -61,11 +62,14 @@ export function SectionCardsBalance() {
             </div>
 
             {/* Tombol */}
-            <div className="flex flex-col gap-2 p-3 relative z-10">
-              <Button className="bg-gradient-to-r from-blue-500 to-blue-700 hover:bg-blue-300 px-5 py-3 text-lg rounded-2xl">
+            <div className="flex flex-col items-end gap-2 p-3 relative z-10">
+              <Button className="bg-gradient-to-r h-12 w-2/4 from-blue-500 to-blue-700 hover:bg-blue-300 px-5 py-3 text-lg rounded-full">
                 Tarik Saldo
               </Button>
-              <Button className="bg-gradient-to-r from-blue-500 to-blue-700 hover:bg-blue-300 px-5 py-3 text-lg rounded-2xl">
+              <Button
+                variant={"outline"}
+                className="h-12 w-2/4 hover:bg-blue-500 border-2 border-blue-500 hover:text-white text-blue-500 px-5 py-3 text-lg rounded-full"
+              >
                 Riwayat
               </Button>
             </div>
