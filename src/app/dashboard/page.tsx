@@ -9,7 +9,6 @@ import { SectionCardsReguler } from "./../../components/section-cards-reguler";
 import { SectionCardsTrouble } from "./../../components/section-cards-trouble";
 import TopNav from "@/components/top-nav";
 
-
 export default function Dashboard() {
   return (
     <SidebarProvider>
