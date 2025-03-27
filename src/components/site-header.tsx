@@ -34,7 +34,7 @@ export function SiteHeader() {
             </>
           )}
         </h3> */}
-        <div className="hidden md:flex relative mx-5 w-full">
+        <div className="hidden md:flex relative w-full">
           <Search
             className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
             size={20}
