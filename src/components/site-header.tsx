@@ -4,6 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { usePathname } from "next/navigation";
 import { Input } from "./ui/input";
+import { Search } from "lucide-react";
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -24,7 +25,7 @@ export function SiteHeader() {
           orientation="vertical"
           className="mx-2 data-[orientation=vertical]:h-4"
         />
-        <h3 className="text-xl font-semibold hidden md:flex items-center gap-1">
+        {/* <h3 className="text-xl font-semibold hidden md:flex items-center gap-1">
           Dashboard
           {dynamicPath && (
             <>
@@ -32,8 +33,17 @@ export function SiteHeader() {
               <span className="capitalize text-black">{dynamicPath}</span>
             </>
           )}
-        </h3>
-        <Input className="hidden md:flex h-[50px] px-5 mx-5" />
+        </h3> */}
+        <div className="hidden md:flex relative mx-5 w-full">
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+            size={20}
+          />
+          <Input
+            placeholder="Cari resi, order id..."
+            className="h-[50px] pl-10 pr-5 border border-blue-500 rounded-lg"
+          />
+        </div>
       </div>
     </header>
   );
