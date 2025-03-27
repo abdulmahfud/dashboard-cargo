@@ -2,20 +2,20 @@
 
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { usePathname } from "next/navigation";
+// import { usePathname } from "next/navigation";
 import { Input } from "./ui/input";
 import { Search } from "lucide-react";
 
 export function SiteHeader() {
-  const pathname = usePathname();
+  // const pathname = usePathname();
 
   // Ambil semua segmen setelah /dashboard
-  const pathSegments = pathname
-    .replace(/^\/dashboard\/?/, "") 
-    .split("/")
-    .filter((segment) => segment.length > 0); // filter kosong
+  // const pathSegments = pathname
+  //   .replace(/^\/dashboard\/?/, "") 
+  //   .split("/")
+  //   .filter((segment) => segment.length > 0); 
 
-  const dynamicPath = pathSegments.length ? pathSegments.join(" / ") : "";
+  // const dynamicPath = pathSegments.length ? pathSegments.join(" / ") : "";
 
   return (
     <header className="h-20 group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 flex shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear">
