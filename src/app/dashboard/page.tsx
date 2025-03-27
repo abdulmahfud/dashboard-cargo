@@ -3,27 +3,14 @@
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { SectionCardsBalance } from "./../../components/section-cards-balance";
 import { SectionCardsCod } from "./../../components/section-cards-cod";
 import { SectionCardsReguler } from "./../../components/section-cards-reguler";
 import { SectionCardsTrouble } from "./../../components/section-cards-trouble";
-import { SectionCardsBalance } from "./../../components/section-cards-balance";
+import TopNav from "./../../components/top-nav";
 
-import { NavUserTop } from "@/components/nav-user-top";
-import { Button } from "@/components/ui/button";
-import { CirclePlus } from "lucide-react";
-
-import { useIsMobile } from "@/lib/useIsMobile";
-
-const dataProfil = {
-  user: {
-    name: "User",
-    email: "user@example.com",
-    avatar: "/image/profil.png",
-  },
-};
 
 export default function Dashboard() {
-  const isMobile = useIsMobile(); 
   return (
     <SidebarProvider>
       <AppSidebar variant="inset" />
@@ -33,16 +20,7 @@ export default function Dashboard() {
           <div className="flex-1">
             <SiteHeader />
           </div>
-          <div className="flex items-center flex-shrink-0">
-            <Button
-              variant="outline"
-              className="bg-gradient-to-r h-12 from-blue-500 to-blue-700 mr-2 rounded-full px-6 py-4 text-lg border-blue-500 text-white hover:bg-blue-700 hover:text-white"
-            >
-              <CirclePlus />
-              Kirim Paket
-            </Button>
-            {!isMobile && <NavUserTop user={dataProfil.user} />}
-          </div>
+          <TopNav />
         </div>
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2">

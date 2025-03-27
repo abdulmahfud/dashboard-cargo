@@ -3,6 +3,7 @@
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { usePathname } from "next/navigation";
+import { Input } from "./ui/input";
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -32,6 +33,7 @@ export function SiteHeader() {
             </>
           )}
         </h3>
+        <Input className="hidden md:flex h-[50px] px-5 mx-5" />
       </div>
     </header>
   );

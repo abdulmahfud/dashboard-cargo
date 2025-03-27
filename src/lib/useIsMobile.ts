@@ -21,20 +21,22 @@ export function useIsMobile(breakpoint = 768): boolean {
   return isMobile;
 }
 
+
 // function useIsMobile(breakpoint = 768) {
-//   const [isMobile, setIsMobile] = useState(false);
+//     const [isMobile, setIsMobile] = useState(false);
 
-//   useEffect(() => {
-//     const checkIsMobile = () => {
-//       setIsMobile(window.innerWidth <= breakpoint);
-//     };
+//     useEffect(() => {
+//       const checkIsMobile = () => {
+//         setIsMobile(window.innerWidth <= breakpoint);
+//       };
 
-//     checkIsMobile();
+//       checkIsMobile();
 
-//     window.addEventListener("resize", checkIsMobile);
-    
-//     return () => window.removeEventListener("resize", checkIsMobile);
-//   }, [breakpoint]);
+//       window.addEventListener("resize", checkIsMobile);
+//       return () => window.removeEventListener("resize", checkIsMobile);
+//     }, [breakpoint]);
 
-//   return isMobile;
-// }
+//     return isMobile;
+//   }
+
+//   const isMobile = useIsMobile();
