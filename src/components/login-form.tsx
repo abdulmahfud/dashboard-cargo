@@ -27,9 +27,12 @@ export function LoginForm({
       {...props}
     >
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">Login Ke Akun</h1>
-        <p className="text-balance text-sm text-muted-foreground">
-          Masukkan email Anda di bawah ini untuk masuk ke akun Anda
+        <h1 className="text-3xl font-bold text-blue-500">
+          Halo Sahabat BisaKirim!
+        </h1>
+        <p className="text-xl text-muted-foreground">
+          Silakan masukkan email dan password untuk login ke akun Anda untuk
+          segera melakukan hal besar
         </p>
       </div>
       <div className="grid gap-6">
@@ -44,16 +47,19 @@ export function LoginForm({
               href="#"
               className="ml-auto text-sm underline-offset-4 hover:underline"
             >
-              Forgot your password?
+              Lupa kata sandi?
             </a>
           </div>
           <Input id="password" type="password" required />
         </div>
-        <Button type="submit" className="w-full">
+        <Button
+          type="submit"
+          className="w-full bg-blue-500 text-white rounded-full h-12 font-semibold text-xl hover:bg-blue-700"
+        >
           Login
         </Button>
       </div>
-      <div className="text-center text-sm">
+      <div className="text-center text-lg font-semibold text-muted-foreground">
         Don&apos;t have an account?{" "}
         <a href="#" className="underline underline-offset-4">
           Sign up
