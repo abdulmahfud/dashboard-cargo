@@ -1,17 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { NavUserTop } from "@/components/nav-user-top";
+import TopNav from "@/components/top-nav";
 import { Button } from "@/components/ui/button";
-import { CirclePlus, CloudDownload } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { useIsMobile } from "@/lib/useIsMobile";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { CloudDownload } from "lucide-react";
+import { useState } from "react";
+import { DateRange } from "react-day-picker";
 import { columns } from "./columns";
 import { DataTable } from "./data-table";
-import { DateRange } from "react-day-picker";
 
 type BalanceHistory = {
   mutation: string;
@@ -59,18 +58,9 @@ const data: BalanceHistory[] = [
   },
 ];
 
-const dataProfil = {
-  user: {
-    name: "User",
-    email: "user@example.com",
-    avatar: "/image/profil.png",
-  },
-};
-
 const LaporanMutasiSaldo = () => {
   const [statusFilter, setStatusFilter] = useState<string>("Semua Status");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const isMobile = useIsMobile();
 
   return (
     <SidebarProvider>
@@ -80,13 +70,7 @@ const LaporanMutasiSaldo = () => {
           <div className="flex-1">
             <SiteHeader />
           </div>
-          <div className="flex items-center flex-shrink-0">
-            <Button className="bg-blue-500 hover:bg-blue-700 mr-1">
-              <CirclePlus /> Kirim Paket
-            </Button>
-
-            {!isMobile && <NavUserTop user={dataProfil.user} />}
-          </div>
+          <TopNav />
         </div>
         <div className="flex flex-1 flex-col bg-blue-100">
           <div className="@container/main flex flex-1 flex-col gap-2">

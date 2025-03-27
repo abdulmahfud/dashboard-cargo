@@ -1,26 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
-import { NavUserTop } from "@/components/nav-user-top";
 import { SiteHeader } from "@/components/site-header";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AnimatePresence, motion } from "framer-motion";
-import { CirclePlus, TextSearch } from "lucide-react";
+import { TextSearch } from "lucide-react";
+import { useState } from "react";
 
-import ZipResults from "@/components/CekKodePos/ZipResults";
 import ZipCodeForm from "@/components/CekKodePos/ZipCodeForm";
-import { useIsMobile } from "@/lib/useIsMobile";
-
-const dataProfil = {
-  user: {
-    name: "User",
-    email: "user@example.com",
-    avatar: "/image/profil.png",
-  },
-};
+import ZipResults from "@/components/CekKodePos/ZipResults";
+import TopNav from "@/components/top-nav";
 
 type ZipCode = {
   desa: string;
@@ -31,7 +21,6 @@ type ZipCode = {
 };
 
 export default function CekKodePos() {
-  const isMobile = useIsMobile();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedZip, setSelectedZip] = useState<ZipCode | null>(null);
 
@@ -52,12 +41,7 @@ export default function CekKodePos() {
           <div className="flex-1">
             <SiteHeader />
           </div>
-          <div className="flex items-center flex-shrink-0">
-            <Button className="bg-blue-500 hover:bg-blue-700 mr-1">
-              <CirclePlus /> Kirim Paket
-            </Button>
-            {!isMobile && <NavUserTop user={dataProfil.user} />}
-          </div>
+          <TopNav />
         </div>
 
         {/* Konten Utama */}

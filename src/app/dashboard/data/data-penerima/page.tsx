@@ -4,20 +4,9 @@ import InputFormPenerima from "@/components/Data/InputFormPenerima";
 import RecipientList from "@/components/Data/RecipientList";
 
 import { AppSidebar } from "@/components/app-sidebar";
-import { NavUserTop } from "@/components/nav-user-top";
 import { SiteHeader } from "@/components/site-header";
-import { Button } from "@/components/ui/button";
+import TopNav from "@/components/top-nav";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { useIsMobile } from "@/lib/useIsMobile";
-import { CirclePlus } from "lucide-react";
-
-const dataProfil = {
-  user: {
-    name: "User",
-    email: "user@example.com",
-    avatar: "/image/profil.png",
-  },
-};
 
 const DataPenerima = () => {
   // Initialize the 'framer-motion' module for animations
@@ -28,8 +17,6 @@ const DataPenerima = () => {
   //   }
   // }, []);
 
-  const isMobile = useIsMobile();
-
   return (
     <SidebarProvider>
       <AppSidebar variant="inset" />
@@ -38,13 +25,7 @@ const DataPenerima = () => {
           <div className="flex-1">
             <SiteHeader />
           </div>
-          <div className="flex items-center flex-shrink-0">
-            <Button className="bg-blue-500 hover:bg-blue-700 mr-1">
-              <CirclePlus /> Kirim Paket
-            </Button>
-
-            {!isMobile && <NavUserTop user={dataProfil.user} />}
-          </div>
+          <TopNav />
         </div>
         <div className="flex flex-1 flex-col bg-blue-100">
           <div className="@container/main flex flex-1 flex-col gap-2">

@@ -190,7 +190,7 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader>
+      <SidebarHeader className="pt-0 pb-0">
         <Image
           src="/image/bisakirim.png"
           alt="Logo Bisakirim"

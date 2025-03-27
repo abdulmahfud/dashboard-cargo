@@ -1,9 +1,8 @@
 "use client";
 
 import { AppSidebar } from "@/components/app-sidebar";
-import { NavUserTop } from "@/components/nav-user-top";
+import CalculationResults from "@/components/PaketInstant/CalculationResults";
 import { SiteHeader } from "@/components/site-header";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -13,21 +12,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { useIsMobile } from "@/lib/useIsMobile";
 import { AnimatePresence, motion } from "framer-motion";
-import { CirclePlus } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import InstantPackageForm from "../../../../components/PaketInstant/InstantPackageForm";
-import CalculationResults from "@/components/PaketInstant/CalculationResults";
-
-const dataProfil = {
-  user: {
-    name: "User",
-    email: "user@example.com",
-    avatar: "/image/profil.png",
-  },
-};
+import TopNav from "@/components/top-nav";
 
 const PaketInstant = () => {
   const [isSearching, setIsSearching] = useState(false);
@@ -51,8 +40,6 @@ const PaketInstant = () => {
     }
   }, []);
 
-  const isMobile = useIsMobile();
-
   return (
     <SidebarProvider>
       <AppSidebar variant="inset" />
@@ -61,13 +48,7 @@ const PaketInstant = () => {
           <div className="flex-1">
             <SiteHeader />
           </div>
-          <div className="flex items-center flex-shrink-0">
-            <Button className="bg-blue-500 hover:bg-blue-700 mr-1">
-              <CirclePlus /> Kirim Paket
-            </Button>
-
-            {!isMobile && <NavUserTop user={dataProfil.user} />}
-          </div>
+          <TopNav />
         </div>
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2">

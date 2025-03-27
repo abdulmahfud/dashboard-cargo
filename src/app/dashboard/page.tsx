@@ -7,7 +7,7 @@ import { SectionCardsBalance } from "./../../components/section-cards-balance";
 import { SectionCardsCod } from "./../../components/section-cards-cod";
 import { SectionCardsReguler } from "./../../components/section-cards-reguler";
 import { SectionCardsTrouble } from "./../../components/section-cards-trouble";
-import TopNav from "./../../components/top-nav";
+import TopNav from "@/components/top-nav";
 
 
 export default function Dashboard() {

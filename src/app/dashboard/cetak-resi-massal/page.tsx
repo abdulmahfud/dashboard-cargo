@@ -1,12 +1,15 @@
+"use client";
+
 import { AppSidebar } from "@/components/app-sidebar";
+import TopNav from "@/components/top-nav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { CirclePlus } from "lucide-react";
 import Image from "next/image";
-
 import { columns, Pengiriman } from "./columns";
 import { DataTable } from "./data-table";
+import { SiteHeader } from "@/components/site-header";
 
 const data: Pengiriman[] = [
   {
@@ -46,6 +49,12 @@ export default function CetakResiMassal() {
       <AppSidebar variant="inset" />
 
       <SidebarInset>
+        <div className="flex items-center justify-between w-full">
+          <div className="flex-1">
+            <SiteHeader />
+          </div>
+          <TopNav />
+        </div>
         <div className="flex flex-1 flex-col bg-blue-100">
           <div className="@container/main flex flex-1 flex-col gap-4 py-4 md:gap-6 md:py-6 md:px-6">
             <Card className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 md:px-6">

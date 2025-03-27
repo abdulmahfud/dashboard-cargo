@@ -1,9 +1,7 @@
 "use client";
 
 import { AppSidebar } from "@/components/app-sidebar";
-import { NavUserTop } from "@/components/nav-user-top";
 import { SiteHeader } from "@/components/site-header";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -14,17 +12,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { useIsMobile } from "@/lib/useIsMobile";
-import { CirclePlus, Facebook, Instagram } from "lucide-react";
+import { Facebook, Instagram } from "lucide-react";
 // import { useState } from "react";
-
-const dataProfil = {
-  user: {
-    name: "User",
-    email: "user@example.com",
-    avatar: "/image/profil.png",
-  },
-};
+import TopNav from "@/components/top-nav";
 
 const SocialMedia = () => {
   // const [isLoading, setIsLoading] = useState(false);
@@ -47,8 +37,6 @@ const SocialMedia = () => {
     e.preventDefault();
   };
 
-  const isMobile = useIsMobile();
-
   return (
     <SidebarProvider>
       <AppSidebar variant="inset" />
@@ -57,13 +45,7 @@ const SocialMedia = () => {
           <div className="flex-1">
             <SiteHeader />
           </div>
-          <div className="flex items-center flex-shrink-0">
-            <Button className="bg-blue-500 hover:bg-blue-700 mr-1">
-              <CirclePlus /> Kirim Paket
-            </Button>
-
-            {!isMobile && <NavUserTop user={dataProfil.user} />}
-          </div>
+          <TopNav />
         </div>
         <div className="flex flex-1 flex-col bg-blue-200">
           <div className="@container/main flex flex-1 flex-col gap-2">
