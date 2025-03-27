@@ -4,7 +4,6 @@ import { CirclePlus } from "lucide-react";
 import { NavUserTop } from "./nav-user-top";
 import Image from "next/image";
 
-
 const dataProfil = {
   user: {
     name: "User",
