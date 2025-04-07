@@ -69,8 +69,8 @@ type DeliveryReport = {
   status:
     | "Sampai Tujuan"
     | "Belum di Expedisi"
-    | "Proses Pengiriman"
-    | "Kendala Pengiriman"
+    | "Proses"
+    | "Masalah Kirim"
     | "Retur"
     | "Dibatalkan";
 };

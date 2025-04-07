@@ -16,11 +16,9 @@ import {
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const CekOngkir = () => {
-  const pathname = usePathname();
   const [isSearching, setIsSearching] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -42,13 +40,6 @@ const CekOngkir = () => {
     }
   }, []);
 
-  const pathSegments = pathname
-    .replace(/^\/dashboard\/?/, "")
-    .split("/")
-    .filter((segment) => segment.length > 0);
-
-  const dynamicPath = pathSegments.length ? pathSegments.join(" / ") : "";
-
   return (
     <SidebarProvider>
       <AppSidebar variant="inset" />
@@ -59,22 +50,10 @@ const CekOngkir = () => {
           </div>
           <TopNav />
         </div>
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col bg-blue-100">
           <div className="@container/main flex flex-1 flex-col gap-2">
-            <div className="flex flex-col gap-2 py-4 md:px-6 bg-blue-100">
-              <span className="text-xs font-semibold">
-                Dashboard
-                {dynamicPath && (
-                  <>
-                    <span className="text-muted-foreground"> / </span>
-                    <span className="capitalize text-blue-500">{dynamicPath}</span>
-                  </>
-                )}
-              </span>
-              <CardTitle className="text-2xl font-bold text-blue-700">
-                Cek Ongkir
-              </CardTitle>
-              <main className="flex-1 container mx-auto">
+          <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 md:px-6 ">
+              <main className="flex-1 container">
                 <div
                   id="app-container"
                   className="grid grid-cols-1 md:grid-cols-2 gap-6"

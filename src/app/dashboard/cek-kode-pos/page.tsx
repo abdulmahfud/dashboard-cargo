@@ -47,7 +47,7 @@ export default function CekKodePos() {
         {/* Konten Utama */}
         <div className="flex flex-1 flex-col bg-blue-100">
           <div className="flex flex-col gap-4">
-            <main className="container mx-auto">
+            <main className="container">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                 {/* Form Pencarian */}
                 <div className="flex flex-col mx-2 h-80">

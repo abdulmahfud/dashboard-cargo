@@ -47,8 +47,8 @@ type DeliveryReport = {
   status:
     | "Sampai Tujuan"
     | "Belum di Expedisi"
-    | "Proses Pengiriman"
-    | "Kendala Pengiriman"
+    | "Proses"
+    | "Masalah Kirim"
     | "Retur"
     | "Dibatalkan";
 };
@@ -72,7 +72,7 @@ const dataReport: DeliveryReport[] = [
     courierService: "Grab Express",
     totalShipment: 50000,
     shippingMethod: "Non COD",
-    status: "Proses Pengiriman",
+    status: "Proses",
   },
   {
     createdAt: "2025-03-19",
@@ -82,7 +82,7 @@ const dataReport: DeliveryReport[] = [
     courierService: "SiCepat - Best",
     totalShipment: 175000,
     shippingMethod: "COD",
-    status: "Kendala Pengiriman",
+    status: "Masalah Kirim",
   },
   {
     createdAt: "2025-03-18",
@@ -132,7 +132,7 @@ const dataReport: DeliveryReport[] = [
     courierService: "AnterAja - Same Day",
     totalShipment: 75000,
     shippingMethod: "Non COD",
-    status: "Proses Pengiriman",
+    status: "Proses",
   },
   {
     createdAt: "2025-03-13",
@@ -142,7 +142,7 @@ const dataReport: DeliveryReport[] = [
     courierService: "JNE - YES",
     totalShipment: 132000,
     shippingMethod: "COD",
-    status: "Kendala Pengiriman",
+    status: "Masalah Kirim",
   },
   {
     createdAt: "2025-03-12",
@@ -192,7 +192,7 @@ const dataReport: DeliveryReport[] = [
     courierService: "AnterAja - Next Day",
     totalShipment: 92000,
     shippingMethod: "Non COD",
-    status: "Proses Pengiriman",
+    status: "Proses",
   },
   {
     createdAt: "2025-03-07",
@@ -202,7 +202,7 @@ const dataReport: DeliveryReport[] = [
     courierService: "JNE - OKE",
     totalShipment: 110000,
     shippingMethod: "COD",
-    status: "Kendala Pengiriman",
+    status: "Masalah Kirim",
   },
   {
     createdAt: "2025-03-06",
@@ -252,7 +252,7 @@ const dataReport: DeliveryReport[] = [
     courierService: "AnterAja - Same Day",
     totalShipment: 77000,
     shippingMethod: "Non COD",
-    status: "Proses Pengiriman",
+    status: "Proses",
   },
 ];
 
@@ -318,17 +318,17 @@ const statusData = [
   {
     label: "Belum Di Ekspedisi",
     value: 25,
-    icon: <Info size={20} className="text-purple-500" />,
+    icon: <Info size={20} className="text-blue-500" />,
     percentage: 65,
   },
   {
-    label: "Proses Pengiriman",
+    label: "Proses",
     value: 65,
     icon: <Truck size={20} className="text-blue-500" />,
     percentage: 25,
   },
   {
-    label: "Kendala Pengiriman",
+    label: "Masalah Kirim",
     value: 65,
     icon: <XCircle size={20} className="text-red-500" />,
     percentage: 35,
@@ -336,7 +336,7 @@ const statusData = [
   {
     label: "Retur",
     value: 5,
-    icon: <RefreshCw size={20} className="text-purple-500" />,
+    icon: <RefreshCw size={20} className="text-blue-500" />,
     percentage: 54,
   },
   {
@@ -383,7 +383,7 @@ const LaporanPengiriman = () => {
                         {item.label}
                       </CardTitle>
                       {item.percentage !== null && (
-                        <span className="text-sm text-purple-500">
+                        <span className="text-sm text-blue-700 rounded-full bg-blue-100 px-1 py-2">
                           {item.percentage}%
                         </span>
                       )}
@@ -407,7 +407,7 @@ const LaporanPengiriman = () => {
                         {status.icon}
                         {status.label}
                       </CardTitle>
-                      <span className="text-sm text-purple-500">
+                      <span className="text-sm text-blue-700 rounded-full bg-blue-100 px-1 py-2">
                         {status.percentage}%
                       </span>
                     </CardHeader>
