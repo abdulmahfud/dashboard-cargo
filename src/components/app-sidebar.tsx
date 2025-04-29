@@ -43,7 +43,7 @@ const data = {
   user: {
     title: "User",
     email: "user@example.com",
-    avatar: "/image/profil.png",
+    avatar: "/images/profil.png",
   },
   navMain: [
     {
@@ -192,7 +192,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader className="pt-0 pb-0">
         <Image
-          src="/image/bisakirim.png"
+          src="/images/BhisaKirim_3.png"
           alt="Logo Bisakirim"
           width={100}
           height={200}

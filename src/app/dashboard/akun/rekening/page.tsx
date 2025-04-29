@@ -38,7 +38,7 @@ const Rekening = () => {
           </div>
           <TopNav />
         </div>
-        <div className="flex flex-1 flex-col bg-blue-200">
+        <div className="flex flex-col flex-1 bg-blue-200">
           <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 md:px-6">
               <Card className="shadow-sm">
@@ -47,14 +47,14 @@ const Rekening = () => {
                     Rekening Bank Kamu
                   </CardTitle>
                   <div>
-                    <p className="text-gray-500 text-sm">
+                    <p className="text-sm text-gray-500">
                       Saldo aktif kamu bisa ditarik ke rekening ini.
                     </p>
                   </div>
                 </CardHeader>
                 <CardContent className="flex items-center gap-4 py-4 pb-6">
                   <Image
-                    src="/image/bca.png"
+                    src="/images/bca.png"
                     alt="bca"
                     width={100}
                     height={100}
@@ -62,7 +62,7 @@ const Rekening = () => {
                   <div>
                     <h2 className="text-lg font-semibold">BCA</h2>
                     <h2 className="text-lg font-semibold">1131236447</h2>
-                    <p className="text-gray-500 text-sm">
+                    <p className="text-sm text-gray-500">
                       a.n abd mahfud wachid
                     </p>
                   </div>

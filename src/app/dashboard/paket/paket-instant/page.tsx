@@ -50,20 +50,20 @@ const PaketInstant = () => {
           </div>
           <TopNav />
         </div>
-        <div className="flex flex-1 flex-col bg-blue-100">
+        <div className="flex flex-col flex-1 bg-blue-100">
           <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 md:px-6">
-              <main className="flex-1 container">
+              <main className="container flex-1">
                 <div
                   id="app-container"
-                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                  className="grid grid-cols-1 gap-6 md:grid-cols-2"
                 >
                   <div className="flex flex-col mx-2">
                     <InstantPackageForm onSearch={handleSearch} />
                   </div>
 
                   <AnimatePresence mode="wait">
-                    <Card className="border border-muted rounded-xl mx-2 shadow-sm h-full">
+                    <Card className="h-full mx-2 border shadow-sm border-muted rounded-xl">
                       <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle className="text-lg font-semibold text-gray-800">
                           Pilih Ekspedisi
@@ -96,8 +96,8 @@ const PaketInstant = () => {
                             exit={{ opacity: 0 }}
                             className="flex flex-col items-center justify-center h-60"
                           >
-                            <div className="w-12 h-12 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
-                            <p className="mt-4 text-gray-500 text-sm">
+                            <div className="w-12 h-12 border-4 border-blue-300 rounded-full border-t-blue-600 animate-spin"></div>
+                            <p className="mt-4 text-sm text-gray-500">
                               Mencari layanan pengiriman...
                             </p>
                           </motion.div>
@@ -117,10 +117,10 @@ const PaketInstant = () => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="flex flex-col items-center justify-center text-center gap-4"
+                            className="flex flex-col items-center justify-center gap-4 text-center"
                           >
                             <Image
-                              src="/image/card.png"
+                              src="/images/card.png"
                               alt="Empty search illustration"
                               width={240}
                               height={240}

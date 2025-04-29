@@ -8,7 +8,7 @@ const dataProfil = {
   user: {
     name: "User",
     email: "user@example.com",
-    avatar: "/image/profil.png",
+    avatar: "/images/profil.png",
   },
 };
 
@@ -36,17 +36,17 @@ export default function TopVav() {
     <div>
       <div className="flex items-center flex-shrink-0">
         <Image
-          src="/image/bisakirim.png"
+          src="/images/bisakirim.png"
           alt="Logo Bisakirim"
           width={100}
           height={200}
           priority
-          className="block md:hidden items-start"
+          className="items-start block md:hidden"
         />
         {!isMobile && (
           <Button
             variant="outline"
-            className="bg-gradient-to-r h-12 from-blue-500 to-blue-700 mr-2 rounded-full px-6 py-4 text-lg border-blue-500 text-white hover:bg-blue-700 hover:text-white"
+            className="h-12 px-6 py-4 mr-2 text-lg text-white border-blue-500 rounded-full bg-gradient-to-r from-blue-500 to-blue-700 hover:bg-blue-700 hover:text-white"
           >
             <CirclePlus />
             Kirim Paket

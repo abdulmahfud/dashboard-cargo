@@ -104,7 +104,7 @@ export function DataTable<TData extends BalanceHistory, TValue>({
   });
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="p-4 space-y-4">
       {/* Filter & Search */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-1 gap-2">
@@ -131,11 +131,11 @@ export function DataTable<TData extends BalanceHistory, TValue>({
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="flex items-center gap-2">
                   {statusFilter}
-                  <ChevronDown className="h-4 w-4" />
+                  <ChevronDown className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <div className="flex flex-col space-y-1 p-2">
+                <div className="flex flex-col p-2 space-y-1">
                   {[
                     "Semua Status",
                     "Pending",
@@ -160,7 +160,7 @@ export function DataTable<TData extends BalanceHistory, TValue>({
       </div>
 
       {/* Tabel */}
-      <div className="rounded-md border">
+      <div className="border rounded-md">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -196,13 +196,13 @@ export function DataTable<TData extends BalanceHistory, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  <div className="flex flex-col items-center justify-center space-y-4 py-8">
+                  <div className="flex flex-col items-center justify-center py-8 space-y-4">
                     <Image
-                      src="/image/search.png"
+                      src="/images/search.png"
                       alt="No data"
                       width={100}
                       height={100}
-                      className="h-40 w-40 object-contain"
+                      className="object-contain w-40 h-40"
                     />
                     <div className="text-sm font-medium text-gray-500">
                       Data Tidak Ditemukan

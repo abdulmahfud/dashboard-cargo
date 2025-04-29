@@ -8,14 +8,14 @@ import { Autoplay } from "swiper/modules";
 
 const slides = [
   {
-    logo: "/image/bisakirim.png",
-    src: "/image/jasa-pengiriman.jpg",
+    logo: "/images/BhisaKirim_3.png",
+    src: "/images/jasa-pengiriman.jpg",
     title: "Pengiriman Cepat",
     description: "Layanan ekspedisi dengan pengiriman cepat dan aman.",
   },
   {
-    logo: "/image/bisakirim.png",
-    src: "/image/laporan-pengiriman.jpg",
+    logo: "/images/BhisaKirim_3.png",
+    src: "/images/laporan-pengiriman.jpg",
     title: "Laporan Detail",
     description: "Semua laporan pengiriman dan keuangan dalam satu tempat.",
   },
@@ -25,13 +25,13 @@ export default function LoginPage() {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
-        <div className="flex flex-1 items-center justify-center">
+        <div className="flex items-center justify-center flex-1">
           <div className="w-full max-w-xl">
             <LoginForm />
           </div>
         </div>
       </div>
-      <div className="relative hidden lg:flex flex-col items-center justify-center bg-muted bg-blue-100">
+      <div className="relative flex-col items-center justify-center hidden bg-blue-100 lg:flex bg-muted">
         <Swiper
           spaceBetween={30}
           slidesPerView={1}
@@ -57,7 +57,7 @@ export default function LoginPage() {
                   className="rounded-lg"
                 />
                 <h2 className="mt-4 mb-2 text-3xl font-bold text-blue-500">{slide.title}</h2>
-                <p className="text-gray-600 text-xl">{slide.description}</p>
+                <p className="text-xl text-gray-600">{slide.description}</p>
               </div>
             </SwiperSlide>
           ))}

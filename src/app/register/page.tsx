@@ -6,7 +6,7 @@ export default function LoginPage() {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
-        <div className="flex flex-1 items-center justify-center">
+        <div className="flex items-center justify-center flex-1">
           <div className="w-full max-w-xs">
             <RegisterForm />
           </div>
@@ -14,7 +14,7 @@ export default function LoginPage() {
       </div>
       <div className="relative hidden bg-muted lg:block">
         <Image
-          src="/image/paket.jpg"
+          src="/images/paket.jpg"
           width={400}
           height={400}
           alt="Image"
