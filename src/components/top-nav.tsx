@@ -36,12 +36,12 @@ export default function TopVav() {
     <div>
       <div className="flex items-center flex-shrink-0">
         <Image
-          src="/images/bisakirim.png"
+          src="/images/BhisaKirim_3.png"
           alt="Logo Bisakirim"
           width={100}
           height={200}
           priority
-          className="items-start block md:hidden"
+          className="items-start block md:hidden pr-2"
         />
         {!isMobile && (
           <Button

@@ -28,7 +28,7 @@ export function LoginForm({
     >
       <div className="flex flex-col items-center gap-2 text-center">
         <h1 className="text-3xl font-bold text-blue-500">
-          Halo Sahabat BisaKirim!
+          Halo Sahabat BhisaKirim!
         </h1>
         <p className="text-xl text-muted-foreground">
           Silakan masukkan email dan password untuk login ke akun Anda untuk
