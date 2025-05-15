@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   BellIcon,
@@ -6,13 +6,12 @@ import {
   LogOutIcon,
   MoreVerticalIcon,
   UserCircleIcon,
-} from "lucide-react"
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { deleteCookie } from "cookies-next";
+import { toast } from "sonner";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,24 +20,40 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
+import { ApiService } from "@/lib/api";
 
 export function NavUser({
   user,
 }: {
   user: {
-    title: string
-    email: string
-    avatar: string
-  }
+    title: string;
+    email: string;
+    avatar: string;
+  };
 }) {
-  const { isMobile } = useSidebar()
+  const { isMobile } = useSidebar();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await ApiService.logout();
+      // Clear token from cookies
+      deleteCookie("token");
+      // Redirect to login page
+      router.push("/login");
+      toast.success("Logout berhasil");
+    } catch (error: unknown) {
+      console.error("Logout error:", error);
+      toast.error("Gagal logout. Silakan coba lagi.");
+    }
+  };
 
   return (
     <SidebarMenu>
@@ -110,7 +125,7 @@ export function NavUser({
               </DropdownMenuItem> */}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOutIcon />
               Log out
             </DropdownMenuItem>

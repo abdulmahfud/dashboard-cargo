@@ -1,23 +1,80 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FormEvent } from "react";
+import { FormEvent, useState } from "react";
+import { ApiService } from "@/lib/api";
+import { setCookie } from "cookies-next";
+import { toast } from "sonner";
+import { AxiosError } from "axios";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+  });
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({ ...prev, [id]: value }));
+    // Clear error when user types
+    setErrors((prev) => ({ ...prev, [id]: "" }));
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setErrors({ email: "", password: "" });
 
-    // Simulasi login sukses, bisa diganti dengan API call nanti
-    router.push("/dashboard");
+    try {
+      const response = await ApiService.login(
+        formData.email,
+        formData.password
+      );
+      const { token } = response.data;
+
+      // Store token in cookie
+      setCookie("token", token, {
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+        path: "/",
+      });
+
+      // Redirect to dashboard or callback URL
+      const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+      router.push(callbackUrl);
+      toast.success("Login berhasil!");
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        const errorMessage = error.response?.data?.message;
+
+        if (errorMessage?.toLowerCase().includes("email")) {
+          setErrors((prev) => ({ ...prev, email: "Email tidak ditemukan" }));
+          toast.error("Email tidak ditemukan");
+        } else if (errorMessage?.toLowerCase().includes("password")) {
+          setErrors((prev) => ({ ...prev, password: "Password salah" }));
+          toast.error("Password salah");
+        } else {
+          toast.error(errorMessage || "Login gagal. Silakan coba lagi.");
+        }
+      } else {
+        toast.error("Terjadi kesalahan. Silakan coba lagi.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -38,7 +95,18 @@ export function LoginForm({
       <div className="grid gap-6">
         <div className="grid gap-2">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" placeholder="m@example.com" required />
+          <Input
+            id="email"
+            type="email"
+            placeholder="m@example.com"
+            required
+            value={formData.email}
+            onChange={handleChange}
+            className={errors.email ? "border-red-500" : ""}
+          />
+          {errors.email && (
+            <p className="text-sm text-red-500">{errors.email}</p>
+          )}
         </div>
         <div className="grid gap-2">
           <div className="flex items-center">
@@ -50,13 +118,24 @@ export function LoginForm({
               Lupa kata sandi?
             </a>
           </div>
-          <Input id="password" type="password" required />
+          <Input
+            id="password"
+            type="password"
+            required
+            value={formData.password}
+            onChange={handleChange}
+            className={errors.password ? "border-red-500" : ""}
+          />
+          {errors.password && (
+            <p className="text-sm text-red-500">{errors.password}</p>
+          )}
         </div>
         <Button
           type="submit"
           className="w-full bg-blue-500 text-white rounded-full h-12 font-semibold text-xl hover:bg-blue-700"
+          disabled={isLoading}
         >
-          Login
+          {isLoading ? "Loading..." : "Login"}
         </Button>
       </div>
       <div className="text-center text-lg font-semibold text-muted-foreground">
