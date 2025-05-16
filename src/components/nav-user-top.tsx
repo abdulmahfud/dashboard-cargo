@@ -7,6 +7,10 @@ import {
   UserCircleIcon,
 } from "lucide-react";
 
+import { useRouter } from "next/navigation";
+import { deleteCookie } from "cookies-next";
+import { toast } from "sonner";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -23,6 +27,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { ApiService } from "@/lib/api";
 
 export function NavUserTop({
   user,
@@ -34,6 +39,22 @@ export function NavUserTop({
   };
 }) {
   const { isMobile } = useSidebar();
+
+  const router = useRouter();
+  
+  const handleLogout = async () => {
+    try {
+      await ApiService.logout();
+      // Clear token from cookies
+      deleteCookie("token");
+      // Redirect to login page
+      router.push("/login");
+      toast.success("Logout berhasil");
+    } catch (error: unknown) {
+      console.error("Logout error:", error);
+      toast.error("Gagal logout. Silakan coba lagi.");
+    }
+  };
 
   return (
     <SidebarMenu>
@@ -104,7 +125,7 @@ export function NavUserTop({
               </DropdownMenuItem> */}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOutIcon />
               Log out
             </DropdownMenuItem>
