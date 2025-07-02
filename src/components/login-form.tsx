@@ -11,6 +11,9 @@ import { setCookie } from "cookies-next";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 
+// Check if the environment is production or development
+const isDev = process.env.NODE_ENV === "development";
+
 export function LoginForm({
   className,
   ...props
@@ -47,8 +50,10 @@ export function LoginForm({
 
       // Store token in cookie
       setCookie("token", token, {
-        maxAge: 60 * 60 * 24 * 7, // 7 days
+        maxAge: 60 * 60 * 24 * 7, // 7 hari
         path: "/",
+        secure: !isDev, // false di local, true di production
+        sameSite: isDev ? "lax" : "strict",
       });
 
       // Redirect to dashboard or callback URL

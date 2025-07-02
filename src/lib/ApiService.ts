@@ -23,9 +23,9 @@ export class ApiService {
     return apiClient.post("/logout");
   }
 
-  // User
+  // Get Current User
   static async getCurrentUser(): Promise<AxiosResponse<ApiResponse<UserData>>> {
-    return apiClient.get("/user");
+    return apiClient.get("/admin/me");
   }
 
   static async updateUser(
