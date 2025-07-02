@@ -34,7 +34,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "src/middleware.ts"
-  ],
+, "src/lib/api.backup"  ],
   "exclude": [
     "node_modules"
   ]

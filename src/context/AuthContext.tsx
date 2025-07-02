@@ -1,14 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { UserData } from "@/lib/api";
-import { ApiService } from "@/lib/api";
-
-export type ApiResponse<T> = {
-  success: boolean;
-  message: string;
-  data: T;
-};
+import { UserData, ApiResponse } from "@/types/api";
+import apiClient from "@/lib/apiClient";
 
 type AuthContextType = {
   user: UserData | null;
@@ -30,7 +24,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setLoading(true);
     try {
       // Tambahkan generic <ApiResponse<UserData>>
-      const res = await ApiService.request<ApiResponse<UserData>>({
+      const res = await apiClient.request<ApiResponse<UserData>>({
         url: "/admin/me",
         method: "GET",
       });

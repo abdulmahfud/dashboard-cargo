@@ -1,12 +1,12 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormEvent, useState } from "react";
-import { ApiService } from "@/lib/api";
+import { ApiService } from "@/lib/ApiService";
 import { setCookie } from "cookies-next";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
@@ -15,7 +15,6 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -54,7 +53,9 @@ export function LoginForm({
 
       // Redirect to dashboard or callback URL
       const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
-      router.push(callbackUrl);
+      // router.push(callbackUrl);
+      window.location.href = callbackUrl;
+
       toast.success("Login berhasil!");
     } catch (error) {
       if (error instanceof AxiosError) {

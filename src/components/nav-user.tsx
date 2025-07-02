@@ -27,7 +27,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { ApiService } from "@/lib/api";
+import { ApiService } from "@/lib/ApiService";
 
 export function NavUser({
   user,
