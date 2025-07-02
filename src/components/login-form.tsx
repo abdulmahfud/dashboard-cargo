@@ -54,6 +54,7 @@ export function LoginForm({
         path: "/",
         secure: !isDev, // false di local, true di production
         sameSite: isDev ? "lax" : "strict",
+        domain: ".bhisakirim.com",
       });
 
       // Redirect to dashboard or callback URL
