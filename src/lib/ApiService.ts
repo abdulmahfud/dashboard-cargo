@@ -1,40 +1,57 @@
-import apiClient from "./apiClient";
+import apiClient, { logout as globalLogout } from "./apiClient";
 import type { AxiosResponse, AxiosRequestConfig } from "axios";
 import type { UserData, RegisterData, ApiResponse } from "@/types/api";
 
 export class ApiService {
-  // Generic request helper (recommended)
+  // ✅ Generic request helper
   static async request<T>(
     config: AxiosRequestConfig
   ): Promise<AxiosResponse<T>> {
     return apiClient.request<T>(config);
   }
 
-  // Authentication
-  static async login(email: string, password: string): Promise<AxiosResponse> {
+  // ✅ Login
+  static async login(
+    email: string,
+    password: string
+  ): Promise<AxiosResponse<ApiResponse<{ token: string }>>> {
     return apiClient.post("/login", { email, password });
   }
 
-  static async register(data: RegisterData): Promise<AxiosResponse> {
+  // ✅ Register
+  static async register(
+    data: RegisterData
+  ): Promise<AxiosResponse<ApiResponse<null>>> {
     return apiClient.post("/auth/register", data);
   }
 
-  static async logout(): Promise<AxiosResponse> {
-    return apiClient.post("/logout");
+  // ✅ Logout (terpusat)
+  static async logout(): Promise<void> {
+    try {
+      await apiClient.post("/logout");
+    } catch (error) {
+      console.warn("Logout API failed:", error);
+    } finally {
+      globalLogout(); // hapus token & redirect login
+    }
   }
 
-  // Get Current User
-  static async getCurrentUser(): Promise<AxiosResponse<ApiResponse<UserData>>> {
+  // ✅ Get current user
+  static async getCurrentUser(): Promise<
+    AxiosResponse<ApiResponse<UserData>>
+  > {
     return apiClient.get("/admin/me");
   }
 
+  // ✅ Update user
   static async updateUser(
     userId: number,
     userData: Partial<UserData>
-  ): Promise<AxiosResponse> {
+  ): Promise<AxiosResponse<ApiResponse<UserData>>> {
     return apiClient.put(`/users/${userId}`, userData);
   }
 
+  // ✅ Get user by ID
   static async getUser(
     id: number
   ): Promise<AxiosResponse<ApiResponse<UserData>>> {

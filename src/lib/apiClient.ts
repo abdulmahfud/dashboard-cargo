@@ -19,6 +19,24 @@ const apiClient: AxiosInstance = axios.create({
   },
 });
 
+const isDev = process.env.NODE_ENV === "development";
+
+// Tambahkan fungsi logout terpusat
+export function logout() {
+  // Hapus cookie token (pastikan domain cocok!)
+  deleteCookie("token", {
+    path: "/",
+    ...(isDev ? {} : { domain: ".bhisakirim.com" }),
+  });
+
+  // Arahkan ke login
+  if (typeof window !== "undefined") {
+    const currentPath = window.location.pathname;
+    window.location.href = `/login?callbackUrl=${encodeURIComponent(currentPath)}`;
+  }
+}
+
+
 // ✅ Retry otomatis jika error jaringan atau 5xx
 axiosRetry(apiClient, {
   retries: 3,
@@ -49,27 +67,16 @@ apiClient.interceptors.request.use(
 let isRedirecting = false;
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (res) => res,
   (error: AxiosError) => {
     if (
       error.response?.status === 401 &&
       typeof window !== "undefined" &&
-      !window.location.pathname.includes("/login")
+      !window.location.pathname.includes("/login") &&
+      !isRedirecting
     ) {
-      // Hapus cookie token
-      deleteCookie("token");
-
-      if (!isRedirecting) {
-        isRedirecting = true;
-
-        const currentPath = window.location.pathname;
-        const redirectTo = `/login?callbackUrl=${encodeURIComponent(currentPath)}`;
-
-        // Tambahkan sedikit delay agar tidak clash dengan router.push lain
-        setTimeout(() => {
-          window.location.href = redirectTo;
-        }, 100);
-      }
+      isRedirecting = true;
+      logout();
     }
 
     return Promise.reject(error);
