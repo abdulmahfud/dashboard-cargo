@@ -40,7 +40,7 @@ export function NavUserTop({
 
   const handleLogout = async () => {
     try {
-      await ApiService.logout(); // ✅ sudah handle hapus token + redirect
+      await ApiService.logout();
       toast.success("Logout berhasil");
     } catch (error) {
       console.error("Logout error:", error);
