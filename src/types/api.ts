@@ -60,7 +60,7 @@ export interface RegisterData {
 
 export interface LoginResponse {
   success: boolean;
-  user: any;
-  permissions: any;
+  user: UserData;
+  permissions: string[];
   token: string;
 }
