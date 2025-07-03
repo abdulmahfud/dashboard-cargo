@@ -23,17 +23,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchUser = async () => {
     setLoading(true);
     try {
-      // Tambahkan generic <ApiResponse<UserData>>
-      const res = await apiClient.request<ApiResponse<UserData>>({
-        url: "/admin/me",
-        method: "GET",
-      });
-      
-      if (res.data.success) {
-        setUser(res.data.data);
-      } else {
-        setUser(null);
-      }
+      const res = await apiClient.get<ApiResponse<UserData>>("/admin/me");
+      setUser(res.data.data);
     } catch {
       setUser(null);
     } finally {

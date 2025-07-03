@@ -50,11 +50,11 @@ export function LoginForm({
 
       // Store token in cookie
       setCookie("token", token, {
-        maxAge: 60 * 60 * 24 * 7, // 7 hari
+        maxAge: 60 * 60 * 24 * 7,
         path: "/",
-        secure: !isDev, // false di local, true di production
+        secure: !isDev,
         sameSite: isDev ? "lax" : "strict",
-        domain: ".bhisakirim.com",
+        ...(isDev ? {} : { domain: ".bhisakirim.com" }),
       });
 
       // Redirect to dashboard or callback URL
