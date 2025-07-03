@@ -37,10 +37,10 @@ export function NavUserTop({
   };
 }) {
   const { isMobile } = useSidebar();
-  
+
   const handleLogout = async () => {
     try {
-      await ApiService.logout(); // Ini sudah kirim request dan panggil logout terpusat
+      await ApiService.logout(); // ✅ sudah handle hapus token + redirect
       toast.success("Logout berhasil");
     } catch (error) {
       console.error("Logout error:", error);

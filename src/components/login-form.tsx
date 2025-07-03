@@ -46,9 +46,11 @@ export function LoginForm({
         formData.email,
         formData.password
       );
-      const { token } = response.data;
+      const token = response.data?.token;
+      if (!token) {
+        throw new Error("Token tidak ditemukan di respons");
+      }
 
-      // Store token in cookie
       setCookie("token", token, {
         maxAge: 60 * 60 * 24 * 7,
         path: "/",

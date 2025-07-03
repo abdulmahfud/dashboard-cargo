@@ -1,6 +1,11 @@
 import apiClient, { logout as globalLogout } from "./apiClient";
 import type { AxiosResponse, AxiosRequestConfig } from "axios";
-import type { UserData, RegisterData, ApiResponse } from "@/types/api";
+import type {
+  UserData,
+  RegisterData,
+  ApiResponse,
+  LoginResponse,
+} from "@/types/api";
 
 export class ApiService {
   // ✅ Generic request helper
@@ -14,7 +19,7 @@ export class ApiService {
   static async login(
     email: string,
     password: string
-  ): Promise<AxiosResponse<ApiResponse<{ token: string }>>> {
+  ): Promise<AxiosResponse<LoginResponse>> {
     return apiClient.post("/login", { email, password });
   }
 
@@ -37,9 +42,7 @@ export class ApiService {
   }
 
   // ✅ Get current user
-  static async getCurrentUser(): Promise<
-    AxiosResponse<ApiResponse<UserData>>
-  > {
+  static async getCurrentUser(): Promise<AxiosResponse<ApiResponse<UserData>>> {
     return apiClient.get("/admin/me");
   }
 
