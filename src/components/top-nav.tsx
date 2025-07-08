@@ -6,14 +6,6 @@ import { CirclePlus } from "lucide-react";
 import { NavUserTop } from "./nav-user-top";
 import Image from "next/image";
 
-const dataProfil = {
-  user: {
-    name: "User",
-    email: "user@example.com",
-    avatar: "/images/profil.png",
-  },
-};
-
 export default function TopVav() {
   function useIsMobile(breakpoint = 768) {
     const [isMobile, setIsMobile] = useState(false);
@@ -54,7 +46,7 @@ export default function TopVav() {
             Kirim Paket
           </Button>
         )}{" "}
-        {!isMobile && <NavUserTop user={dataProfil.user} />}{" "}
+        {!isMobile && <NavUserTop />}{" "}
       </div>
     </div>
   );
