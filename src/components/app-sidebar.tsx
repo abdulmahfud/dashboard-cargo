@@ -29,22 +29,15 @@ import { NavMain } from "@/components/nav-main";
 import { NavReport } from "@/components/nav-report";
 import { NavSecondary } from "@/components/nav-secondary";
 import { NavSendPackage } from "@/components/nav-send-package";
-import { NavUser } from "@/components/nav-user";
 
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
 } from "@/components/ui/sidebar";
 import Image from "next/image";
 
 const data = {
-  user: {
-    title: "User",
-    email: "user@example.com",
-    avatar: "/images/profil.png",
-  },
   navMain: [
     {
       title: "Beranda",
@@ -206,9 +199,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavAccount items={data.account} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={data.user} />
-      </SidebarFooter>
     </Sidebar>
   );
 }
