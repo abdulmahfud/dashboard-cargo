@@ -27,15 +27,11 @@ import {
 } from "@/components/ui/sidebar";
 import { ApiService } from "@/lib/ApiService";
 
-export function NavUser({
-  user,
-}: {
-  user: {
-    title: string;
-    email: string;
-    avatar: string;
-  };
-}) {
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/context/AuthContext";
+
+export function NavUser() {
+  const { user, loading } = useAuth(); // ⬅ Ambil user dari context
   const { isMobile } = useSidebar();
 
   const handleLogout = async () => {
@@ -48,6 +44,30 @@ export function NavUser({
     }
   };
 
+  if (loading) {
+    // Tampilkan Skeleton saat loading user
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-8 w-8 rounded-lg" />
+            <div className="flex flex-col gap-1">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          </div>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    );
+  }
+
+  if (!user)
+    return (
+      <div className="p-6 text-red-600 font-semibold">
+        User tidak ditemukan.
+      </div>
+    );
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -58,11 +78,17 @@ export function NavUser({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg grayscale">
-                <AvatarImage src={user.avatar} alt={user.title} />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                <AvatarImage
+                  src={user.avatar || "/images/user.png"}
+                  alt={user.name}
+                />
+                <AvatarFallback className="rounded-lg">
+                  {user.name ? user.name[0] : "U"}
+                </AvatarFallback>
               </Avatar>
+
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.title}</span>
+                <span className="truncate font-medium">{user.name}</span>
                 <span className="truncate text-xs text-muted-foreground">
                   {user.email}
                 </span>
@@ -79,11 +105,13 @@ export function NavUser({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.title} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  <AvatarImage src={user.avatar} alt={user.name} />
+                  <AvatarFallback className="rounded-lg">
+                    {user.name ? user.name[0] : "U"}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.title}</span>
+                  <span className="truncate font-medium">{user.name}</span>
                   <span className="truncate text-xs text-muted-foreground">
                     {user.email}
                   </span>

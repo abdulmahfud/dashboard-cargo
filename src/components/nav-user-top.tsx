@@ -26,16 +26,11 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { ApiService } from "@/lib/ApiService";
+import { useAuth } from "@/context/AuthContext";
+import { Skeleton } from "./ui/skeleton";
 
-export function NavUserTop({
-  user,
-}: {
-  user: {
-    name: string;
-    email: string;
-    avatar: string;
-  };
-}) {
+export function NavUserTop() {
+  const { user, loading } = useAuth();
   const { isMobile } = useSidebar();
 
   const handleLogout = async () => {
@@ -47,6 +42,24 @@ export function NavUserTop({
       toast.error("Gagal logout. Silakan coba lagi.");
     }
   };
+
+  if (loading) {
+
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <Skeleton className="h-8 w-8 rounded-lg" />
+        </SidebarMenuItem>
+      </SidebarMenu>
+    );
+  }
+
+  if (!user)
+    return (
+      <div className="p-6 text-red-600 font-semibold">
+        User tidak ditemukan.
+      </div>
+    );
 
   return (
     <SidebarMenu>
@@ -65,7 +78,9 @@ export function NavUserTop({
               </div>
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                <AvatarFallback className="rounded-lg">
+                  {user.name ? user.name[0] : "U"}
+                </AvatarFallback>
               </Avatar>
             </SidebarMenuButton>
           </DropdownMenuTrigger>
@@ -79,7 +94,9 @@ export function NavUserTop({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  <AvatarFallback className="rounded-lg">
+                    {user.name ? user.name[0] : "U"}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>

@@ -1,6 +1,13 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
 import axiosRetry from "axios-retry";
 import { getCookie, deleteCookie } from "cookies-next";
+import type {
+  ShipperListResponse,
+  ReceiverListResponse,
+  ProvinceListResponse,
+  RegencyListResponse,
+  DistrictListResponse,
+} from "@/types/dataRegulerForm";
 
 // Ambil URL dari .env
 const API_URL =
@@ -35,7 +42,6 @@ export function logout() {
     window.location.href = `/login?callbackUrl=${encodeURIComponent(currentPath)}`;
   }
 }
-
 
 // ✅ Retry otomatis jika error jaringan atau 5xx
 axiosRetry(apiClient, {
@@ -82,5 +88,39 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// ✅ Get shippers
+export const getShippers = async (): Promise<ShipperListResponse> => {
+  const res = await apiClient.get("/admin/shipper");
+  return res.data;
+};
+
+// ✅ Get receivers
+export const getReceivers = async (): Promise<ReceiverListResponse> => {
+  const res = await apiClient.get("/admin/receiver");
+  return res.data;
+};
+
+// ✅ Get provinces
+export const getProvinces = async (): Promise<ProvinceListResponse> => {
+  const res = await apiClient.get("/public/provinces");
+  return res.data;
+};
+
+// ✅ Get regencies by province
+export const getRegencies = async (
+  provinceId: number
+): Promise<RegencyListResponse> => {
+  const res = await apiClient.get(`/public/provinces/${provinceId}/regencies`);
+  return res.data;
+};
+
+// ✅ Get districts by regency
+export const getDistricts = async (
+  regencyId: number
+): Promise<DistrictListResponse> => {
+  const res = await apiClient.get(`/public/regencies/${regencyId}/districts`);
+  return res.data;
+};
 
 export default apiClient;

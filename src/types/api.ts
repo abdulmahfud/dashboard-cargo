@@ -9,6 +9,7 @@ export interface UserData {
   name: string;
   email: string;
   phone: string;
+  avatar: string;
   email_verified_at: string | null;
   created_at: string;
   updated_at: string;
@@ -63,4 +64,5 @@ export interface LoginResponse {
   user: UserData;
   permissions: string[];
   token: string;
+  avatar: string;
 }

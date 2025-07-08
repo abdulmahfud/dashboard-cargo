@@ -26,36 +26,100 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  businessData,
-  businessRecipients,
-  itemTypes,
-} from "@/lib/dataRegulerForm";
 import { Package, PenLine, Search, Send, User } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import {
+  getShippers,
+  getReceivers,
+  getProvinces,
+  getRegencies,
+  getDistricts,
+} from "@/lib/apiClient";
+import type {
+  Shipper,
+  Receiver,
+  Province,
+  Regency,
+  District,
+} from "@/types/dataRegulerForm";
+import { itemTypes } from "@/types/dataRegulerForm";
 
 interface RegularPackageFormProps {
-  onSearch: () => void;
+  onSearch: (payload?: RegularPackagePayload) => void;
 }
+
+type ReceiverManual = {
+  name: string;
+  phone: string;
+  address: string;
+  province: string;
+  regency: string;
+  district: string;
+};
+
+type RegularPackagePayload = {
+  receiver_id?: string;
+  receiver?: ReceiverManual;
+  receiverName?: string;
+  receiverPhone?: string;
+  province?: string;
+  regency?: string;
+  district?: string;
+  receiverAddress?: string;
+  itemContent?: string;
+  itemType?: string;
+  itemValue?: string;
+  itemQuantity?: string;
+  weight?: string;
+  length?: string;
+  width?: string;
+  height?: string;
+  notes?: string;
+  deliveryType?: string;
+  paymentMethod?: string;
+  servicetype?: number; // Added servicetype
+  [key: string]: string | number | boolean | ReceiverManual | undefined;
+};
+
 interface Business {
   id: number;
   businessName: string;
   senderName: string;
   contact: string;
+  province: string | null;
+  regency: string | null;
+  district: string | null;
   address: string;
 }
+
 export default function RegularPackageForm({
   onSearch,
 }: RegularPackageFormProps) {
-  const [selectedBusiness, setSelectedBusiness] = useState(businessData[0]);
+  const [businessData, setBusinessData] = useState<Business[]>([]);
+  const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(
+    null
+  );
   const [open, setOpen] = useState(false);
   const [openRecipient, setOpenRecipient] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [businessRecipients, setBusinessRecipients] = useState<Receiver[]>([]);
+  const [provinceOptions, setProvinceOptions] = useState<Province[]>([]);
+  const [regencyOptions, setRegencyOptions] = useState<Regency[]>([]);
+  const [districtOptions, setDistrictOptions] = useState<District[]>([]);
+  const [provinceSearch, setProvinceSearch] = useState("");
+  const [regencySearch, setRegencySearch] = useState("");
+  const [districtSearch, setDistrictSearch] = useState("");
+  const [loadingProvince, setLoadingProvince] = useState(false);
+  const [loadingRegency, setLoadingRegency] = useState(false);
+  const [loadingDistrict, setLoadingDistrict] = useState(false);
+  const [receiverId, setReceiverId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     receiverName: "",
     receiverPhone: "",
-    destinationArea: "",
+    province: "",
+    regency: "",
+    district: "",
     receiverAddress: "",
     itemContent: "",
     itemType: "",
@@ -70,6 +134,77 @@ export default function RegularPackageForm({
     paymentMethod: "cod",
   });
 
+  useEffect(() => {
+    getShippers().then((res) => {
+      const mapped = res.data.data.map((shipper: Shipper) => ({
+        id: shipper.id,
+        businessName: shipper.name,
+        senderName: shipper.contact || shipper.name,
+        contact: shipper.phone,
+        province: shipper.province,
+        regency: shipper.regency,
+        district: shipper.district,
+        address: shipper.address,
+      }));
+      setBusinessData(mapped);
+      setSelectedBusiness(mapped[0] || null);
+    });
+    getReceivers().then((res) => {
+      setBusinessRecipients(res.data.data);
+    });
+  }, []);
+
+  // Province search and fetch
+  useEffect(() => {
+    if (provinceSearch.length >= 3) {
+      setLoadingProvince(true);
+      getProvinces().then((res) => {
+        setProvinceOptions(
+          res.data.filter((prov) =>
+            prov.name.toLowerCase().includes(provinceSearch.toLowerCase())
+          )
+        );
+        setLoadingProvince(false);
+      });
+    } else {
+      setProvinceOptions([]);
+    }
+  }, [provinceSearch]);
+
+  // Regency search and fetch
+  useEffect(() => {
+    if (formData.province && regencySearch.length >= 3) {
+      setLoadingRegency(true);
+      getRegencies(Number(formData.province)).then((res) => {
+        setRegencyOptions(
+          res.data.filter((reg) =>
+            reg.name.toLowerCase().includes(regencySearch.toLowerCase())
+          )
+        );
+        setLoadingRegency(false);
+      });
+    } else {
+      setRegencyOptions([]);
+    }
+  }, [formData.province, regencySearch]);
+
+  // District search and fetch
+  useEffect(() => {
+    if (formData.regency && districtSearch.length >= 3) {
+      setLoadingDistrict(true);
+      getDistricts(Number(formData.regency)).then((res) => {
+        setDistrictOptions(
+          res.data.filter((dist) =>
+            dist.name.toLowerCase().includes(districtSearch.toLowerCase())
+          )
+        );
+        setLoadingDistrict(false);
+      });
+    } else {
+      setDistrictOptions([]);
+    }
+  }, [formData.regency, districtSearch]);
+
   const handleSelectAddress = (business: Business) => {
     setSelectedBusiness(business);
     setOpen(false);
@@ -77,12 +212,57 @@ export default function RegularPackageForm({
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    // Jika user edit field penerima manual, reset receiverId
+    if (
+      [
+        "receiverName",
+        "receiverPhone",
+        "province",
+        "regency",
+        "district",
+        "receiverAddress",
+      ].includes(field)
+    ) {
+      setReceiverId(null);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch();
-    console.log("Form Data:", formData);
+    // Siapkan payload
+    let payload: RegularPackagePayload = {
+      ...formData,
+    };
+    // Set servicetype sesuai deliveryType
+    payload.servicetype = formData.deliveryType === "pickup" ? 1 : 6;
+    if (receiverId) {
+      payload = {
+        ...payload,
+        receiver_id: receiverId,
+      };
+      // Hapus data manual receiver agar backend tidak ambigu
+      delete payload.receiverName;
+      delete payload.receiverPhone;
+      delete payload.province;
+      delete payload.regency;
+      delete payload.district;
+      delete payload.receiverAddress;
+    } else {
+      // Kirim object receiver manual
+      payload = {
+        ...payload,
+        receiver: {
+          name: formData.receiverName,
+          phone: formData.receiverPhone,
+          address: formData.receiverAddress,
+          province: formData.province,
+          regency: formData.regency,
+          district: formData.district,
+        },
+      };
+    }
+    onSearch(payload);
+    console.log("Form Data:", payload);
   };
 
   const filteredRecipients = businessRecipients.filter((recipient) =>
@@ -175,8 +355,8 @@ export default function RegularPackageForm({
             {/* Button untuk membuka popup */}
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-blue-500 text-white hover:bg-blue-700">
-                  <PenLine size={16} /> Ganti Alamat
+                <Button className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 text-sm flex items-center gap-2 px-4 py-2 rounded-xl shadow-md transition duration-300 ease-in-out">
+                  <PenLine size={16} /> Pilih Alamat
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -193,7 +373,7 @@ export default function RegularPackageForm({
                     <div
                       key={business.id}
                       className={`p-3 border rounded-lg cursor-pointer ${
-                        selectedBusiness.id === business.id
+                        selectedBusiness && selectedBusiness.id === business.id
                           ? "border-primary"
                           : "border-gray-300"
                       }`}
@@ -218,21 +398,33 @@ export default function RegularPackageForm({
           <div className="space-y-4">
             <div>
               <Label>Nama Usaha</Label>
-              <Input value={selectedBusiness.businessName} readOnly />
+              <Input value={selectedBusiness?.businessName || ""} readOnly />
             </div>
             <div>
               <Label>Nama Pengirim</Label>
-              <Input value={selectedBusiness.senderName} readOnly />
+              <Input value={selectedBusiness?.senderName || ""} readOnly />
             </div>
             <div>
               <Label>Kontak</Label>
-              <Input value={selectedBusiness.contact} readOnly />
+              <Input value={selectedBusiness?.contact || ""} readOnly />
+            </div>
+            <div>
+              <Label>Provinsi</Label>
+              <Input value={selectedBusiness?.province || ""} readOnly />
+            </div>
+            <div>
+              <Label>Kota</Label>
+              <Input value={selectedBusiness?.regency || ""} readOnly />
+            </div>
+            <div>
+              <Label>Kecamatan</Label>
+              <Input value={selectedBusiness?.district || ""} readOnly />
             </div>
             <div>
               <Label>Alamat</Label>
               <Textarea
                 className="min-h-[100px]"
-                value={selectedBusiness.address}
+                value={selectedBusiness?.address || ""}
                 readOnly
               />
             </div>
@@ -273,26 +465,152 @@ export default function RegularPackageForm({
                 />
               </div>
             </div>
-            {/* Area Tujuan */}
-            <div className="space-y-1.5">
-              <Label htmlFor="destinationArea" className="text-shipping-label">
-                Area Tujuan<span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="destinationAddress"
-                placeholder="Sidoharjo (Sidoarjo), Tolangohula, Gorontalo, Gorontalo"
-                value={formData.destinationArea}
-                onChange={(e) =>
-                  handleChange("destinationArea", e.target.value)
-                }
-                className="bg-white placeholder:text-shipping-placeholder"
-              />
+            {/* Alamat Tujuan - diganti dropdown province/regency/district */}
+            <div className="grid grid-cols-1 gap-4 relative">
+              {/* Province Dropdown */}
+              <div className="relative">
+                <Label htmlFor="province">
+                  Provinsi <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="province"
+                  placeholder="Cari provinsi..."
+                  value={provinceSearch}
+                  onChange={(e) => {
+                    setProvinceSearch(e.target.value);
+                    handleChange("province", "");
+                    handleChange("regency", "");
+                    handleChange("district", "");
+                  }}
+                  autoComplete="off"
+                />
+                {provinceSearch.length >= 3 && !formData.province && (
+                  <div className="border rounded bg-white max-h-40 overflow-y-auto absolute z-20 w-full">
+                    {loadingProvince ? (
+                      <div className="p-2 text-sm text-gray-500">
+                        Loading...
+                      </div>
+                    ) : provinceOptions.length > 0 ? (
+                      provinceOptions.map((prov) => (
+                        <div
+                          key={prov.id}
+                          className="p-2 hover:bg-blue-100 cursor-pointer"
+                          onClick={() => {
+                            handleChange("province", String(prov.id));
+                            setProvinceSearch(prov.name);
+                            setRegencySearch("");
+                            setDistrictSearch("");
+                          }}
+                        >
+                          {prov.name}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-2 text-sm text-gray-500">
+                        Tidak ada hasil
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              {/* Regency Dropdown */}
+              <div className="relative">
+                <Label htmlFor="regency">
+                  Kota/Kabupaten <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="regency"
+                  placeholder="Cari kota/kabupaten..."
+                  value={regencySearch}
+                  onChange={(e) => {
+                    setRegencySearch(e.target.value);
+                    handleChange("regency", "");
+                    handleChange("district", "");
+                  }}
+                  disabled={!formData.province}
+                  autoComplete="off"
+                />
+                {formData.province &&
+                  regencySearch.length >= 3 &&
+                  !formData.regency && (
+                    <div className="border rounded bg-white max-h-40 overflow-y-auto absolute z-20 w-full">
+                      {loadingRegency ? (
+                        <div className="p-2 text-sm text-gray-500">
+                          Loading...
+                        </div>
+                      ) : regencyOptions.length > 0 ? (
+                        regencyOptions.map((reg) => (
+                          <div
+                            key={reg.id}
+                            className="p-2 hover:bg-blue-100 cursor-pointer"
+                            onClick={() => {
+                              handleChange("regency", String(reg.id));
+                              setRegencySearch(reg.name);
+                              setDistrictSearch("");
+                            }}
+                          >
+                            {reg.name}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-2 text-sm text-gray-500">
+                          Tidak ada hasil
+                        </div>
+                      )}
+                    </div>
+                  )}
+              </div>
+              {/* District Dropdown */}
+              <div className="relative">
+                <Label htmlFor="district">
+                  Kecamatan <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="district"
+                  placeholder="Cari kecamatan..."
+                  value={districtSearch}
+                  onChange={(e) => {
+                    setDistrictSearch(e.target.value);
+                    handleChange("district", "");
+                  }}
+                  disabled={!formData.regency}
+                  autoComplete="off"
+                />
+                {formData.regency &&
+                  districtSearch.length >= 3 &&
+                  !formData.district && (
+                    <div className="border rounded bg-white max-h-40 overflow-y-auto absolute z-20 w-full">
+                      {loadingDistrict ? (
+                        <div className="p-2 text-sm text-gray-500">
+                          Loading...
+                        </div>
+                      ) : districtOptions.length > 0 ? (
+                        districtOptions.map((dist) => (
+                          <div
+                            key={dist.id}
+                            className="p-2 hover:bg-blue-100 cursor-pointer"
+                            onClick={() => {
+                              handleChange("district", String(dist.id));
+                              setDistrictSearch(dist.name);
+                            }}
+                          >
+                            {dist.name}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-2 text-sm text-gray-500">
+                          Tidak ada hasil
+                        </div>
+                      )}
+                    </div>
+                  )}
+              </div>
             </div>
 
-            {/* Alamat Lengkap */}
+            {/* Detail Alamat Lengkap */}
             <div>
               <Label htmlFor="receiverAddress">
-                Alamat Lengkap <span className="text-red-500">*</span>
+                Detail Alamat Lengkap <span className="text-red-500">*</span>
               </Label>
               <Textarea
                 id="receiverAddress"
@@ -307,7 +625,7 @@ export default function RegularPackageForm({
 
             <Popover open={openRecipient} onOpenChange={setOpenRecipient}>
               <PopoverTrigger asChild>
-                <Button className="w-full bg-blue-500 text-white hover:bg-blue-700">
+                <Button className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 text-sm flex items-center gap-2 px-4 py-2 rounded-xl shadow-md transition duration-300 ease-in-out">
                   <PenLine size={16} className="mr-2" /> Pilih dari List
                   Penerima
                 </Button>
@@ -332,11 +650,14 @@ export default function RegularPackageForm({
                         onClick={() => {
                           handleChange("receiverName", recipient.name);
                           handleChange("receiverPhone", recipient.phone);
-                          handleChange(
-                            "destinationArea",
-                            recipient.destinationarea
-                          );
+                          handleChange("province", recipient.province || "");
+                          handleChange("regency", recipient.regency || "");
+                          handleChange("district", recipient.district || "");
                           handleChange("receiverAddress", recipient.address);
+                          setProvinceSearch(recipient.province || "");
+                          setRegencySearch(recipient.regency || "");
+                          setDistrictSearch(recipient.district || "");
+                          setReceiverId(String(recipient.id));
                           setOpen(false);
                         }}
                       >
@@ -449,7 +770,10 @@ export default function RegularPackageForm({
               />
             </div>
 
-            <Button type="submit" className="w-full">
+            <Button
+              type="submit"
+              className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 text-sm flex items-center gap-2 px-4 py-2 rounded-xl shadow-md transition duration-300 ease-in-out"
+            >
               Proses Paket
             </Button>
           </div>
