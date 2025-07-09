@@ -98,3 +98,36 @@ export interface DistrictListResponse {
   message: string;
   data: District[];
 }
+
+// Tag type for shipping options
+export interface Tag {
+  label: string;
+  type: "warning" | "info" | "default" | "success";
+}
+
+// Shipping option type (for future use, not dummy data)
+export interface ShippingOption {
+  id: string;
+  name: string;
+  logo: string;
+  price: string;
+  originalPrice?: string;
+  duration: string;
+  recommended?: boolean;
+  available: boolean;
+  tags?: Tag[];
+}
+
+// Service types for tabs
+export const serviceTypes = [
+  { id: "economy", name: "Economy" },
+  { id: "regular", name: "Regular" },
+  { id: "cargo", name: "Cargo" },
+];
+
+// Sort options for shipping results
+export const sortOptions = [
+  { value: "cheapest", label: "Harga Termurah" },
+  { value: "fastest", label: "Waktu Tersingkat" },
+  { value: "recommended", label: "Rekomendasi" },
+];

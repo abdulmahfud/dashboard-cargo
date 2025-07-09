@@ -5,13 +5,13 @@ import CalculationResults from "@/components/PaketReguler/CalculationResults";
 import { SiteHeader } from "@/components/site-header";
 import TopNav from "@/components/top-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
@@ -20,16 +20,9 @@ import RegularPackageForm from "../../../../components/PaketReguler/RegularPacka
 
 const PaketReguler = () => {
   const [isSearching, setIsSearching] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSearch = () => {
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsSearching(true);
-      setIsLoading(false);
-    }, 800);
-  };
+  const [calculationResult, setCalculationResult] = useState<
+    Record<string, unknown> | undefined
+  >(undefined);
 
   // Initialize the 'framer-motion' module for animations
   useEffect(() => {
@@ -52,14 +45,20 @@ const PaketReguler = () => {
         </div>
         <div className="flex flex-col flex-1 bg-blue-100">
           <div className="@container/main flex flex-1 flex-col gap-2">
-          <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 md:px-6">
+            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 md:px-6">
               <main className="container flex-1">
                 <div
                   id="app-container"
                   className="grid grid-cols-1 gap-6 md:grid-cols-2"
                 >
                   <div className="flex flex-col mx-2">
-                    <RegularPackageForm onSearch={handleSearch} />
+                    <RegularPackageForm
+                      onResult={(result) => {
+                        setCalculationResult(result);
+                        setIsSearching(false);
+                      }}
+                      setIsSearching={setIsSearching}
+                    />
                   </div>
 
                   <AnimatePresence mode="wait">
@@ -69,7 +68,7 @@ const PaketReguler = () => {
                           Pilih Ekspedisi
                         </CardTitle>
 
-                        <Select>
+                        {/* <Select>
                           <SelectTrigger className="w-[180px]">
                             <SelectValue placeholder="Harga Termurah" />
                           </SelectTrigger>
@@ -84,11 +83,11 @@ const PaketReguler = () => {
                               Rating Tertinggi
                             </SelectItem>
                           </SelectContent>
-                        </Select>
+                        </Select> */}
                       </CardHeader>
 
-                      <CardContent className="min-h-[300px] flex items-center justify-center">
-                        {isLoading ? (
+                      <CardContent className="flex items-center justify-center">
+                        {isSearching ? (
                           <motion.div
                             key="loading"
                             initial={{ opacity: 0 }}
@@ -101,7 +100,7 @@ const PaketReguler = () => {
                               Mencari layanan pengiriman...
                             </p>
                           </motion.div>
-                        ) : isSearching ? (
+                        ) : calculationResult ? (
                           <motion.div
                             key="result"
                             initial={{ opacity: 0 }}
@@ -109,7 +108,10 @@ const PaketReguler = () => {
                             exit={{ opacity: 0 }}
                             className="flex flex-col w-full"
                           >
-                            <CalculationResults isSearching={isSearching} />
+                            <CalculationResults
+                              isSearching={isSearching}
+                              result={calculationResult}
+                            />
                           </motion.div>
                         ) : (
                           <motion.div

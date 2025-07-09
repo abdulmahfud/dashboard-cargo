@@ -26,7 +26,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Package, PenLine, Search, Send, User } from "lucide-react";
+import {
+  Package,
+  PenLine,
+  Search,
+  Send,
+  User,
+  CircleChevronRight,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import {
   getShippers,
@@ -34,6 +41,7 @@ import {
   getProvinces,
   getRegencies,
   getDistricts,
+  getJntExpressShipmentCost,
 } from "@/lib/apiClient";
 import type {
   Shipper,
@@ -43,10 +51,6 @@ import type {
   District,
 } from "@/types/dataRegulerForm";
 import { itemTypes } from "@/types/dataRegulerForm";
-
-interface RegularPackageFormProps {
-  onSearch: (payload?: RegularPackagePayload) => void;
-}
 
 type ReceiverManual = {
   name: string;
@@ -92,8 +96,14 @@ interface Business {
   address: string;
 }
 
+interface RegularPackageFormProps {
+  onResult?: (result: Record<string, unknown>) => void;
+  setIsSearching?: (isSearching: boolean) => void;
+}
+
 export default function RegularPackageForm({
-  onSearch,
+  onResult,
+  setIsSearching,
 }: RegularPackageFormProps) {
   const [businessData, setBusinessData] = useState<Business[]>([]);
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(
@@ -113,6 +123,7 @@ export default function RegularPackageForm({
   const [loadingRegency, setLoadingRegency] = useState(false);
   const [loadingDistrict, setLoadingDistrict] = useState(false);
   const [receiverId, setReceiverId] = useState<string | null>(null);
+  const [selectedDistrictName, setSelectedDistrictName] = useState("");
 
   const [formData, setFormData] = useState({
     receiverName: "",
@@ -133,6 +144,8 @@ export default function RegularPackageForm({
     deliveryType: "dropoff",
     paymentMethod: "cod",
   });
+
+  // Loading state sekarang dikontrol parent
 
   useEffect(() => {
     getShippers().then((res) => {
@@ -227,8 +240,23 @@ export default function RegularPackageForm({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (setIsSearching) setIsSearching(true);
+    // Validasi field wajib
+    if (
+      !formData.weight ||
+      !selectedBusiness?.regency ||
+      !formData.district ||
+      !selectedDistrictName
+    ) {
+      onResult?.({
+        error: true,
+        message: "Berat, kota pengirim, dan kecamatan tujuan wajib diisi.",
+      });
+      if (setIsSearching) setIsSearching(false);
+      return;
+    }
     // Siapkan payload
     let payload: RegularPackagePayload = {
       ...formData,
@@ -261,7 +289,32 @@ export default function RegularPackageForm({
         },
       };
     }
-    onSearch(payload);
+    // Ambil data untuk ongkir
+    const weight = formData.weight;
+    // Kirim nama regency pengirim dan district tujuan
+    const sendSiteCode = selectedBusiness?.regency || "";
+    const destAreaCode = selectedDistrictName;
+    try {
+      console.log("Payload ke API:", { weight, sendSiteCode, destAreaCode });
+      const result = await getJntExpressShipmentCost({
+        weight,
+        sendSiteCode,
+        destAreaCode,
+      });
+      onResult?.(result);
+    } catch (err) {
+      const errorResult = {
+        error: true,
+        message:
+          err && typeof err === "object" && "message" in err
+            ? (err as { message?: string }).message || "Gagal cek ongkir"
+            : "Gagal cek ongkir",
+      };
+      onResult?.(errorResult);
+    } finally {
+      if (setIsSearching) setIsSearching(false);
+    }
+    // onSearch(payload); // tidak perlu lagi, sekarang pakai calculationResult
     console.log("Form Data:", payload);
   };
 
@@ -526,6 +579,7 @@ export default function RegularPackageForm({
                     setRegencySearch(e.target.value);
                     handleChange("regency", "");
                     handleChange("district", "");
+                    setSelectedDistrictName("");
                   }}
                   disabled={!formData.province}
                   autoComplete="off"
@@ -546,7 +600,6 @@ export default function RegularPackageForm({
                             onClick={() => {
                               handleChange("regency", String(reg.id));
                               setRegencySearch(reg.name);
-                              setDistrictSearch("");
                             }}
                           >
                             {reg.name}
@@ -572,6 +625,7 @@ export default function RegularPackageForm({
                   onChange={(e) => {
                     setDistrictSearch(e.target.value);
                     handleChange("district", "");
+                    setSelectedDistrictName("");
                   }}
                   disabled={!formData.regency}
                   autoComplete="off"
@@ -592,6 +646,7 @@ export default function RegularPackageForm({
                             onClick={() => {
                               handleChange("district", String(dist.id));
                               setDistrictSearch(dist.name);
+                              setSelectedDistrictName(dist.name);
                             }}
                           >
                             {dist.name}
@@ -626,8 +681,7 @@ export default function RegularPackageForm({
             <Popover open={openRecipient} onOpenChange={setOpenRecipient}>
               <PopoverTrigger asChild>
                 <Button className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 text-sm flex items-center gap-2 px-4 py-2 rounded-xl shadow-md transition duration-300 ease-in-out">
-                  <PenLine size={16} className="mr-2" /> Pilih dari List
-                  Penerima
+                  <PenLine size={16} className="mr-2" /> Pilih List Penerima
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-96 p-4">
@@ -657,6 +711,7 @@ export default function RegularPackageForm({
                           setProvinceSearch(recipient.province || "");
                           setRegencySearch(recipient.regency || "");
                           setDistrictSearch(recipient.district || "");
+                          setSelectedDistrictName(recipient.district || "");
                           setReceiverId(String(recipient.id));
                           setOpen(false);
                         }}
@@ -688,7 +743,12 @@ export default function RegularPackageForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="itemContent">Isi Barang *</Label>
-                <Input id="itemContent" placeholder="Contoh: Laptop" />
+                <Input
+                  id="itemContent"
+                  placeholder="Contoh: Laptop"
+                  value={formData.itemContent}
+                  onChange={(e) => handleChange("itemContent", e.target.value)}
+                />
               </div>
               <div>
                 <Label htmlFor="itemType">Jenis Barang *</Label>
@@ -723,7 +783,7 @@ export default function RegularPackageForm({
                     id="itemValue"
                     type="number"
                     value={formData.itemValue}
-                    placeholder="1.000.000"
+                    placeholder="Cth : 1.000.000"
                     onChange={(e) => handleChange("itemValue", e.target.value)}
                     className="pl-10"
                   />
@@ -736,7 +796,7 @@ export default function RegularPackageForm({
                 <Input
                   id="itemQuantity"
                   type="number"
-                  placeholder="1"
+                  placeholder="Cth : 1"
                   value={formData.itemQuantity}
                   onChange={(e) => handleChange("itemQuantity", e.target.value)}
                 />
@@ -746,19 +806,43 @@ export default function RegularPackageForm({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
                 <Label htmlFor="weight">Berat (gram) *</Label>
-                <Input id="weight" placeholder="1000" type="number" />
+                <Input
+                  id="weight"
+                  placeholder="Cth : 1000"
+                  type="number"
+                  value={formData.weight}
+                  onChange={(e) => handleChange("weight", e.target.value)}
+                />
               </div>
               <div>
                 <Label htmlFor="length">Panjang (cm) *</Label>
-                <Input id="length" placeholder="25" type="number" />
+                <Input
+                  id="length"
+                  placeholder="Cth : 25"
+                  type="number"
+                  value={formData.length}
+                  onChange={(e) => handleChange("length", e.target.value)}
+                />
               </div>
               <div>
                 <Label htmlFor="width">Lebar (cm) *</Label>
-                <Input id="width" placeholder="25" type="number" />
+                <Input
+                  id="width"
+                  placeholder="Cth : 25"
+                  type="number"
+                  value={formData.width}
+                  onChange={(e) => handleChange("width", e.target.value)}
+                />
               </div>
               <div>
                 <Label htmlFor="height">Tinggi (cm) *</Label>
-                <Input id="height" placeholder="25" type="number" />
+                <Input
+                  id="height"
+                  placeholder="Cth : 25"
+                  type="number"
+                  value={formData.height}
+                  onChange={(e) => handleChange("height", e.target.value)}
+                />
               </div>
             </div>
 
@@ -767,6 +851,8 @@ export default function RegularPackageForm({
               <Textarea
                 id="notes"
                 placeholder="Catatan untuk kurir (opsional)"
+                value={formData.notes}
+                onChange={(e) => handleChange("notes", e.target.value)}
               />
             </div>
 
@@ -774,11 +860,13 @@ export default function RegularPackageForm({
               type="submit"
               className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 text-sm flex items-center gap-2 px-4 py-2 rounded-xl shadow-md transition duration-300 ease-in-out"
             >
-              Proses Paket
+              <CircleChevronRight className="w-4 h-4" />
+              Proses Pengiriman
             </Button>
           </div>
         </Card>
       </form>
+      {/* Hasil cek ongkir dihandle parent */}
     </div>
   );
 }

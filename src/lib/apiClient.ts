@@ -123,4 +123,31 @@ export const getDistricts = async (
   return res.data;
 };
 
+// ✅ Get JNT Express shipment cost
+export const getJntExpressShipmentCost = async ({
+  weight,
+  sendSiteCode,
+  destAreaCode,
+}: {
+  weight: string | number;
+  sendSiteCode: string;
+  destAreaCode: string;
+}) => {
+  // Konversi berat dari gram ke kilogram untuk JNT API
+  const weightInKg = Number(weight) / 1000;
+
+  const requestPayload = {
+    weight: weightInKg.toString(),
+    sendSiteCode,
+    destAreaCode,
+  };
+
+  const res = await apiClient.post(
+    "/admin/expedition/jntexpress/shipment_cost",
+    requestPayload
+  );
+
+  return res.data;
+};
+
 export default apiClient;
