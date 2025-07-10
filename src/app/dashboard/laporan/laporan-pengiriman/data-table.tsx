@@ -67,12 +67,13 @@ type DeliveryReport = {
   totalShipment: number;
   shippingMethod: "COD" | "Non COD";
   status:
-    | "Sampai Tujuan"
-    | "Belum di Expedisi"
-    | "Proses"
-    | "Masalah Kirim"
-    | "Retur"
-    | "Dibatalkan";
+  | "Belum Proses"
+  | "Belum di Expedisi"
+  | "Proses Pengiriman"
+  | "Kendala Pengiriman"
+  | "Sampai Tujuan"
+  | "Retur"
+  | "Dibatalkan";
 };
 
 export function DataTable<TData extends DeliveryReport, TValue>({
@@ -156,10 +157,11 @@ export function DataTable<TData extends DeliveryReport, TValue>({
                 <div className="flex flex-col p-2 space-y-1">
                   {[
                     "Semua Status",
-                    "Sampai Tujuan",
+                    "Belum Proses",
                     "Belum di Expedisi",
                     "Proses Pengiriman",
                     "Kendala Pengiriman",
+                    "Sampai Tujuan",
                     "Retur",
                     "Dibatalkan",
                   ].map((status) => (

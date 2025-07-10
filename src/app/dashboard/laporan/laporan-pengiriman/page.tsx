@@ -18,6 +18,7 @@ import {
   RefreshCw,
   Truck,
   XCircle,
+  Hourglass,
 } from "lucide-react";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
@@ -45,10 +46,11 @@ type DeliveryReport = {
   totalShipment: number;
   shippingMethod: "COD" | "Non COD";
   status:
-    | "Sampai Tujuan"
+    | "Belum Proses"
     | "Belum di Expedisi"
-    | "Proses"
-    | "Masalah Kirim"
+    | "Proses Pengiriman"
+    | "Kendala Pengiriman"
+    | "Sampai Tujuan"
     | "Retur"
     | "Dibatalkan";
 };
@@ -72,7 +74,7 @@ const dataReport: DeliveryReport[] = [
     courierService: "Grab Express",
     totalShipment: 50000,
     shippingMethod: "Non COD",
-    status: "Proses",
+    status: "Proses Pengiriman",
   },
   {
     createdAt: "2025-03-19",
@@ -82,7 +84,7 @@ const dataReport: DeliveryReport[] = [
     courierService: "SiCepat - Best",
     totalShipment: 175000,
     shippingMethod: "COD",
-    status: "Masalah Kirim",
+    status: "Kendala Pengiriman",
   },
   {
     createdAt: "2025-03-18",
@@ -132,7 +134,7 @@ const dataReport: DeliveryReport[] = [
     courierService: "AnterAja - Same Day",
     totalShipment: 75000,
     shippingMethod: "Non COD",
-    status: "Proses",
+    status: "Proses Pengiriman",
   },
   {
     createdAt: "2025-03-13",
@@ -142,7 +144,7 @@ const dataReport: DeliveryReport[] = [
     courierService: "JNE - YES",
     totalShipment: 132000,
     shippingMethod: "COD",
-    status: "Masalah Kirim",
+    status: "Kendala Pengiriman",
   },
   {
     createdAt: "2025-03-12",
@@ -192,7 +194,7 @@ const dataReport: DeliveryReport[] = [
     courierService: "AnterAja - Next Day",
     totalShipment: 92000,
     shippingMethod: "Non COD",
-    status: "Proses",
+    status: "Proses Pengiriman",
   },
   {
     createdAt: "2025-03-07",
@@ -202,7 +204,7 @@ const dataReport: DeliveryReport[] = [
     courierService: "JNE - OKE",
     totalShipment: 110000,
     shippingMethod: "COD",
-    status: "Masalah Kirim",
+    status: "Kendala Pengiriman",
   },
   {
     createdAt: "2025-03-06",
@@ -252,7 +254,7 @@ const dataReport: DeliveryReport[] = [
     courierService: "AnterAja - Same Day",
     totalShipment: 77000,
     shippingMethod: "Non COD",
-    status: "Proses",
+    status: "Proses Pengiriman",
   },
 ];
 
@@ -310,27 +312,33 @@ const data = [
 
 const statusData = [
   {
-    label: "Sampai Tujuan",
+    label: "Belum Proses",
     value: 5,
-    icon: <CheckCircle size={20} className="text-green-500" />,
+    icon: <Hourglass size={20} className="text-yellow-500" />,
     percentage: 35,
   },
   {
-    label: "Belum Di Ekspedisi",
+    label: "Belum di Expedisi",
     value: 25,
     icon: <Info size={20} className="text-blue-500" />,
     percentage: 65,
   },
   {
-    label: "Proses",
+    label: "Proses Pengiriman",
     value: 65,
     icon: <Truck size={20} className="text-blue-500" />,
     percentage: 25,
   },
   {
-    label: "Masalah Kirim",
+    label: "Kendala Pengiriman",
     value: 65,
     icon: <XCircle size={20} className="text-red-500" />,
+    percentage: 35,
+  },
+  {
+    label: "Sampai Tujuan",
+    value: 5,
+    icon: <CheckCircle size={20} className="text-green-500" />,
     percentage: 35,
   },
   {
@@ -399,7 +407,7 @@ const LaporanPengiriman = () => {
               </div>
 
               {/* Kartu Status Pengiriman */}
-              <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
                 {statusData.map((status, index) => (
                   <Card key={index} className="shadow-md">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

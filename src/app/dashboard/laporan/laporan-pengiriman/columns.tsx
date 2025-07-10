@@ -24,10 +24,11 @@ type DeliveryReport = {
   totalShipment: number;
   shippingMethod: "COD" | "Non COD";
   status:
-    | "Sampai Tujuan"
+    | "Belum Proses"
     | "Belum di Expedisi"
-    | "Proses"
-    | "Masalah Kirim"
+    | "Proses Pengiriman"
+    | "Kendala Pengiriman"
+    | "Sampai Tujuan"
     | "Retur"
     | "Dibatalkan";
 };
