@@ -8,6 +8,18 @@ import type {
   RegencyListResponse,
   DistrictListResponse,
 } from "@/types/dataRegulerForm";
+import type {
+  ReceiverListResponse as ReceiverDataListResponse,
+  ReceiverResponse,
+  ReceiverCreateRequest,
+  ReceiverUpdateRequest,
+} from "@/types/dataPenerima";
+import type {
+  ShipperListResponse as ShipperDataListResponse,
+  ShipperResponse,
+  ShipperCreateRequest,
+  ShipperUpdateRequest,
+} from "@/types/dataPengirim";
 
 // Ambil URL dari .env
 const API_URL =
@@ -147,6 +159,84 @@ export const getJntExpressShipmentCost = async ({
     requestPayload
   );
 
+  return res.data;
+};
+
+// ✅ Receiver CRUD operations
+export const getReceiversData = async (
+  search?: string,
+  page?: number
+): Promise<ReceiverDataListResponse> => {
+  const params: { search?: string; page?: number } = {};
+  if (search) params.search = search;
+  if (page) params.page = page;
+
+  const res = await apiClient.get("/admin/receiver", { params });
+  return res.data;
+};
+
+export const createReceiver = async (
+  data: ReceiverCreateRequest
+): Promise<ReceiverResponse> => {
+  const res = await apiClient.post("/admin/receiver", data);
+  return res.data;
+};
+
+export const updateReceiver = async (
+  id: number,
+  data: ReceiverUpdateRequest
+): Promise<ReceiverResponse> => {
+  const res = await apiClient.put(`/admin/receiver/${id}`, data);
+  return res.data;
+};
+
+export const deleteReceiver = async (id: number): Promise<ReceiverResponse> => {
+  const res = await apiClient.delete(`/admin/receiver/${id}`);
+  return res.data;
+};
+
+export const getReceiverById = async (
+  id: number
+): Promise<ReceiverResponse> => {
+  const res = await apiClient.get(`/admin/receiver/${id}`);
+  return res.data;
+};
+
+// ✅ Shipper CRUD operations
+export const getShippersData = async (
+  search?: string,
+  page?: number
+): Promise<ShipperDataListResponse> => {
+  const params: { search?: string; page?: number } = {};
+  if (search) params.search = search;
+  if (page) params.page = page;
+
+  const res = await apiClient.get("/admin/shipper", { params });
+  return res.data;
+};
+
+export const createShipper = async (
+  data: ShipperCreateRequest
+): Promise<ShipperResponse> => {
+  const res = await apiClient.post("/admin/shipper", data);
+  return res.data;
+};
+
+export const updateShipper = async (
+  id: number,
+  data: ShipperUpdateRequest
+): Promise<ShipperResponse> => {
+  const res = await apiClient.put(`/admin/shipper/${id}`, data);
+  return res.data;
+};
+
+export const deleteShipper = async (id: number): Promise<ShipperResponse> => {
+  const res = await apiClient.delete(`/admin/shipper/${id}`);
+  return res.data;
+};
+
+export const getShipperById = async (id: number): Promise<ShipperResponse> => {
+  const res = await apiClient.get(`/admin/shipper/${id}`);
   return res.data;
 };
 

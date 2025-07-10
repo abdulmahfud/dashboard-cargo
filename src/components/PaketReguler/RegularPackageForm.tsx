@@ -408,7 +408,7 @@ export default function RegularPackageForm({
             {/* Button untuk membuka popup */}
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 text-sm flex items-center gap-2 px-4 py-2 rounded-xl shadow-md transition duration-300 ease-in-out">
+                <Button className="h-11 px-6 py-4 font-semibold bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 text-sm flex items-center gap-2 rounded-full shadow-md transition duration-300 ease-in-out">
                   <PenLine size={16} /> Pilih Alamat
                 </Button>
               </DialogTrigger>
@@ -680,7 +680,7 @@ export default function RegularPackageForm({
 
             <Popover open={openRecipient} onOpenChange={setOpenRecipient}>
               <PopoverTrigger asChild>
-                <Button className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 text-sm flex items-center gap-2 px-4 py-2 rounded-xl shadow-md transition duration-300 ease-in-out">
+                <Button className="w-full h-11 px-6 py-4 font-semibold bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 text-sm flex items-center gap-2 rounded-full shadow-md transition duration-300 ease-in-out">
                   <PenLine size={16} className="mr-2" /> Pilih List Penerima
                 </Button>
               </PopoverTrigger>
@@ -858,7 +858,7 @@ export default function RegularPackageForm({
 
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 text-sm flex items-center gap-2 px-4 py-2 rounded-xl shadow-md transition duration-300 ease-in-out"
+              className="w-full h-11 px-6 py-4 font-semibold bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 text-sm flex items-center gap-2 rounded-full shadow-md transition duration-300 ease-in-out"
             >
               <CircleChevronRight className="w-4 h-4" />
               Proses Pengiriman

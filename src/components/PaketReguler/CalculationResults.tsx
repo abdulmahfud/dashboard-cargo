@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { ShippingOption } from "@/types/dataRegulerForm";
 import Image from "next/image";
+import { CirclePlus } from "lucide-react";
 
 interface CalculationResultsProps {
   isSearching: boolean;
@@ -272,7 +273,7 @@ export default function CalculationResults({
 
               <div className="flex space-x-3">
                 <Button
-                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 text-sm flex items-center gap-2 px-4 py-2 rounded-xl shadow-md transition duration-300 ease-in-out"
+                  className="w-full h-11 px-6 py-4 font-semibold bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 text-sm flex items-center gap-2 rounded-full shadow-md transition duration-300 ease-in-out"
                   onClick={() => {
                     // Handle submit logic here
                     console.log("Submitting package with:", {
@@ -282,6 +283,7 @@ export default function CalculationResults({
                     });
                   }}
                 >
+                  <CirclePlus className="w-4 h-4" />
                   Proses Paket
                 </Button>
               </div>

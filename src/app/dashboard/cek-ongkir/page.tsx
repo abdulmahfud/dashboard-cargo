@@ -6,13 +6,6 @@ import ShippingResults from "@/components/CekOngkir/ShippingResults";
 import { SiteHeader } from "@/components/site-header";
 import TopNav from "@/components/top-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
@@ -20,16 +13,9 @@ import { useEffect, useState } from "react";
 
 const CekOngkir = () => {
   const [isSearching, setIsSearching] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSearch = () => {
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsSearching(true);
-      setIsLoading(false);
-    }, 800);
-  };
+  const [calculationResult, setCalculationResult] = useState<
+    Record<string, unknown> | undefined
+  >(undefined);
 
   // Initialize the 'framer-motion' module for animations
   useEffect(() => {
@@ -52,14 +38,20 @@ const CekOngkir = () => {
         </div>
         <div className="flex flex-col flex-1 bg-blue-100">
           <div className="@container/main flex flex-1 flex-col gap-2">
-          <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 md:px-6 ">
+            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 md:px-6 ">
               <main className="container flex-1">
                 <div
                   id="app-container"
                   className="grid grid-cols-1 gap-6 md:grid-cols-2"
                 >
                   <div className="flex flex-col">
-                    <ShippingForm onSearch={handleSearch} />
+                    <ShippingForm
+                      onResult={(result) => {
+                        setCalculationResult(result);
+                        setIsSearching(false);
+                      }}
+                      setIsSearching={setIsSearching}
+                    />
                   </div>
 
                   <AnimatePresence mode="wait">
@@ -68,27 +60,10 @@ const CekOngkir = () => {
                         <CardTitle className="text-lg font-semibold text-gray-800">
                           Hasil Pencarian
                         </CardTitle>
-
-                        <Select>
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Harga Termurah" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="termurah">
-                              Harga Termurah
-                            </SelectItem>
-                            <SelectItem value="tercepat">
-                              Pengiriman Tercepat
-                            </SelectItem>
-                            <SelectItem value="rating">
-                              Rating Tertinggi
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
                       </CardHeader>
 
                       <CardContent className="min-h-[300px] flex items-center justify-center">
-                        {isLoading ? (
+                        {isSearching ? (
                           <motion.div
                             key="loading"
                             initial={{ opacity: 0 }}
@@ -101,7 +76,7 @@ const CekOngkir = () => {
                               Mencari layanan pengiriman...
                             </p>
                           </motion.div>
-                        ) : isSearching ? (
+                        ) : calculationResult ? (
                           <motion.div
                             key="result"
                             initial={{ opacity: 0 }}
@@ -109,7 +84,10 @@ const CekOngkir = () => {
                             exit={{ opacity: 0 }}
                             className="flex flex-col w-full"
                           >
-                            <ShippingResults isSearching={isSearching} />
+                            <ShippingResults
+                              isSearching={isSearching}
+                              result={calculationResult}
+                            />
                           </motion.div>
                         ) : (
                           <motion.div

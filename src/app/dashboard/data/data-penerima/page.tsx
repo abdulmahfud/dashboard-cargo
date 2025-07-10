@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import InputFormPenerima from "@/components/Data/InputFormPenerima";
 import RecipientList from "@/components/Data/RecipientList";
 
@@ -9,13 +10,12 @@ import TopNav from "@/components/top-nav";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 const DataPenerima = () => {
-  // Initialize the 'framer-motion' module for animations
-  // useEffect(() => {
-  //   const container = document.getElementById("app-container");
-  //   if (container) {
-  //     container.classList.add("motion-safe");
-  //   }
-  // }, []);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handleReceiverAdded = () => {
+    // Trigger refresh of the recipient list
+    setRefreshTrigger((prev) => prev + 1);
+  };
 
   return (
     <SidebarProvider>
@@ -36,10 +36,10 @@ const DataPenerima = () => {
                   className="grid grid-cols-1 md:grid-cols-3 gap-6"
                 >
                   <div className="flex flex-col">
-                    <InputFormPenerima />
+                    <InputFormPenerima onReceiverAdded={handleReceiverAdded} />
                   </div>
                   <div className="flex flex-col col-span-2">
-                    <RecipientList />
+                    <RecipientList refreshTrigger={refreshTrigger} />
                   </div>
                 </div>
               </main>

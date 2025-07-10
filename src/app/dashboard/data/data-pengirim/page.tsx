@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import InputFormPengirim from "@/components/Data/InputFormPengirim";
 import ListSender from "@/components/Data/ListSender";
 
@@ -9,6 +10,13 @@ import TopNav from "@/components/top-nav";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 const DataPengirim = () => {
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handleShipperCreated = () => {
+    // Trigger refresh of the list when a new shipper is created
+    setRefreshTrigger((prev) => prev + 1);
+  };
+
   return (
     <SidebarProvider>
       <AppSidebar variant="inset" />
@@ -28,10 +36,12 @@ const DataPengirim = () => {
                   className="grid grid-cols-1 md:grid-cols-3 gap-6"
                 >
                   <div className="flex flex-col">
-                    <InputFormPengirim />
+                    <InputFormPengirim
+                      onShipperCreated={handleShipperCreated}
+                    />
                   </div>
                   <div className="flex flex-col col-span-2">
-                    <ListSender />
+                    <ListSender refreshTrigger={refreshTrigger} />
                   </div>
                 </div>
               </main>
