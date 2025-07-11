@@ -33,6 +33,7 @@ import { Label } from "@/components/ui/label";
 import { DatePickerWithRange } from "./date-picker-with-range";
 import { DataTablePagination } from "./pagination";
 import { DateRange } from "react-day-picker";
+import { DeliveryReport } from "@/types/laporanPengiriman";
 
 interface DataTableProps<TData extends DeliveryReport, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -44,37 +45,6 @@ interface DataTableProps<TData extends DeliveryReport, TValue> {
   packageTypeFilter: string;
   setPackageTypeFilter: React.Dispatch<React.SetStateAction<string>>;
 }
-
-
-type DeliveryReport = {
-  createdAt: string;
-  shipmentNo: string;
-  packageType: "Paket Reguler" | "Paket Instant" | "COD" | "Non COD";
-  recipient: string;
-  courierService:
-    | "JNE - Reguler"
-    | "JNE - YES"
-    | "JNE - OKE"
-    | "J&T Express"
-    | "SiCepat - Best"
-    | "TIKI - ONS"
-    | "TIKI - Reguler"
-    | "Ninja Xpress"
-    | "AnterAja - Same Day"
-    | "AnterAja - Next Day"
-    | "Grab Express"
-    | "Gojek - GoSend";
-  totalShipment: number;
-  shippingMethod: "COD" | "Non COD";
-  status:
-  | "Belum Proses"
-  | "Belum di Expedisi"
-  | "Proses Pengiriman"
-  | "Kendala Pengiriman"
-  | "Sampai Tujuan"
-  | "Retur"
-  | "Dibatalkan";
-};
 
 export function DataTable<TData extends DeliveryReport, TValue>({
   columns,

@@ -99,11 +99,16 @@ interface Business {
 interface RegularPackageFormProps {
   onResult?: (result: Record<string, unknown>) => void;
   setIsSearching?: (isSearching: boolean) => void;
+  onFormDataChange?: (data: {
+    itemValue?: string;
+    paymentMethod?: string;
+  }) => void;
 }
 
 export default function RegularPackageForm({
   onResult,
   setIsSearching,
+  onFormDataChange,
 }: RegularPackageFormProps) {
   const [businessData, setBusinessData] = useState<Business[]>([]);
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(
@@ -167,6 +172,16 @@ export default function RegularPackageForm({
     });
   }, []);
 
+  // Notify parent of initial form data
+  useEffect(() => {
+    if (onFormDataChange) {
+      onFormDataChange({
+        itemValue: formData.itemValue,
+        paymentMethod: formData.paymentMethod,
+      });
+    }
+  }, [onFormDataChange, formData.itemValue, formData.paymentMethod]);
+
   // Province search and fetch
   useEffect(() => {
     if (provinceSearch.length >= 3) {
@@ -224,18 +239,22 @@ export default function RegularPackageForm({
   };
 
   const handleChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    // Jika user edit field penerima manual, reset receiverId
+    const newData = { ...formData, [field]: value };
+    setFormData(newData);
+
+    // Notify parent of relevant form data changes
     if (
-      [
-        "receiverName",
-        "receiverPhone",
-        "province",
-        "regency",
-        "district",
-        "receiverAddress",
-      ].includes(field)
+      (field === "itemValue" || field === "paymentMethod") &&
+      onFormDataChange
     ) {
+      onFormDataChange({
+        itemValue: newData.itemValue,
+        paymentMethod: newData.paymentMethod,
+      });
+    }
+
+    // Jika user edit field penerima manual, reset receiverId
+    if (["receiverName", "receiverPhone", "receiverAddress"].includes(field)) {
       setReceiverId(null);
     }
   };
@@ -244,15 +263,20 @@ export default function RegularPackageForm({
     e.preventDefault();
     if (setIsSearching) setIsSearching(true);
     // Validasi field wajib
-    if (
-      !formData.weight ||
-      !selectedBusiness?.regency ||
-      !formData.district ||
-      !selectedDistrictName
-    ) {
+    const isUsingExistingReceiver = !!receiverId;
+    const hasMandatoryData = isUsingExistingReceiver
+      ? formData.weight && selectedBusiness?.regency && selectedDistrictName
+      : formData.weight &&
+        selectedBusiness?.regency &&
+        formData.district &&
+        selectedDistrictName;
+
+    if (!hasMandatoryData) {
       onResult?.({
         error: true,
-        message: "Berat, kota pengirim, dan kecamatan tujuan wajib diisi.",
+        message: isUsingExistingReceiver
+          ? "Berat dan alamat pengirim wajib diisi."
+          : "Berat, kota pengirim, dan kecamatan tujuan wajib diisi.",
       });
       if (setIsSearching) setIsSearching(false);
       return;
@@ -329,72 +353,92 @@ export default function RegularPackageForm({
         <Card className="p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Detail Pengiriman</h2>
           <div className="mb-6">
-            <p className="text-sm text-gray-500 mb-2">Opsi Penjemputan</p>
+            <Label>Opsi Penjemputan</Label>
             <RadioGroup
               value={formData.deliveryType}
               onValueChange={(value) => handleChange("deliveryType", value)}
               className="grid grid-cols-1 md:grid-cols-2 gap-4"
             >
-              <div
-                className={`flex items-center space-x-2 p-4 rounded-lg border ${
+              {/* Pick Up Option */}
+              <label
+                htmlFor="pickup"
+                className={`flex items-start space-x-2 p-4 rounded-lg border cursor-pointer transition ${
                   formData.deliveryType === "pickup"
                     ? "border-blue-500 bg-blue-200"
-                    : "border-gray-200"
+                    : "border-gray-200 hover:border-gray-400"
                 }`}
               >
-                <RadioGroupItem value="pickup" id="pickup" />
-                <Label htmlFor="pickup">
+                <RadioGroupItem value="pickup" id="pickup" className="peer" />
+                <div>
                   <div className="font-medium">Pick Up</div>
                   <div className="text-sm text-gray-500">
                     Paket akan dijemput ke tempatmu
                   </div>
-                </Label>
-              </div>
-              <div
-                className={`flex items-center space-x-2 p-4 rounded-lg border ${
+                </div>
+              </label>
+
+              {/* Drop Off Option */}
+              <label
+                htmlFor="dropoff"
+                className={`flex items-start space-x-2 p-4 rounded-lg border cursor-pointer transition ${
                   formData.deliveryType === "dropoff"
                     ? "border-blue-500 bg-blue-200"
-                    : "border-gray-200"
+                    : "border-gray-200 hover:border-gray-400"
                 }`}
               >
-                <RadioGroupItem value="dropoff" id="dropoff" />
-                <Label htmlFor="dropoff">
+                <RadioGroupItem value="dropoff" id="dropoff" className="peer" />
+                <div>
                   <div className="font-medium">Drop Off</div>
                   <div className="text-sm text-gray-500">
                     Paket perlu diantar ke agen ekspedisi
                   </div>
-                </Label>
-              </div>
+                </div>
+              </label>
             </RadioGroup>
           </div>
 
           <div className="mb-6">
-            <p className="text-sm text-gray-500 mb-2">Metode Pembayaran</p>
+            <Label>Metode Pembayaran</Label>
             <RadioGroup
               value={formData.paymentMethod}
               onValueChange={(value) => handleChange("paymentMethod", value)}
               className="grid grid-cols-1 md:grid-cols-2 gap-4"
             >
-              <div
-                className={`flex items-center space-x-2 p-4 rounded-lg border ${
+              {/* COD Option */}
+              <label
+                htmlFor="cod"
+                className={`flex items-center space-x-2 p-4 rounded-lg border cursor-pointer transition ${
                   formData.paymentMethod === "cod"
                     ? "border-blue-500 bg-blue-200"
-                    : "border-gray-200"
+                    : "border-gray-200 hover:border-gray-400"
                 }`}
               >
-                <RadioGroupItem value="cod" id="cod" />
-                <Label htmlFor="cod">COD (Cash on Delivery)</Label>
-              </div>
-              <div
-                className={`flex items-center space-x-2 p-4 rounded-lg border ${
+                <RadioGroupItem value="cod" id="cod" className="peer" />
+                <div>
+                  <div className="font-medium">COD (Cash on Delivery)</div>
+                  <div className="text-sm text-gray-500">
+                    Pembayaran akan dilakukan saat paket sampai di tujuan
+                  </div>
+                </div>
+              </label>
+
+              {/* Non-COD Option */}
+              <label
+                htmlFor="non-cod"
+                className={`flex items-center space-x-2 p-4 rounded-lg border cursor-pointer transition ${
                   formData.paymentMethod === "non-cod"
                     ? "border-blue-500 bg-blue-200"
-                    : "border-gray-200"
+                    : "border-gray-200 hover:border-gray-400"
                 }`}
               >
-                <RadioGroupItem value="non-cod" id="non-cod" />
-                <Label htmlFor="non-cod">Non-COD</Label>
-              </div>
+                <RadioGroupItem value="non-cod" id="non-cod" className="peer" />
+                <div>
+                  <div className="font-medium">Non-COD</div>
+                  <div className="text-sm text-gray-500">
+                    Pembayaran akan dilakukan sebelum paket dikirim
+                  </div>
+                </div>
+              </label>
             </RadioGroup>
           </div>
         </Card>
@@ -519,6 +563,27 @@ export default function RegularPackageForm({
               </div>
             </div>
             {/* Alamat Tujuan - diganti dropdown province/regency/district */}
+            {receiverId && (
+              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                <span className="text-sm text-blue-700">
+                  Menggunakan alamat tersimpan
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setReceiverId(null);
+                    setProvinceSearch("");
+                    setRegencySearch("");
+                    setDistrictSearch("");
+                    setSelectedDistrictName("");
+                  }}
+                >
+                  Edit Alamat
+                </Button>
+              </div>
+            )}
             <div className="grid grid-cols-1 gap-4 relative">
               {/* Province Dropdown */}
               <div className="relative">
@@ -534,37 +599,44 @@ export default function RegularPackageForm({
                     handleChange("province", "");
                     handleChange("regency", "");
                     handleChange("district", "");
+                    // Clear receiverId when manually editing
+                    if (receiverId) {
+                      setReceiverId(null);
+                    }
                   }}
                   autoComplete="off"
+                  readOnly={!!receiverId} // Make read-only if using saved recipient
                 />
-                {provinceSearch.length >= 3 && !formData.province && (
-                  <div className="border rounded bg-white max-h-40 overflow-y-auto absolute z-20 w-full">
-                    {loadingProvince ? (
-                      <div className="p-2 text-sm text-gray-500">
-                        Loading...
-                      </div>
-                    ) : provinceOptions.length > 0 ? (
-                      provinceOptions.map((prov) => (
-                        <div
-                          key={prov.id}
-                          className="p-2 hover:bg-blue-100 cursor-pointer"
-                          onClick={() => {
-                            handleChange("province", String(prov.id));
-                            setProvinceSearch(prov.name);
-                            setRegencySearch("");
-                            setDistrictSearch("");
-                          }}
-                        >
-                          {prov.name}
+                {!receiverId &&
+                  provinceSearch.length >= 3 &&
+                  !formData.province && (
+                    <div className="border rounded bg-white max-h-40 overflow-y-auto absolute z-20 w-full">
+                      {loadingProvince ? (
+                        <div className="p-2 text-sm text-gray-500">
+                          Loading...
                         </div>
-                      ))
-                    ) : (
-                      <div className="p-2 text-sm text-gray-500">
-                        Tidak ada hasil
-                      </div>
-                    )}
-                  </div>
-                )}
+                      ) : provinceOptions.length > 0 ? (
+                        provinceOptions.map((prov) => (
+                          <div
+                            key={prov.id}
+                            className="p-2 hover:bg-blue-100 cursor-pointer"
+                            onClick={() => {
+                              handleChange("province", String(prov.id));
+                              setProvinceSearch(prov.name);
+                              setRegencySearch("");
+                              setDistrictSearch("");
+                            }}
+                          >
+                            {prov.name}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-2 text-sm text-gray-500">
+                          Tidak ada hasil
+                        </div>
+                      )}
+                    </div>
+                  )}
               </div>
               {/* Regency Dropdown */}
               <div className="relative">
@@ -580,11 +652,17 @@ export default function RegularPackageForm({
                     handleChange("regency", "");
                     handleChange("district", "");
                     setSelectedDistrictName("");
+                    // Clear receiverId when manually editing
+                    if (receiverId) {
+                      setReceiverId(null);
+                    }
                   }}
-                  disabled={!formData.province}
+                  disabled={!formData.province && !receiverId}
                   autoComplete="off"
+                  readOnly={!!receiverId} // Make read-only if using saved recipient
                 />
-                {formData.province &&
+                {!receiverId &&
+                  formData.province &&
                   regencySearch.length >= 3 &&
                   !formData.regency && (
                     <div className="border rounded bg-white max-h-40 overflow-y-auto absolute z-20 w-full">
@@ -626,11 +704,17 @@ export default function RegularPackageForm({
                     setDistrictSearch(e.target.value);
                     handleChange("district", "");
                     setSelectedDistrictName("");
+                    // Clear receiverId when manually editing
+                    if (receiverId) {
+                      setReceiverId(null);
+                    }
                   }}
-                  disabled={!formData.regency}
+                  disabled={!formData.regency && !receiverId}
                   autoComplete="off"
+                  readOnly={!!receiverId} // Make read-only if using saved recipient
                 />
-                {formData.regency &&
+                {!receiverId &&
+                  formData.regency &&
                   districtSearch.length >= 3 &&
                   !formData.district && (
                     <div className="border rounded bg-white max-h-40 overflow-y-auto absolute z-20 w-full">
@@ -702,18 +786,31 @@ export default function RegularPackageForm({
                         key={recipient.id}
                         className="p-3 border rounded-lg cursor-pointer hover:bg-gray-100"
                         onClick={() => {
-                          handleChange("receiverName", recipient.name);
-                          handleChange("receiverPhone", recipient.phone);
-                          handleChange("province", recipient.province || "");
-                          handleChange("regency", recipient.regency || "");
-                          handleChange("district", recipient.district || "");
-                          handleChange("receiverAddress", recipient.address);
+                          // Set receiver ID first to indicate this is from saved list
+                          setReceiverId(String(recipient.id));
+
+                          // Update form data directly without triggering receiverId reset
+                          setFormData((prev) => ({
+                            ...prev,
+                            receiverName: recipient.name,
+                            receiverPhone: recipient.phone || "",
+                            receiverAddress: recipient.address || "",
+                            // Clear location IDs since we're using saved data
+                            province: "",
+                            regency: "",
+                            district: "",
+                          }));
+
+                          // Set the search fields to show the location names (auto-complete effect)
                           setProvinceSearch(recipient.province || "");
                           setRegencySearch(recipient.regency || "");
                           setDistrictSearch(recipient.district || "");
+
+                          // Set district name for API (using the stored name)
                           setSelectedDistrictName(recipient.district || "");
-                          setReceiverId(String(recipient.id));
-                          setOpen(false);
+
+                          // Close the popover
+                          setOpenRecipient(false);
                         }}
                       >
                         <p className="font-medium">{recipient.name}</p>
@@ -861,7 +958,7 @@ export default function RegularPackageForm({
               className="w-full h-11 px-6 py-4 font-semibold bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 text-sm flex items-center gap-2 rounded-full shadow-md transition duration-300 ease-in-out"
             >
               <CircleChevronRight className="w-4 h-4" />
-              Proses Pengiriman
+              Pilih Expedisi
             </Button>
           </div>
         </Card>

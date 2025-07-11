@@ -20,6 +20,9 @@ import type {
   ShipperCreateRequest,
   ShipperUpdateRequest,
 } from "@/types/dataPengirim";
+import type {
+  OrderListResponse,
+} from "@/types/laporanPengiriman";
 
 // Ambil URL dari .env
 const API_URL =
@@ -237,6 +240,12 @@ export const deleteShipper = async (id: number): Promise<ShipperResponse> => {
 
 export const getShipperById = async (id: number): Promise<ShipperResponse> => {
   const res = await apiClient.get(`/admin/shipper/${id}`);
+  return res.data;
+};
+
+// ✅ Orders/Laporan Pengiriman operations
+export const getOrders = async (): Promise<OrderListResponse> => {
+  const res = await apiClient.get("/admin/list-orders");
   return res.data;
 };
 

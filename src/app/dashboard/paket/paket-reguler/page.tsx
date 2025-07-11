@@ -23,6 +23,10 @@ const PaketReguler = () => {
   const [calculationResult, setCalculationResult] = useState<
     Record<string, unknown> | undefined
   >(undefined);
+  const [formData, setFormData] = useState<{
+    itemValue?: string;
+    paymentMethod?: string;
+  }>({});
 
   // Initialize the 'framer-motion' module for animations
   useEffect(() => {
@@ -58,6 +62,7 @@ const PaketReguler = () => {
                         setIsSearching(false);
                       }}
                       setIsSearching={setIsSearching}
+                      onFormDataChange={setFormData}
                     />
                   </div>
 
@@ -111,6 +116,7 @@ const PaketReguler = () => {
                             <CalculationResults
                               isSearching={isSearching}
                               result={calculationResult}
+                              formData={formData}
                             />
                           </motion.div>
                         ) : (

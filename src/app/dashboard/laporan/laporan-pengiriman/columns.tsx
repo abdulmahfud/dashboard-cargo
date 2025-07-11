@@ -1,37 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-
-// Tipe data DeliveryReport
-type DeliveryReport = {
-  createdAt: string;
-  shipmentNo: string;
-  packageType: "Paket Reguler" | "Paket Instant" | "COD" | "Non COD";
-  recipient: string;
-  courierService:
-    | "JNE - Reguler"
-    | "JNE - YES"
-    | "JNE - OKE"
-    | "J&T Express"
-    | "SiCepat - Best"
-    | "TIKI - ONS"
-    | "TIKI - Reguler"
-    | "Ninja Xpress"
-    | "AnterAja - Same Day"
-    | "AnterAja - Next Day"
-    | "Grab Express"
-    | "Gojek - GoSend";
-  totalShipment: number;
-  shippingMethod: "COD" | "Non COD";
-  status:
-    | "Belum Proses"
-    | "Belum di Expedisi"
-    | "Proses Pengiriman"
-    | "Kendala Pengiriman"
-    | "Sampai Tujuan"
-    | "Retur"
-    | "Dibatalkan";
-};
+import { DeliveryReport } from "@/types/laporanPengiriman";
 
 // Kolom tabel
 export const columns: ColumnDef<DeliveryReport>[] = [
@@ -41,7 +11,7 @@ export const columns: ColumnDef<DeliveryReport>[] = [
   },
   {
     accessorKey: "shipmentNo",
-    header: "NO PENGIRIMAN",
+    header: "NO RESI / AWB",
   },
   {
     accessorKey: "packageType",

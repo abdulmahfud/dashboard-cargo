@@ -20,248 +20,141 @@ import {
   XCircle,
   Hourglass,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DateRange } from "react-day-picker";
 import { columns } from "./columns";
 import { DataTable } from "./data-table";
+import { getOrders } from "@/lib/apiClient";
+import { 
+  Order, 
+  DeliveryReport, 
+  STATUS_MAPPING, 
+  VENDOR_MAPPING 
+} from "@/types/laporanPengiriman";
 
-type DeliveryReport = {
-  createdAt: string;
-  shipmentNo: string;
-  packageType: "Paket Reguler" | "Paket Instant" | "COD" | "Non COD";
-  recipient: string;
-  courierService:
-    | "JNE - Reguler"
-    | "JNE - YES"
-    | "JNE - OKE"
-    | "J&T Express"
-    | "SiCepat - Best"
-    | "TIKI - ONS"
-    | "TIKI - Reguler"
-    | "Ninja Xpress"
-    | "AnterAja - Same Day"
-    | "AnterAja - Next Day"
-    | "Grab Express"
-    | "Gojek - GoSend";
-  totalShipment: number;
-  shippingMethod: "COD" | "Non COD";
-  status:
-    | "Belum Proses"
-    | "Belum di Expedisi"
-    | "Proses Pengiriman"
-    | "Kendala Pengiriman"
-    | "Sampai Tujuan"
-    | "Retur"
-    | "Dibatalkan";
+// Function to transform API data to table format
+const transformOrderToDeliveryReport = (order: Order): DeliveryReport => {
+  // Determine package type based on service_type_code
+  let packageType: DeliveryReport["packageType"];
+  if (order.service_type_code === "COD") {
+    packageType = "COD";
+  } else if (order.service_type_code === "REGULER") {
+    packageType = "Paket Reguler";
+  } else if (order.service_type_code === "INSTANT") {
+    packageType = "Paket Instant";
+  } else {
+    packageType = "Non COD";
+  }
+
+  // Map vendor to courier service
+  const courierService = VENDOR_MAPPING[order.vendor] || order.vendor;
+
+  // Map status
+  const status = STATUS_MAPPING[order.status] || order.status;
+
+  // Determine shipping method based on service_type_code
+  const shippingMethod: DeliveryReport["shippingMethod"] = 
+    order.service_type_code === "COD" ? "COD" : "Non COD";
+
+  // Calculate total shipment from cod_value or item_value
+  const totalShipment = parseFloat(order.cod_value) || parseFloat(order.item_value) || 0;
+
+  // Format date
+  const createdAt = new Date(order.created_at).toISOString().split('T')[0];
+
+  return {
+    createdAt,
+    shipmentNo: order.awb_no || order.reference_no,
+    packageType,
+    recipient: order.receiver.name,
+    courierService,
+    totalShipment,
+    shippingMethod,
+    status,
+  };
 };
 
-const dataReport: DeliveryReport[] = [
-  {
-    createdAt: "2025-03-21",
-    shipmentNo: "KP-100001",
-    packageType: "Paket Reguler",
-    recipient: "Andi Wijaya",
-    courierService: "JNE - Reguler",
-    totalShipment: 150000,
-    shippingMethod: "COD",
-    status: "Sampai Tujuan",
-  },
-  {
-    createdAt: "2025-03-20",
-    shipmentNo: "KP-100002",
-    packageType: "Paket Instant",
-    recipient: "Budi Santoso",
-    courierService: "Grab Express",
-    totalShipment: 50000,
-    shippingMethod: "Non COD",
-    status: "Proses Pengiriman",
-  },
-  {
-    createdAt: "2025-03-19",
-    shipmentNo: "KP-100003",
-    packageType: "COD",
-    recipient: "Citra Lestari",
-    courierService: "SiCepat - Best",
-    totalShipment: 175000,
-    shippingMethod: "COD",
-    status: "Kendala Pengiriman",
-  },
-  {
-    createdAt: "2025-03-18",
-    shipmentNo: "KP-100004",
-    packageType: "Paket Reguler",
-    recipient: "Doni Saputra",
-    courierService: "J&T Express",
-    totalShipment: 100000,
-    shippingMethod: "Non COD",
-    status: "Retur",
-  },
-  {
-    createdAt: "2025-03-17",
-    shipmentNo: "KP-100005",
-    packageType: "Paket Instant",
-    recipient: "Eka Ramadhan",
-    courierService: "Gojek - GoSend",
-    totalShipment: 65000,
-    shippingMethod: "COD",
-    status: "Dibatalkan",
-  },
-  {
-    createdAt: "2025-03-16",
-    shipmentNo: "KP-100006",
-    packageType: "Non COD",
-    recipient: "Fajar Pratama",
-    courierService: "Ninja Xpress",
-    totalShipment: 120000,
-    shippingMethod: "Non COD",
-    status: "Belum di Expedisi",
-  },
-  {
-    createdAt: "2025-03-15",
-    shipmentNo: "KP-100007",
-    packageType: "Paket Reguler",
-    recipient: "Gita Maharani",
-    courierService: "TIKI - ONS",
-    totalShipment: 89000,
-    shippingMethod: "COD",
-    status: "Sampai Tujuan",
-  },
-  {
-    createdAt: "2025-03-14",
-    shipmentNo: "KP-100008",
-    packageType: "Paket Instant",
-    recipient: "Hadi Setiawan",
-    courierService: "AnterAja - Same Day",
-    totalShipment: 75000,
-    shippingMethod: "Non COD",
-    status: "Proses Pengiriman",
-  },
-  {
-    createdAt: "2025-03-13",
-    shipmentNo: "KP-100009",
-    packageType: "COD",
-    recipient: "Indah Permata",
-    courierService: "JNE - YES",
-    totalShipment: 132000,
-    shippingMethod: "COD",
-    status: "Kendala Pengiriman",
-  },
-  {
-    createdAt: "2025-03-12",
-    shipmentNo: "KP-100010",
-    packageType: "Paket Reguler",
-    recipient: "Joko Susanto",
-    courierService: "J&T Express",
-    totalShipment: 98000,
-    shippingMethod: "Non COD",
-    status: "Retur",
-  },
-  {
-    createdAt: "2025-03-11",
-    shipmentNo: "KP-100011",
-    packageType: "Paket Instant",
-    recipient: "Kurniawati",
-    courierService: "Gojek - GoSend",
-    totalShipment: 70000,
-    shippingMethod: "COD",
-    status: "Dibatalkan",
-  },
-  {
-    createdAt: "2025-03-10",
-    shipmentNo: "KP-100012",
-    packageType: "Non COD",
-    recipient: "Lukman Hakim",
-    courierService: "Ninja Xpress",
-    totalShipment: 135000,
-    shippingMethod: "Non COD",
-    status: "Belum di Expedisi",
-  },
-  {
-    createdAt: "2025-03-09",
-    shipmentNo: "KP-100013",
-    packageType: "Paket Reguler",
-    recipient: "Mila Safitri",
-    courierService: "TIKI - Reguler",
-    totalShipment: 86000,
-    shippingMethod: "COD",
-    status: "Sampai Tujuan",
-  },
-  {
-    createdAt: "2025-03-08",
-    shipmentNo: "KP-100014",
-    packageType: "Paket Instant",
-    recipient: "Naufal Rizki",
-    courierService: "AnterAja - Next Day",
-    totalShipment: 92000,
-    shippingMethod: "Non COD",
-    status: "Proses Pengiriman",
-  },
-  {
-    createdAt: "2025-03-07",
-    shipmentNo: "KP-100015",
-    packageType: "COD",
-    recipient: "Oktaviani Putri",
-    courierService: "JNE - OKE",
-    totalShipment: 110000,
-    shippingMethod: "COD",
-    status: "Kendala Pengiriman",
-  },
-  {
-    createdAt: "2025-03-06",
-    shipmentNo: "KP-100016",
-    packageType: "Paket Reguler",
-    recipient: "Purnama Dewi",
-    courierService: "J&T Express",
-    totalShipment: 94000,
-    shippingMethod: "Non COD",
-    status: "Retur",
-  },
-  {
-    createdAt: "2025-03-05",
-    shipmentNo: "KP-100017",
-    packageType: "Paket Instant",
-    recipient: "Qori Ananda",
-    courierService: "Grab Express",
-    totalShipment: 50000,
-    shippingMethod: "COD",
-    status: "Dibatalkan",
-  },
-  {
-    createdAt: "2025-03-04",
-    shipmentNo: "KP-100018",
-    packageType: "Non COD",
-    recipient: "Rahmat Saputra",
-    courierService: "Ninja Xpress",
-    totalShipment: 123000,
-    shippingMethod: "Non COD",
-    status: "Belum di Expedisi",
-  },
-  {
-    createdAt: "2025-03-03",
-    shipmentNo: "KP-100019",
-    packageType: "Paket Reguler",
-    recipient: "Siti Aisyah",
-    courierService: "TIKI - ONS",
-    totalShipment: 87000,
-    shippingMethod: "COD",
-    status: "Sampai Tujuan",
-  },
-  {
-    createdAt: "2025-03-02",
-    shipmentNo: "KP-100020",
-    packageType: "Paket Instant",
-    recipient: "Taufik Hidayat",
-    courierService: "AnterAja - Same Day",
-    totalShipment: 77000,
-    shippingMethod: "Non COD",
-    status: "Proses Pengiriman",
-  },
-];
+const LaporanPengiriman = () => {
+  const [statusFilter, setStatusFilter] = useState<string>("Semua Status");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [packageTypeFilter, setPackageTypeFilter] =
+    useState<string>("Semua Status");
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [dataReport, setDataReport] = useState<DeliveryReport[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // Fetch orders from API
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await getOrders();
+        setOrders(response.data);
+        
+        // Transform API data to table format
+        const transformedData = response.data.map(transformOrderToDeliveryReport);
+        setDataReport(transformedData);
+      } catch (err) {
+        console.error("Error fetching orders:", err);
+        setError("Failed to fetch orders data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+      fetchOrders();
+}, []);
+
+// Calculate statistics from real data
+const calculateStatistics = () => {
+  const totalPengiriman = dataReport.length;
+  const paketReguler = dataReport.filter(item => item.packageType === "Paket Reguler").length;
+  const paketInstant = dataReport.filter(item => item.packageType === "Paket Instant").length;
+  const cod = dataReport.filter(item => item.packageType === "COD" || item.shippingMethod === "COD").length;
+  const nonCod = dataReport.filter(item => item.packageType === "Non COD" || item.shippingMethod === "Non COD").length;
+
+  return {
+    totalPengiriman,
+    paketReguler,
+    paketInstant,
+    cod,
+    nonCod,
+    paketRegulerPercentage: totalPengiriman > 0 ? Math.round((paketReguler / totalPengiriman) * 100) : 0,
+    paketInstantPercentage: totalPengiriman > 0 ? Math.round((paketInstant / totalPengiriman) * 100) : 0,
+    codPercentage: totalPengiriman > 0 ? Math.round((cod / totalPengiriman) * 100) : 0,
+    nonCodPercentage: totalPengiriman > 0 ? Math.round((nonCod / totalPengiriman) * 100) : 0,
+  };
+};
+
+const calculateStatusStatistics = () => {
+  const statusCounts = {
+    "Belum Proses": dataReport.filter(item => item.status === "Belum Proses").length,
+    "Belum di Expedisi": dataReport.filter(item => item.status === "Belum di Expedisi").length,
+    "Proses Pengiriman": dataReport.filter(item => item.status === "Proses Pengiriman").length,
+    "Kendala Pengiriman": dataReport.filter(item => item.status === "Kendala Pengiriman").length,
+    "Sampai Tujuan": dataReport.filter(item => item.status === "Sampai Tujuan").length,
+    "Retur": dataReport.filter(item => item.status === "Retur").length,
+    "Dibatalkan": dataReport.filter(item => item.status === "Dibatalkan").length,
+  };
+
+  const total = dataReport.length;
+  return Object.entries(statusCounts).map(([status, count]) => ({
+    status,
+    count,
+    percentage: total > 0 ? Math.round((count / total) * 100) : 0,
+  }));
+};
+
+const stats = calculateStatistics();
+const statusStats = calculateStatusStatistics();
+
+// Updated data arrays using real statistics
 const data = [
   {
     label: "Total Pengiriman",
-    value: 65,
+    value: stats.totalPengiriman,
     icon: (
       <LayoutGrid
         size={30}
@@ -272,96 +165,140 @@ const data = [
   },
   {
     label: "Paket Reguler",
-    value: 105,
+    value: stats.paketReguler,
     icon: (
       <Package
         size={30}
         className="bg-blue-200 text-blue-500 rounded-full p-1"
       />
     ),
-    percentage: 20,
+    percentage: stats.paketRegulerPercentage,
   },
   {
     label: "Paket Instant",
-    value: 45,
+    value: stats.paketInstant,
     icon: (
       <Truck size={30} className="bg-blue-200 text-blue-500 rounded-full p-1" />
     ),
-    percentage: 65,
+    percentage: stats.paketInstantPercentage,
   },
   {
     label: "COD",
-    value: 705,
+    value: stats.cod,
     icon: (
       <Package2
         size={30}
         className="bg-blue-200 text-blue-500 rounded-full p-1"
       />
     ),
-    percentage: 24,
+    percentage: stats.codPercentage,
   },
   {
     label: "Non COD",
-    value: 65,
+    value: stats.nonCod,
     icon: (
       <Boxes size={30} className="bg-blue-200 text-blue-500 rounded-full p-1" />
     ),
-    percentage: 54,
+    percentage: stats.nonCodPercentage,
   },
 ];
 
 const statusData = [
   {
     label: "Belum Proses",
-    value: 5,
+    value: statusStats.find(s => s.status === "Belum Proses")?.count || 0,
     icon: <Hourglass size={20} className="text-yellow-500" />,
-    percentage: 35,
+    percentage: statusStats.find(s => s.status === "Belum Proses")?.percentage || 0,
   },
   {
     label: "Belum di Expedisi",
-    value: 25,
+    value: statusStats.find(s => s.status === "Belum di Expedisi")?.count || 0,
     icon: <Info size={20} className="text-blue-500" />,
-    percentage: 65,
+    percentage: statusStats.find(s => s.status === "Belum di Expedisi")?.percentage || 0,
   },
   {
     label: "Proses Pengiriman",
-    value: 65,
+    value: statusStats.find(s => s.status === "Proses Pengiriman")?.count || 0,
     icon: <Truck size={20} className="text-blue-500" />,
-    percentage: 25,
+    percentage: statusStats.find(s => s.status === "Proses Pengiriman")?.percentage || 0,
   },
   {
     label: "Kendala Pengiriman",
-    value: 65,
+    value: statusStats.find(s => s.status === "Kendala Pengiriman")?.count || 0,
     icon: <XCircle size={20} className="text-red-500" />,
-    percentage: 35,
+    percentage: statusStats.find(s => s.status === "Kendala Pengiriman")?.percentage || 0,
   },
   {
     label: "Sampai Tujuan",
-    value: 5,
+    value: statusStats.find(s => s.status === "Sampai Tujuan")?.count || 0,
     icon: <CheckCircle size={20} className="text-green-500" />,
-    percentage: 35,
+    percentage: statusStats.find(s => s.status === "Sampai Tujuan")?.percentage || 0,
   },
   {
     label: "Retur",
-    value: 5,
+    value: statusStats.find(s => s.status === "Retur")?.count || 0,
     icon: <RefreshCw size={20} className="text-blue-500" />,
-    percentage: 54,
+    percentage: statusStats.find(s => s.status === "Retur")?.percentage || 0,
   },
   {
     label: "Dibatalkan",
-    value: 6,
+    value: statusStats.find(s => s.status === "Dibatalkan")?.count || 0,
     icon: <XCircle size={20} className="text-red-600" />,
-    percentage: 63,
+    percentage: statusStats.find(s => s.status === "Dibatalkan")?.percentage || 0,
   },
 ];
 
-const LaporanPengiriman = () => {
-  const [statusFilter, setStatusFilter] = useState<string>("Semua Status");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [packageTypeFilter, setPackageTypeFilter] =
-    useState<string>("Semua Status");
-
+if (loading) {
   return (
+    <SidebarProvider>
+      <AppSidebar variant="inset" />
+      <SidebarInset>
+        <div className="flex items-center justify-between w-full">
+          <div className="flex-1">
+            <SiteHeader />
+          </div>
+          <TopNav />
+        </div>
+        <div className="flex flex-1 flex-col bg-blue-100">
+          <div className="@container/main flex flex-1 flex-col gap-2">
+            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 md:px-6">
+              <div className="flex items-center justify-center h-64">
+                <div className="text-lg">Loading...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
+
+if (error) {
+  return (
+    <SidebarProvider>
+      <AppSidebar variant="inset" />
+      <SidebarInset>
+        <div className="flex items-center justify-between w-full">
+          <div className="flex-1">
+            <SiteHeader />
+          </div>
+          <TopNav />
+        </div>
+        <div className="flex flex-1 flex-col bg-blue-100">
+          <div className="@container/main flex flex-1 flex-col gap-2">
+            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 md:px-6">
+              <div className="flex items-center justify-center h-64">
+                <div className="text-lg text-red-500">{error}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
+
+return (
     <SidebarProvider>
       <AppSidebar variant="inset" />
       <SidebarInset>

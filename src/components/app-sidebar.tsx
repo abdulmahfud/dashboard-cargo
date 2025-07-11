@@ -189,8 +189,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <Image
           src="/images/BhisaKirim_3.png"
           alt="Logo Bisakirim"
-          width={100}
-          height={200}
+          width={150}
+          height={150}
         />
       </SidebarHeader>
       <SidebarContent>

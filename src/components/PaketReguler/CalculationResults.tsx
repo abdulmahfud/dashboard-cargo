@@ -6,6 +6,7 @@ import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { ShippingOption } from "@/types/dataRegulerForm";
 import Image from "next/image";
@@ -14,6 +15,10 @@ import { CirclePlus } from "lucide-react";
 interface CalculationResultsProps {
   isSearching: boolean;
   result?: Record<string, unknown>;
+  formData?: {
+    itemValue?: string;
+    paymentMethod?: string;
+  };
 }
 
 type ApiErrorResult = { error: true; message?: string };
@@ -30,10 +35,12 @@ type JntApiResult = {
 export default function CalculationResults({
   isSearching,
   result,
+  formData,
 }: CalculationResultsProps) {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isInsured, setIsInsured] = useState(false);
   const [showPaymentSection, setShowPaymentSection] = useState(false);
+  const [customCODValue, setCustomCODValue] = useState<string>("");
 
   // Build shippingOptions from API result if present
   const shippingOptions: ShippingOption[] = useMemo(() => {
@@ -116,11 +123,36 @@ export default function CalculationResults({
 
   const calculateTotal = () => {
     if (!selectedShippingOption) return 0;
+
     const shippingCost = parseInt(
       selectedShippingOption.price.replace(/[^\d]/g, "")
     );
-    const insuranceCost = isInsured ? 1000 : 0; // Mock insurance cost
-    return shippingCost + insuranceCost;
+
+    const itemValue = parseInt(formData?.itemValue || "0");
+    const isCOD = formData?.paymentMethod === "cod";
+
+    // COD fee: 5% of item value
+    const codFee = isCOD ? Math.round(itemValue * 0.05) : 0;
+
+    // Insurance: 0.2% of item value when checked
+    const insuranceCost = isInsured ? Math.round(itemValue * 0.002) : 0;
+
+    return shippingCost + codFee + insuranceCost;
+  };
+
+  const getItemValue = () => {
+    return parseInt(formData?.itemValue || "0");
+  };
+
+  const getCODFee = () => {
+    const itemValue = getItemValue();
+    const isCOD = formData?.paymentMethod === "cod";
+    return isCOD ? Math.round(itemValue * 0.05) : 0;
+  };
+
+  const getInsuranceCost = () => {
+    const itemValue = getItemValue();
+    return isInsured ? Math.round(itemValue * 0.002) : 0;
   };
 
   return (
@@ -211,6 +243,36 @@ export default function CalculationResults({
             </CardContent>
           </Card>
 
+          {/* Custom COD Section - only show if payment method is COD */}
+          {formData?.paymentMethod === "cod" && (
+            <Card>
+              <CardContent className="p-4">
+                <h3 className="text-lg font-semibold mb-3">Custom COD</h3>
+                <p className="text-sm text-gray-600 mb-3">
+                  Ubah nilai COD yang ditagihkan ke penerima
+                </p>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium">Rp</span>
+                  <Input
+                    type="text"
+                    placeholder="Cth: 100.000"
+                    value={customCODValue}
+                    onChange={(e) => {
+                      // Format number with thousands separator
+                      const value = e.target.value.replace(/[^\d]/g, "");
+                      const formatted = value.replace(
+                        /\B(?=(\d{3})+(?!\d))/g,
+                        "."
+                      );
+                      setCustomCODValue(formatted);
+                    }}
+                    className="flex-1"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Promo Section */}
           <Card>
             <CardContent className="p-4">
@@ -240,15 +302,52 @@ export default function CalculationResults({
                   </span>
                 </div>
                 <div className="flex justify-between">
+                  <span>Nilai Barang</span>
+                  <span className="font-medium">
+                    Rp{getItemValue().toLocaleString("id-ID")}
+                  </span>
+                </div>
+                <div className="flex justify-between">
                   <span>Pengiriman</span>
                   <span className="font-medium">
                     {selectedShippingOption.price}
                   </span>
                 </div>
+                {formData?.paymentMethod === "cod" && (
+                  <div className="flex justify-between">
+                    <span>Asuransi</span>
+                    <span className="font-medium">Rp200</span>
+                  </div>
+                )}
+                {formData?.paymentMethod === "cod" && (
+                  <div className="flex justify-between">
+                    <span>Biaya COD</span>
+                    <span className="font-medium">
+                      Rp{getCODFee().toLocaleString("id-ID")}
+                    </span>
+                  </div>
+                )}
+                <Separator />
+                {customCODValue && formData?.paymentMethod === "cod" && (
+                  <div className="flex justify-between">
+                    <span>Ditagihkan penerima</span>
+                    <span className="font-medium text-purple-600">
+                      Rp{customCODValue}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span>Nilai Pencairan</span>
+                  <span className="font-medium text-green-600">
+                    Rp{getItemValue().toLocaleString("id-ID")}
+                  </span>
+                </div>
                 {isInsured && (
                   <div className="flex justify-between">
                     <span>Asuransi</span>
-                    <span className="font-medium">Rp1.000</span>
+                    <span className="font-medium">
+                      Rp{getInsuranceCost().toLocaleString("id-ID")}
+                    </span>
                   </div>
                 )}
                 <Separator />
