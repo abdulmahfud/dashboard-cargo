@@ -42,6 +42,34 @@ export interface OrderRequest {
   servicetype: string; // "1" = Pickup, "6" = Drop Off
 }
 
+export interface VendorResponse {
+  status: string;
+  data?: {
+    awb_no: string;
+    label_url: string;
+    service_code: string;
+    cod_value: string;
+    item_value: string;
+    reguler_value: number;
+    etd: string;
+    des_code: string;
+    status: string;
+  };
+  awb_no?: string;
+  label_url?: string;
+  raw_response?: {
+    success: boolean;
+    desc: string;
+    detail: Array<{
+      orderid: string;
+      status: string;
+      awb_no: string;
+      desCode: string;
+      etd: string;
+    }>;
+  };
+}
+
 export interface OrderResponse {
   status: string;
   message?: string;
@@ -65,7 +93,7 @@ export interface OrderResponse {
     created_at: string;
     updated_at: string;
   };
-  vendor_response?: any;
+  vendor_response?: VendorResponse;
 }
 
 export type ExpeditionVendor = "jntexpress" | "lion" | "sap";
