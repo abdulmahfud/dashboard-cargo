@@ -219,7 +219,7 @@ export default function CalculationResults({
     const isCOD = formData?.paymentMethod === "cod";
 
     // COD fee: 5% of item value
-    const codFee = isCOD ? Math.round(itemValue * 0.05) : 0;
+    const codFee = isCOD ? Math.round(itemValue * 0.04) : 0;
 
     // Insurance: 0.2% of item value when checked
     const insuranceCost = isInsured ? Math.round(itemValue * 0.002) : 0;
