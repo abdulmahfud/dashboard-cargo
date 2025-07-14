@@ -279,22 +279,39 @@ export default function CalculationResults({
     setOrderResult(null);
 
     try {
-      // Calculate COD value properly
+      // Calculate COD value properly - total amount charged to recipient
       let codValue = "0";
       if (formData.formData.paymentMethod === "cod") {
         if (customCODValue) {
           // Use custom COD value if provided
           codValue = customCODValue.replace(/\./g, "");
         } else {
-          // Use total calculation (shipping + COD fee + insurance + item value)
-          codValue = calculateTotal().toString();
+          // Calculate total: Item Value + Shipping + COD Fee + Insurance
+          const itemValue = getItemValue();
+          const shippingCost = parseInt(
+            selectedShippingOption.price.replace(/[^\d]/g, "")
+          );
+          const codFee = getCODFee();
+          const insuranceCost = getInsuranceCost();
+
+          codValue = (
+            itemValue +
+            shippingCost +
+            codFee +
+            insuranceCost
+          ).toString();
         }
       }
 
       console.log("💰 CalculationResults - COD calculation:", {
         paymentMethod: formData.formData.paymentMethod,
         customCODValue,
-        totalCalculation: calculateTotal(),
+        itemValue: getItemValue(),
+        shippingCost: parseInt(
+          selectedShippingOption.price.replace(/[^\d]/g, "")
+        ),
+        codFee: getCODFee(),
+        insuranceCost: getInsuranceCost(),
         finalCodValue: codValue,
       });
 
@@ -625,7 +642,7 @@ export default function CalculationResults({
                 <div className="flex justify-between">
                   <span>Nilai Barang</span>
                   <span className="font-medium">
-                    Rp {getItemValue().toLocaleString("id-ID")}
+                    Rp{getItemValue().toLocaleString("id-ID")}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -634,42 +651,71 @@ export default function CalculationResults({
                     {selectedShippingOption.price}
                   </span>
                 </div>
-                {formData?.paymentMethod === "cod" && (
-                  <div className="flex justify-between">
-                    <span>Biaya COD</span>
-                    <span className="font-medium">
-                      Rp {getCODFee().toLocaleString("id-ID")}
-                    </span>
-                  </div>
-                )}
-                <Separator />
-                {customCODValue && formData?.paymentMethod === "cod" && (
-                  <div className="flex justify-between">
-                    <span>Ditagihkan penerima</span>
-                    <span className="font-medium text-blue-800">
-                      Rp {customCODValue}
-                    </span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span>Nilai Pencairan</span>
-                  <span className="font-medium text-green-600">
-                    Rp {getItemValue().toLocaleString("id-ID")}
-                  </span>
-                </div>
                 {isInsured && (
                   <div className="flex justify-between">
                     <span>Asuransi</span>
                     <span className="font-medium">
-                      Rp {getInsuranceCost().toLocaleString("id-ID")}
+                      Rp{getInsuranceCost().toLocaleString("id-ID")}
                     </span>
                   </div>
                 )}
+                {formData?.paymentMethod === "cod" && (
+                  <div className="flex justify-between">
+                    <span>Biaya COD</span>
+                    <span className="font-medium">
+                      Rp{getCODFee().toLocaleString("id-ID")}
+                    </span>
+                  </div>
+                )}
+
                 <Separator />
-                <div className="flex justify-between text-lg font-bold text-blue-600">
-                  <span>Total Pembayaran</span>
-                  <span>Rp {calculateTotal().toLocaleString("id-ID")}</span>
-                </div>
+
+                {/* COD specific sections */}
+                {formData?.paymentMethod === "cod" ? (
+                  <>
+                    {customCODValue ? (
+                      <div className="flex justify-between">
+                        <span className="text-purple-600 font-medium">
+                          Ditagihkan penerima
+                        </span>
+                        <span className="font-medium text-purple-600">
+                          Rp{customCODValue}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between">
+                        <span className="text-purple-600 font-medium">
+                          Ditagihkan penerima
+                        </span>
+                        <span className="font-medium text-purple-600">
+                          Rp
+                          {(
+                            getItemValue() +
+                            parseInt(
+                              selectedShippingOption.price.replace(/[^\d]/g, "")
+                            ) +
+                            getCODFee() +
+                            getInsuranceCost()
+                          ).toLocaleString("id-ID")}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-green-600 font-medium">
+                        Nilai Pencairan
+                      </span>
+                      <span className="font-medium text-green-600">
+                        Rp{getItemValue().toLocaleString("id-ID")}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  /* Non-COD: Show total payment */
+                  <div className="flex justify-between text-lg font-bold text-blue-600">
+                    <span>Total Pembayaran</span>
+                    <span>Rp{calculateTotal().toLocaleString("id-ID")}</span>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
