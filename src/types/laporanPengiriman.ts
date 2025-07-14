@@ -52,11 +52,11 @@ export interface OrderListResponse {
 export interface DeliveryReport {
   createdAt: string;
   shipmentNo: string;
-  packageType: "Paket Reguler" | "Paket Instant" | "COD" | "Non COD";
+  packageType: "Paket Reguler" | "Paket Instant" | "COD";
   recipient: string;
   courierService: string;
   totalShipment: number;
-  shippingMethod: "COD" | "Non COD";
+  shippingMethod: "COD" | "REGULER";
   status: string;
 }
 

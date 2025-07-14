@@ -164,7 +164,6 @@ export function DataTable<TData extends DeliveryReport, TValue>({
                     "Paket Reguler",
                     "Paket Instant",
                     "COD",
-                    "Non COD",
                   ].map((type) => (
                     <Button
                       key={type}

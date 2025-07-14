@@ -102,6 +102,27 @@ interface RegularPackageFormProps {
   onFormDataChange?: (data: {
     itemValue?: string;
     paymentMethod?: string;
+    formData?: {
+      receiverName: string;
+      receiverPhone: string;
+      province: string;
+      regency: string;
+      district: string;
+      receiverAddress: string;
+      itemContent: string;
+      itemType: string;
+      itemValue: string;
+      itemQuantity: string;
+      weight: string;
+      length: string;
+      width: string;
+      height: string;
+      notes: string;
+      deliveryType: string;
+      paymentMethod: string;
+    };
+    businessData?: Business | null;
+    receiverId?: string | null;
   }) => void;
 }
 
@@ -129,6 +150,7 @@ export default function RegularPackageForm({
   const [loadingDistrict, setLoadingDistrict] = useState(false);
   const [receiverId, setReceiverId] = useState<string | null>(null);
   const [selectedDistrictName, setSelectedDistrictName] = useState("");
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState({
     receiverName: "",
@@ -153,7 +175,10 @@ export default function RegularPackageForm({
   // Loading state sekarang dikontrol parent
 
   useEffect(() => {
+    console.log("🏪 RegularPackageForm - Loading initial data...");
+
     getShippers().then((res) => {
+      console.log("📋 RegularPackageForm - Shippers loaded:", res.data.data);
       const mapped = res.data.data.map((shipper: Shipper) => ({
         id: shipper.id,
         businessName: shipper.name,
@@ -166,8 +191,14 @@ export default function RegularPackageForm({
       }));
       setBusinessData(mapped);
       setSelectedBusiness(mapped[0] || null);
+      console.log("✅ RegularPackageForm - Business data set:", {
+        mapped,
+        selectedBusiness: mapped[0] || null,
+      });
     });
+
     getReceivers().then((res) => {
+      console.log("👥 RegularPackageForm - Receivers loaded:", res.data.data);
       setBusinessRecipients(res.data.data);
     });
   }, []);
@@ -175,12 +206,22 @@ export default function RegularPackageForm({
   // Notify parent of initial form data
   useEffect(() => {
     if (onFormDataChange) {
-      onFormDataChange({
+      const notificationData = {
         itemValue: formData.itemValue,
         paymentMethod: formData.paymentMethod,
+        formData: formData,
+        businessData: selectedBusiness,
+        receiverId: receiverId,
+      };
+
+      console.log("🔄 RegularPackageForm - useEffect notification:", {
+        trigger: "formData/selectedBusiness/receiverId change",
+        notificationData,
       });
+
+      onFormDataChange(notificationData);
     }
-  }, [onFormDataChange, formData.itemValue, formData.paymentMethod]);
+  }, [formData, selectedBusiness, receiverId]); // Removed onFormDataChange from dependencies
 
   // Province search and fetch
   useEffect(() => {
@@ -238,55 +279,207 @@ export default function RegularPackageForm({
     setOpen(false);
   };
 
+  const validateField = (field: string, value: string): string => {
+    if (!value || value.trim() === "") {
+      return "Field ini wajib diisi";
+    }
+
+    switch (field) {
+      case "receiverName":
+        return value.length < 2 ? "Nama minimal 2 karakter" : "";
+      case "receiverPhone":
+        return !/^[0-9+\-\s()]{8,15}$/.test(value)
+          ? "Nomor telepon tidak valid"
+          : "";
+      case "receiverAddress":
+        return value.length < 10 ? "Alamat minimal 10 karakter" : "";
+      case "itemContent":
+        return value.length < 2 ? "Isi barang minimal 2 karakter" : "";
+      case "itemType":
+        return "";
+      case "itemValue":
+        return parseInt(value) < 1000 ? "Nilai barang minimal Rp 1.000" : "";
+      case "itemQuantity":
+        return parseInt(value) < 1 ? "Jumlah minimal 1" : "";
+      case "weight":
+        return parseInt(value) < 1 ? "Berat minimal 1 gram" : "";
+      case "length":
+      case "width":
+      case "height":
+        return parseInt(value) < 1 ? "Dimensi minimal 1 cm" : "";
+      default:
+        return "";
+    }
+  };
+
+  const validateAllFields = (): boolean => {
+    const requiredFields = [
+      "receiverName",
+      "receiverPhone",
+      "receiverAddress",
+      "itemContent",
+      "itemType",
+      "itemValue",
+      "itemQuantity",
+      "weight",
+      "length",
+      "width",
+      "height",
+    ];
+
+    const newErrors: Record<string, string> = {};
+    let hasErrors = false;
+
+    // Check if using saved receiver but still need location validation
+    if (!receiverId) {
+      if (!formData.province) {
+        newErrors.province = "Provinsi wajib dipilih";
+        hasErrors = true;
+      }
+      if (!formData.regency) {
+        newErrors.regency = "Kota/Kabupaten wajib dipilih";
+        hasErrors = true;
+      }
+      if (!formData.district) {
+        newErrors.district = "Kecamatan wajib dipilih";
+        hasErrors = true;
+      }
+    }
+
+    // Validate all required fields
+    requiredFields.forEach((field) => {
+      const value = formData[field as keyof typeof formData] || "";
+      const error = validateField(field, value);
+      if (error) {
+        newErrors[field] = error;
+        hasErrors = true;
+      }
+    });
+
+    // Check if business is selected
+    if (!selectedBusiness) {
+      hasErrors = true;
+      alert("Silakan pilih alamat pengirim terlebih dahulu");
+    }
+
+    setFormErrors(newErrors);
+    return !hasErrors;
+  };
+
   const handleChange = (field: string, value: string) => {
     const newData = { ...formData, [field]: value };
     setFormData(newData);
+
+    // Validate field and update errors
+    const error = validateField(field, value);
+    setFormErrors((prev) => ({
+      ...prev,
+      [field]: error,
+    }));
+
+    // Debug logging for form changes
+    console.log("🔍 RegularPackageForm - handleChange:", {
+      field,
+      value,
+      newData,
+      receiverId,
+      selectedBusiness,
+    });
 
     // Notify parent of relevant form data changes
     if (
       (field === "itemValue" || field === "paymentMethod") &&
       onFormDataChange
     ) {
-      onFormDataChange({
+      const changeData = {
         itemValue: newData.itemValue,
         paymentMethod: newData.paymentMethod,
-      });
+        formData: newData,
+        businessData: selectedBusiness,
+        receiverId: receiverId,
+      };
+
+      console.log(
+        "📤 RegularPackageForm - Notifying parent with data:",
+        changeData
+      );
+
+      onFormDataChange(changeData);
     }
 
     // Jika user edit field penerima manual, reset receiverId
     if (["receiverName", "receiverPhone", "receiverAddress"].includes(field)) {
+      console.log(
+        "🔄 RegularPackageForm - Resetting receiverId due to manual edit"
+      );
       setReceiverId(null);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (setIsSearching) setIsSearching(true);
-    // Validasi field wajib
-    const isUsingExistingReceiver = !!receiverId;
-    const hasMandatoryData = isUsingExistingReceiver
-      ? formData.weight && selectedBusiness?.regency && selectedDistrictName
-      : formData.weight &&
-        selectedBusiness?.regency &&
-        formData.district &&
-        selectedDistrictName;
 
-    if (!hasMandatoryData) {
+    console.log("🚀 RegularPackageForm - handleSubmit started with data:", {
+      formData,
+      selectedBusiness,
+      receiverId,
+      selectedDistrictName,
+    });
+
+    // Validate all required fields first
+    if (!validateAllFields()) {
+      console.log(
+        "❌ RegularPackageForm - Validation failed: Required fields missing"
+      );
       onResult?.({
         error: true,
-        message: isUsingExistingReceiver
-          ? "Berat dan alamat pengirim wajib diisi."
-          : "Berat, kota pengirim, dan kecamatan tujuan wajib diisi.",
+        message: "Silakan lengkapi semua field yang wajib diisi",
+      });
+      return;
+    }
+
+    if (setIsSearching) setIsSearching(true);
+
+    // Additional validation for location data
+    const isUsingExistingReceiver = !!receiverId;
+    const hasLocationData = isUsingExistingReceiver
+      ? selectedDistrictName && selectedBusiness?.regency
+      : selectedDistrictName && selectedBusiness?.regency && formData.district;
+
+    console.log("✅ RegularPackageForm - Location validation check:", {
+      isUsingExistingReceiver,
+      hasLocationData,
+      selectedDistrictName,
+      businessRegency: selectedBusiness?.regency,
+      formDistrict: formData.district,
+    });
+
+    if (!hasLocationData) {
+      const errorMessage = isUsingExistingReceiver
+        ? "Alamat pengirim dan tujuan wajib diisi."
+        : "Alamat pengirim dan kecamatan tujuan wajib diisi.";
+
+      console.log(
+        "❌ RegularPackageForm - Location validation failed:",
+        errorMessage
+      );
+
+      onResult?.({
+        error: true,
+        message: errorMessage,
       });
       if (setIsSearching) setIsSearching(false);
       return;
     }
+
     // Siapkan payload
     let payload: RegularPackagePayload = {
       ...formData,
     };
+
     // Set servicetype sesuai deliveryType
     payload.servicetype = formData.deliveryType === "pickup" ? 1 : 6;
+
     if (receiverId) {
       payload = {
         ...payload,
@@ -313,20 +506,32 @@ export default function RegularPackageForm({
         },
       };
     }
+
     // Ambil data untuk ongkir
     const weight = formData.weight;
     // Kirim nama regency pengirim dan district tujuan
     const sendSiteCode = selectedBusiness?.regency || "";
     const destAreaCode = selectedDistrictName;
+
+    console.log("📦 RegularPackageForm - Prepared payload:", {
+      payload,
+      apiParams: { weight, sendSiteCode, destAreaCode },
+    });
+
     try {
-      console.log("Payload ke API:", { weight, sendSiteCode, destAreaCode });
+      console.log(
+        "🌐 RegularPackageForm - Making API call to getJntExpressShipmentCost"
+      );
       const result = await getJntExpressShipmentCost({
         weight,
         sendSiteCode,
         destAreaCode,
       });
+
+      console.log("✅ RegularPackageForm - API call successful:", result);
       onResult?.(result);
     } catch (err) {
+      console.error("❌ RegularPackageForm - API call failed:", err);
       const errorResult = {
         error: true,
         message:
@@ -334,12 +539,11 @@ export default function RegularPackageForm({
             ? (err as { message?: string }).message || "Gagal cek ongkir"
             : "Gagal cek ongkir",
       };
+      console.log("📤 RegularPackageForm - Sending error result:", errorResult);
       onResult?.(errorResult);
     } finally {
       if (setIsSearching) setIsSearching(false);
     }
-    // onSearch(payload); // tidak perlu lagi, sekarang pakai calculationResult
-    console.log("Form Data:", payload);
   };
 
   const filteredRecipients = businessRecipients.filter((recipient) =>
@@ -546,7 +750,13 @@ export default function RegularPackageForm({
                   placeholder="Nama lengkap penerima"
                   value={formData.receiverName}
                   onChange={(e) => handleChange("receiverName", e.target.value)}
+                  className={formErrors.receiverName ? "border-red-500" : ""}
                 />
+                {formErrors.receiverName && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {formErrors.receiverName}
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor="receiverPhone">
@@ -559,7 +769,13 @@ export default function RegularPackageForm({
                   onChange={(e) =>
                     handleChange("receiverPhone", e.target.value)
                   }
+                  className={formErrors.receiverPhone ? "border-red-500" : ""}
                 />
+                {formErrors.receiverPhone && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {formErrors.receiverPhone}
+                  </p>
+                )}
               </div>
             </div>
             {/* Alamat Tujuan - diganti dropdown province/regency/district */}
@@ -606,7 +822,13 @@ export default function RegularPackageForm({
                   }}
                   autoComplete="off"
                   readOnly={!!receiverId} // Make read-only if using saved recipient
+                  className={formErrors.province ? "border-red-500" : ""}
                 />
+                {formErrors.province && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {formErrors.province}
+                  </p>
+                )}
                 {!receiverId &&
                   provinceSearch.length >= 3 &&
                   !formData.province && (
@@ -660,7 +882,13 @@ export default function RegularPackageForm({
                   disabled={!formData.province && !receiverId}
                   autoComplete="off"
                   readOnly={!!receiverId} // Make read-only if using saved recipient
+                  className={formErrors.regency ? "border-red-500" : ""}
                 />
+                {formErrors.regency && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {formErrors.regency}
+                  </p>
+                )}
                 {!receiverId &&
                   formData.province &&
                   regencySearch.length >= 3 &&
@@ -712,7 +940,13 @@ export default function RegularPackageForm({
                   disabled={!formData.regency && !receiverId}
                   autoComplete="off"
                   readOnly={!!receiverId} // Make read-only if using saved recipient
+                  className={formErrors.district ? "border-red-500" : ""}
                 />
+                {formErrors.district && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {formErrors.district}
+                  </p>
+                )}
                 {!receiverId &&
                   formData.regency &&
                   districtSearch.length >= 3 &&
@@ -758,8 +992,13 @@ export default function RegularPackageForm({
                 onChange={(e) =>
                   handleChange("receiverAddress", e.target.value)
                 }
-                className="min-h-[100px]"
+                className={`min-h-[100px] ${formErrors.receiverAddress ? "border-red-500" : ""}`}
               />
+              {formErrors.receiverAddress && (
+                <p className="text-sm text-red-500 mt-1">
+                  {formErrors.receiverAddress}
+                </p>
+              )}
             </div>
 
             <Popover open={openRecipient} onOpenChange={setOpenRecipient}>
@@ -839,21 +1078,33 @@ export default function RegularPackageForm({
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="itemContent">Isi Barang *</Label>
+                <Label htmlFor="itemContent">
+                  Isi Barang <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="itemContent"
                   placeholder="Contoh: Laptop"
                   value={formData.itemContent}
                   onChange={(e) => handleChange("itemContent", e.target.value)}
+                  className={formErrors.itemContent ? "border-red-500" : ""}
                 />
+                {formErrors.itemContent && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {formErrors.itemContent}
+                  </p>
+                )}
               </div>
               <div>
-                <Label htmlFor="itemType">Jenis Barang *</Label>
+                <Label htmlFor="itemType">
+                  Jenis Barang <span className="text-red-500">*</span>
+                </Label>
                 <Select
                   value={formData.itemType}
                   onValueChange={(value) => handleChange("itemType", value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger
+                    className={formErrors.itemType ? "border-red-500" : ""}
+                  >
                     <SelectValue placeholder="Pilih Jenis Barang" />
                   </SelectTrigger>
                   <SelectContent>
@@ -864,6 +1115,11 @@ export default function RegularPackageForm({
                     ))}
                   </SelectContent>
                 </Select>
+                {formErrors.itemType && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {formErrors.itemType}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -882,9 +1138,14 @@ export default function RegularPackageForm({
                     value={formData.itemValue}
                     placeholder="Cth : 1.000.000"
                     onChange={(e) => handleChange("itemValue", e.target.value)}
-                    className="pl-10"
+                    className={`pl-10 ${formErrors.itemValue ? "border-red-500" : ""}`}
                   />
                 </div>
+                {formErrors.itemValue && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {formErrors.itemValue}
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor="itemQuantity">
@@ -896,50 +1157,88 @@ export default function RegularPackageForm({
                   placeholder="Cth : 1"
                   value={formData.itemQuantity}
                   onChange={(e) => handleChange("itemQuantity", e.target.value)}
+                  className={formErrors.itemQuantity ? "border-red-500" : ""}
                 />
+                {formErrors.itemQuantity && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {formErrors.itemQuantity}
+                  </p>
+                )}
               </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <Label htmlFor="weight">Berat (gram) *</Label>
+                <Label htmlFor="weight">
+                  Berat (gram) <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="weight"
                   placeholder="Cth : 1000"
                   type="number"
                   value={formData.weight}
                   onChange={(e) => handleChange("weight", e.target.value)}
+                  className={formErrors.weight ? "border-red-500" : ""}
                 />
+                {formErrors.weight && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {formErrors.weight}
+                  </p>
+                )}
               </div>
               <div>
-                <Label htmlFor="length">Panjang (cm) *</Label>
+                <Label htmlFor="length">
+                  Panjang (cm) <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="length"
                   placeholder="Cth : 25"
                   type="number"
                   value={formData.length}
                   onChange={(e) => handleChange("length", e.target.value)}
+                  className={formErrors.length ? "border-red-500" : ""}
                 />
+                {formErrors.length && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {formErrors.length}
+                  </p>
+                )}
               </div>
               <div>
-                <Label htmlFor="width">Lebar (cm) *</Label>
+                <Label htmlFor="width">
+                  Lebar (cm) <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="width"
                   placeholder="Cth : 25"
                   type="number"
                   value={formData.width}
                   onChange={(e) => handleChange("width", e.target.value)}
+                  className={formErrors.width ? "border-red-500" : ""}
                 />
+                {formErrors.width && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {formErrors.width}
+                  </p>
+                )}
               </div>
               <div>
-                <Label htmlFor="height">Tinggi (cm) *</Label>
+                <Label htmlFor="height">
+                  Tinggi (cm) <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="height"
                   placeholder="Cth : 25"
                   type="number"
                   value={formData.height}
                   onChange={(e) => handleChange("height", e.target.value)}
+                  className={formErrors.height ? "border-red-500" : ""}
                 />
+                {formErrors.height && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {formErrors.height}
+                  </p>
+                )}
               </div>
             </div>
 

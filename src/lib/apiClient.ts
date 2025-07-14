@@ -20,9 +20,12 @@ import type {
   ShipperCreateRequest,
   ShipperUpdateRequest,
 } from "@/types/dataPengirim";
+import type { OrderListResponse } from "@/types/laporanPengiriman";
 import type {
-  OrderListResponse,
-} from "@/types/laporanPengiriman";
+  OrderRequest,
+  OrderResponse,
+  ExpeditionVendor,
+} from "@/types/order";
 
 // Ambil URL dari .env
 const API_URL =
@@ -246,6 +249,45 @@ export const getShipperById = async (id: number): Promise<ShipperResponse> => {
 // ✅ Orders/Laporan Pengiriman operations
 export const getOrders = async (): Promise<OrderListResponse> => {
   const res = await apiClient.get("/admin/list-orders");
+  return res.data;
+};
+
+// ✅ Order submission to expedition vendors
+export const submitOrderToExpedition = async (
+  vendor: ExpeditionVendor,
+  orderData: OrderRequest
+): Promise<OrderResponse> => {
+  const res = await apiClient.post(
+    `/admin/expedition/${vendor}/order`,
+    orderData
+  );
+  return res.data;
+};
+
+// ✅ JNT Express order submission (specific method)
+export const submitJntExpressOrder = async (
+  orderData: OrderRequest
+): Promise<OrderResponse> => {
+  const res = await apiClient.post(
+    "/admin/expedition/jntexpress/order",
+    orderData
+  );
+  return res.data;
+};
+
+// ✅ Lion order submission (for future use)
+export const submitLionOrder = async (
+  orderData: OrderRequest
+): Promise<OrderResponse> => {
+  const res = await apiClient.post("/admin/expedition/lion/order", orderData);
+  return res.data;
+};
+
+// ✅ SAP order submission (for future use)
+export const submitSapOrder = async (
+  orderData: OrderRequest
+): Promise<OrderResponse> => {
+  const res = await apiClient.post("/admin/expedition/sap/order", orderData);
   return res.data;
 };
 

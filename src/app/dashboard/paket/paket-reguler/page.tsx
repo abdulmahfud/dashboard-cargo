@@ -5,17 +5,10 @@ import CalculationResults from "@/components/PaketReguler/CalculationResults";
 import { SiteHeader } from "@/components/site-header";
 import TopNav from "@/components/top-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// import {
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-// } from "@/components/ui/select";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import RegularPackageForm from "../../../../components/PaketReguler/RegularPackageForm";
 
 const PaketReguler = () => {
@@ -26,15 +19,81 @@ const PaketReguler = () => {
   const [formData, setFormData] = useState<{
     itemValue?: string;
     paymentMethod?: string;
+    formData?: {
+      receiverName: string;
+      receiverPhone: string;
+      province: string;
+      regency: string;
+      district: string;
+      receiverAddress: string;
+      itemContent: string;
+      itemType: string;
+      itemValue: string;
+      itemQuantity: string;
+      weight: string;
+      length: string;
+      width: string;
+      height: string;
+      notes: string;
+      deliveryType: string;
+      paymentMethod: string;
+    };
+    businessData?: {
+      id: number;
+      businessName: string;
+      senderName: string;
+      contact: string;
+      province: string | null;
+      regency: string | null;
+      district: string | null;
+      address: string;
+    } | null;
+    receiverId?: string | null;
   }>({});
+
+  // Debug: Log when form data changes
+  useEffect(() => {
+    console.log("🏗️ PaketReguler - Form data updated:", formData);
+  }, [formData]);
+
+  // Debug: Log when calculation result changes
+  useEffect(() => {
+    console.log(
+      "📊 PaketReguler - Calculation result updated:",
+      calculationResult
+    );
+  }, [calculationResult]);
 
   // Initialize the 'framer-motion' module for animations
   useEffect(() => {
+    console.log("🎬 PaketReguler - Component initialized");
     // This is just to ensure framer-motion is properly initialized
     const container = document.getElementById("app-container");
     if (container) {
       container.classList.add("motion-safe");
     }
+  }, []);
+
+  // Memoized callback functions to prevent infinite loops
+  const handleCalculationResult = useCallback(
+    (result: Record<string, unknown>) => {
+      console.log("📥 PaketReguler - Received calculation result:", result);
+      setCalculationResult(result);
+      setIsSearching(false);
+    },
+    []
+  );
+
+  const handleFormDataChange = useCallback((data: typeof formData) => {
+    console.log("📝 PaketReguler - Received form data change:", data);
+    setFormData(data);
+  }, []);
+
+  const handleResetForm = useCallback(() => {
+    console.log("🔄 PaketReguler - Resetting form");
+    setFormData({});
+    setCalculationResult(undefined);
+    // Form will be reset via prop passing
   }, []);
 
   return (
@@ -57,12 +116,9 @@ const PaketReguler = () => {
                 >
                   <div className="flex flex-col mx-2">
                     <RegularPackageForm
-                      onResult={(result) => {
-                        setCalculationResult(result);
-                        setIsSearching(false);
-                      }}
+                      onResult={handleCalculationResult}
                       setIsSearching={setIsSearching}
-                      onFormDataChange={setFormData}
+                      onFormDataChange={handleFormDataChange}
                     />
                   </div>
 
@@ -72,23 +128,6 @@ const PaketReguler = () => {
                         <CardTitle className="text-lg font-semibold text-gray-800">
                           Pilih Ekspedisi
                         </CardTitle>
-
-                        {/* <Select>
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Harga Termurah" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="termurah">
-                              Harga Termurah
-                            </SelectItem>
-                            <SelectItem value="tercepat">
-                              Pengiriman Tercepat
-                            </SelectItem>
-                            <SelectItem value="rating">
-                              Rating Tertinggi
-                            </SelectItem>
-                          </SelectContent>
-                        </Select> */}
                       </CardHeader>
 
                       <CardContent className="flex items-center justify-center">
@@ -117,6 +156,7 @@ const PaketReguler = () => {
                               isSearching={isSearching}
                               result={calculationResult}
                               formData={formData}
+                              onResetForm={handleResetForm}
                             />
                           </motion.div>
                         ) : (

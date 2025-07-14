@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import {
-  Boxes,
   CheckCircle,
   CloudDownload,
   Info,
@@ -35,15 +34,13 @@ import {
 // Function to transform API data to table format
 const transformOrderToDeliveryReport = (order: Order): DeliveryReport => {
   // Determine package type based on service_type_code
-  let packageType: DeliveryReport["packageType"];
+  let packageType: DeliveryReport["packageType"] = "Paket Reguler"; // Default value
   if (order.service_type_code === "COD") {
     packageType = "COD";
   } else if (order.service_type_code === "REGULER") {
     packageType = "Paket Reguler";
   } else if (order.service_type_code === "INSTANT") {
     packageType = "Paket Instant";
-  } else {
-    packageType = "Non COD";
   }
 
   // Map vendor to courier service
@@ -54,7 +51,7 @@ const transformOrderToDeliveryReport = (order: Order): DeliveryReport => {
 
   // Determine shipping method based on service_type_code
   const shippingMethod: DeliveryReport["shippingMethod"] =
-    order.service_type_code === "COD" ? "COD" : "Non COD";
+    order.service_type_code === "COD" ? "COD" : "REGULER";
 
   // Calculate total shipment from cod_value or item_value
   const totalShipment =
@@ -120,17 +117,12 @@ const LaporanPengiriman = () => {
     const cod = dataReport.filter(
       (item) => item.packageType === "COD" || item.shippingMethod === "COD"
     ).length;
-    const nonCod = dataReport.filter(
-      (item) =>
-        item.packageType === "Non COD" || item.shippingMethod === "Non COD"
-    ).length;
 
     return {
       totalPengiriman,
       paketReguler,
       paketInstant,
       cod,
-      nonCod,
       paketRegulerPercentage:
         totalPengiriman > 0
           ? Math.round((paketReguler / totalPengiriman) * 100)
@@ -141,8 +133,6 @@ const LaporanPengiriman = () => {
           : 0,
       codPercentage:
         totalPengiriman > 0 ? Math.round((cod / totalPengiriman) * 100) : 0,
-      nonCodPercentage:
-        totalPengiriman > 0 ? Math.round((nonCod / totalPengiriman) * 100) : 0,
     };
   };
 
@@ -224,17 +214,6 @@ const LaporanPengiriman = () => {
         />
       ),
       percentage: stats.codPercentage,
-    },
-    {
-      label: "Non COD",
-      value: stats.nonCod,
-      icon: (
-        <Boxes
-          size={30}
-          className="bg-blue-200 text-blue-500 rounded-full p-1"
-        />
-      ),
-      percentage: stats.nonCodPercentage,
     },
   ];
 
