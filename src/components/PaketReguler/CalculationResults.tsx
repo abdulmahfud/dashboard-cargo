@@ -218,7 +218,7 @@ export default function CalculationResults({
     const itemValue = parseInt(formData?.itemValue || "0");
     const isCOD = formData?.paymentMethod === "cod";
 
-    // COD fee: 5% of item value
+    // COD fee: 4% of item value
     const codFee = isCOD ? Math.round(itemValue * 0.04) : 0;
 
     // Insurance: 0.2% of item value when checked
@@ -234,7 +234,7 @@ export default function CalculationResults({
   const getCODFee = () => {
     const itemValue = getItemValue();
     const isCOD = formData?.paymentMethod === "cod";
-    return isCOD ? Math.round(itemValue * 0.05) : 0;
+    return isCOD ? Math.round(itemValue * 0.04) : 0;
   };
 
   const getInsuranceCost = () => {
@@ -675,19 +675,19 @@ export default function CalculationResults({
                   <>
                     {customCODValue ? (
                       <div className="flex justify-between">
-                        <span className="text-purple-600 font-medium">
+                        <span className="text-blue-600 font-medium">
                           Ditagihkan penerima
                         </span>
-                        <span className="font-medium text-purple-600">
+                        <span className="font-medium text-blue-600">
                           Rp{customCODValue}
                         </span>
                       </div>
                     ) : (
                       <div className="flex justify-between">
-                        <span className="text-purple-600 font-medium">
+                        <span className="text-blue-600 font-medium">
                           Ditagihkan penerima
                         </span>
-                        <span className="font-medium text-purple-600">
+                        <span className="font-medium text-blue-600">
                           Rp
                           {(
                             getItemValue() +
