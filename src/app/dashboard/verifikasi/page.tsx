@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import apiClient from "@/lib/apiClient";
 import { useAuth } from "@/context/AuthContext";
 import { VerificationError } from "@/types/verifikasi";
+import { ApiService } from "@/lib/ApiService";
 
 export default function VerifikasiPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -91,10 +92,14 @@ export default function VerifikasiPage() {
     }
   };
 
-  const handleLogout = () => {
-    // Clear token and redirect to login
-    document.cookie = "token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
-    window.location.href = "/login";
+  const handleLogout = async () => {
+    try {
+      await ApiService.logout();
+      toast.success("Logout berhasil");
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Gagal logout. Silakan coba lagi.");
+    }
   };
 
   return (
@@ -175,9 +180,9 @@ export default function VerifikasiPage() {
             <Button
               onClick={handleLogout}
               variant="ghost"
-              className="w-full text-gray-600 hover:text-gray-800"
+              className="w-full text-gray-600 hover:text-gray-800 bg-red-500"
             >
-              Logout dan Login Ulang
+              Logout
             </Button>
           </div>
         </CardContent>
