@@ -8,12 +8,14 @@ type AuthContextType = {
   user: UserData | null;
   loading: boolean;
   refreshUser: () => Promise<void>;
+  isVerified: boolean;
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   refreshUser: async () => {},
+  isVerified: false,
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -36,8 +38,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     fetchUser();
   }, []);
 
+  const isVerified = !!user?.email_verified_at;
+
   return (
-    <AuthContext.Provider value={{ user, loading, refreshUser: fetchUser }}>
+    <AuthContext.Provider value={{ user, loading, refreshUser: fetchUser, isVerified }}>
       {children}
     </AuthContext.Provider>
   );

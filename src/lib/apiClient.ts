@@ -302,6 +302,24 @@ export const searchAddress = async (
   return res.data;
 };
 
+// ✅ User registration
+export const registerUser = async (data: {
+  name: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+  whatsapp: string;
+}) => {
+  const res = await apiClient.post("/register", data);
+  return res.data;
+};
+
+// ✅ Resend email verification
+export const resendEmailVerification = async () => {
+  const res = await apiClient.post("/email/resend");
+  return res.data;
+};
+
 // ✅ Cancel order functions for different vendors
 export const cancelJntExpressOrder = async (data: {
   orderid: string;

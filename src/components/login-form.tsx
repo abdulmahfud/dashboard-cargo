@@ -10,6 +10,7 @@ import { ApiService } from "@/lib/ApiService";
 import { setCookie } from "cookies-next";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
+import Link from "next/link"
 
 // Check if the environment is production or development
 const isDev = process.env.NODE_ENV === "development";
@@ -149,9 +150,9 @@ export function LoginForm({
       </div>
       <div className="text-center text-lg font-semibold text-muted-foreground">
         Don&apos;t have an account?{" "}
-        <a href="#" className="underline underline-offset-4">
+        <Link href="/register" className="underline underline-offset-4">
           Sign up
-        </a>
+        </Link>
       </div>
     </form>
   );

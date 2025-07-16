@@ -32,13 +32,40 @@ async function isAuthenticated(request: NextRequest): Promise<boolean> {
   return true;
 }
 
+async function isEmailVerified(request: NextRequest): Promise<boolean> {
+  const token = request.cookies.get("token")?.value;
+  if (!token) return false;
+
+  try {
+    // Make API call to check user verification status
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/me`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const data = await response.json();
+    return !!data.data?.email_verified_at;
+  } catch {
+    return false;
+  }
+}
+
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isAuthPage = path === "/login" || path === "/register";
   const isDashboard = path.startsWith("/dashboard");
+  const isVerificationPage = path === "/dashboard/verifikasi";
 
   const authenticated = await isAuthenticated(request);
 
+  // If accessing dashboard and not authenticated, redirect to login
   if (isDashboard && !authenticated) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", path);
@@ -49,8 +76,27 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
+  // If authenticated and accessing auth pages, redirect to dashboard
   if (isAuthPage && authenticated) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // If authenticated but accessing dashboard (not verification page), check email verification
+  if (authenticated && isDashboard && !isVerificationPage) {
+    const emailVerified = await isEmailVerified(request);
+    
+    if (!emailVerified) {
+      return NextResponse.redirect(new URL("/dashboard/verifikasi", request.url));
+    }
+  }
+
+  // If authenticated, verified, and accessing verification page, redirect to dashboard
+  if (authenticated && isVerificationPage) {
+    const emailVerified = await isEmailVerified(request);
+    
+    if (emailVerified) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
   }
 
   return NextResponse.next();

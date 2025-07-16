@@ -1,46 +1,247 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormEvent, useState } from "react";
+import { toast } from "sonner";
+import Link from "next/link";
+import apiClient from "@/lib/apiClient";
+import { RegisterFormData, RegisterError, FormErrors } from "@/types/register";
 
 export function RegisterForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState<RegisterFormData>({
+    name: "",
+    email: "",
+    password: "",
+    password_confirmation: "",
+    whatsapp: "",
+  });
+  const [errors, setErrors] = useState<FormErrors>({
+    name: "",
+    email: "",
+    password: "",
+    password_confirmation: "",
+    whatsapp: "",
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({ ...prev, [id]: value }));
+    // Clear error when user types
+    setErrors((prev) => ({ ...prev, [id]: "" }));
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {
+      name: "",
+      email: "",
+      password: "",
+      password_confirmation: "",
+      whatsapp: "",
+    };
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Nama wajib diisi";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email wajib diisi";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Format email tidak valid";
+    }
+
+    if (!formData.password) {
+      newErrors.password = "Password wajib diisi";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Password minimal 8 karakter";
+    }
+
+    if (!formData.password_confirmation) {
+      newErrors.password_confirmation = "Konfirmasi password wajib diisi";
+    } else if (formData.password !== formData.password_confirmation) {
+      newErrors.password_confirmation = "Password tidak sama";
+    }
+
+    if (!formData.whatsapp.trim()) {
+      newErrors.whatsapp = "WhatsApp wajib diisi";
+    } else if (!/^[0-9+\-\s()]+$/.test(formData.whatsapp)) {
+      newErrors.whatsapp = "Format WhatsApp tidak valid";
+    }
+
+    setErrors(newErrors);
+    return !Object.values(newErrors).some(error => error !== "");
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      toast.error("Silakan perbaiki kesalahan pada form");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await apiClient.post("/register", {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        password: formData.password,
+        password_confirmation: formData.password_confirmation,
+        whatsapp: formData.whatsapp.trim(),
+      });
+
+      if (response.data.success) {
+        toast.success("Registrasi berhasil! Silakan cek email untuk verifikasi.");
+        
+        // Redirect to verification page
+        window.location.href = "/dashboard/verifikasi";
+      } else {
+        toast.error(response.data.message || "Registrasi gagal");
+      }
+    } catch (error) {
+      const registerError = error as RegisterError;
+      const errorData = registerError.response?.data;
+      
+      if (errorData?.errors) {
+        // Handle validation errors
+        const validationErrors = errorData.errors;
+        const newErrors = { ...errors };
+        
+        Object.keys(validationErrors).forEach(key => {
+          if (key in newErrors) {
+            newErrors[key as keyof FormErrors] = validationErrors[key][0];
+          }
+        });
+        
+        setErrors(newErrors);
+        toast.error("Silakan perbaiki kesalahan pada form");
+      } else {
+        const errorMessage = errorData?.message || "Registrasi gagal";
+        toast.error(errorMessage);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <form className={cn("flex flex-col gap-6", className)} {...props}>
+    <form
+      onSubmit={handleSubmit}
+      className={cn("flex flex-col gap-6", className)}
+      {...props}
+    >
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">Login to your account</h1>
-        <p className="text-balance text-sm text-muted-foreground">
-          Enter your email below to login to your account
+        <h1 className="text-3xl font-bold text-blue-500">
+          Bergabung dengan BhisaKirim!
+        </h1>
+        <p className="text-xl text-muted-foreground">
+          Daftarkan akun Anda untuk mulai menggunakan layanan ekspedisi terbaik
         </p>
       </div>
       <div className="grid gap-6">
         <div className="grid gap-2">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" placeholder="m@example.com" required />
+          <Label htmlFor="name">Nama Lengkap</Label>
+          <Input
+            id="name"
+            type="text"
+            placeholder="Masukkan nama lengkap"
+            required
+            value={formData.name}
+            onChange={handleChange}
+            className={errors.name ? "border-red-500" : ""}
+          />
+          {errors.name && (
+            <p className="text-sm text-red-500">{errors.name}</p>
+          )}
         </div>
+        
         <div className="grid gap-2">
-          <div className="flex items-center">
-            <Label htmlFor="password">Password</Label>
-            <a
-              href="#"
-              className="ml-auto text-sm underline-offset-4 hover:underline"
-            >
-              Forgot your password?
-            </a>
-          </div>
-          <Input id="password" type="password" required />
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="m@example.com"
+            required
+            value={formData.email}
+            onChange={handleChange}
+            className={errors.email ? "border-red-500" : ""}
+          />
+          {errors.email && (
+            <p className="text-sm text-red-500">{errors.email}</p>
+          )}
         </div>
-        <Button type="submit" className="w-full">
-          Login
+
+        <div className="grid gap-2">
+          <Label htmlFor="whatsapp">WhatsApp</Label>
+          <Input
+            id="whatsapp"
+            type="tel"
+            placeholder="081234567890"
+            required
+            value={formData.whatsapp}
+            onChange={handleChange}
+            className={errors.whatsapp ? "border-red-500" : ""}
+          />
+          {errors.whatsapp && (
+            <p className="text-sm text-red-500">{errors.whatsapp}</p>
+          )}
+        </div>
+        
+        <div className="grid gap-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            placeholder="Minimal 8 karakter"
+            required
+            value={formData.password}
+            onChange={handleChange}
+            className={errors.password ? "border-red-500" : ""}
+          />
+          {errors.password && (
+            <p className="text-sm text-red-500">{errors.password}</p>
+          )}
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="password_confirmation">Konfirmasi Password</Label>
+          <Input
+            id="password_confirmation"
+            type="password"
+            placeholder="Ulangi password"
+            required
+            value={formData.password_confirmation}
+            onChange={handleChange}
+            className={errors.password_confirmation ? "border-red-500" : ""}
+          />
+          {errors.password_confirmation && (
+            <p className="text-sm text-red-500">{errors.password_confirmation}</p>
+          )}
+        </div>
+        
+        <Button
+          type="submit"
+          className="w-full bg-blue-500 text-white rounded-full h-12 font-semibold text-xl hover:bg-blue-700"
+          disabled={isLoading}
+        >
+          {isLoading ? "Mendaftar..." : "Daftar Sekarang"}
         </Button>
       </div>
-      <div className="text-center text-sm">
-        Don&apos;t have an account?{" "}
-        <a href="#" className="underline underline-offset-4">
-          Sign up
-        </a>
+      <div className="text-center text-lg font-semibold text-muted-foreground">
+        Sudah punya akun?{" "}
+        <Link
+          href="/login"
+          className="underline underline-offset-4 text-blue-500"
+        >
+          Login di sini
+        </Link>
       </div>
     </form>
   );
