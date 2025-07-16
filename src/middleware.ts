@@ -37,8 +37,11 @@ async function isEmailVerified(request: NextRequest): Promise<boolean> {
   if (!token) return false;
 
   try {
+    // Use the same base URL as apiClient
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.bhisakirim.com/api";
+    
     // Make API call to check user verification status
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/me`, {
+    const response = await fetch(`${API_URL}/admin/me`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/json',
@@ -51,8 +54,11 @@ async function isEmailVerified(request: NextRequest): Promise<boolean> {
     }
 
     const data = await response.json();
-    return !!data.data?.email_verified_at;
-  } catch {
+    const isVerified = !!data.data?.email_verified_at;
+    
+    return isVerified;
+  } catch (error) {
+    console.error("Error checking email verification:", error);
     return false;
   }
 }

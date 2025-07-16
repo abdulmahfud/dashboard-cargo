@@ -7,21 +7,45 @@ import { Mail, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import apiClient from "@/lib/apiClient";
 import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
 import { VerificationError } from "@/types/verifikasi";
 
 export default function VerifikasiPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
-  const { user, refreshUser } = useAuth();
-  const router = useRouter();
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
+  const { user, refreshUser, loading } = useAuth();
 
+  // Check verification status on page load
   useEffect(() => {
-    // If user is already verified, redirect to dashboard
-    if (user?.email_verified_at) {
-      router.push("/dashboard");
+    const checkInitialStatus = async () => {
+      if (loading) return; // Wait for auth context to load
+      
+      try {
+        const response = await apiClient.get("/admin/me");
+        const userData = response.data.data;
+        
+        if (userData.email_verified_at) {
+          window.location.href = "/dashboard";
+          return;
+        }
+      } catch {
+        // Silently handle error
+      } finally {
+        setInitialCheckDone(true);
+      }
+    };
+
+    if (!initialCheckDone && !loading) {
+      checkInitialStatus();
     }
-  }, [user, router]);
+  }, [loading, initialCheckDone]);
+
+  // Also check when user context changes
+  useEffect(() => {
+    if (user?.email_verified_at && initialCheckDone) {
+      window.location.href = "/dashboard";
+    }
+  }, [user, initialCheckDone]);
 
   const handleResendVerification = async () => {
     setIsLoading(true);
@@ -75,7 +99,15 @@ export default function VerifikasiPage() {
 
   return (
     <div className="min-h-screen bg-blue-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+      {!initialCheckDone ? (
+        <Card className="w-full max-w-md">
+          <CardContent className="flex items-center justify-center p-8">
+            <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
+            <span className="ml-2 text-gray-600">Memeriksa status verifikasi...</span>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 p-3 bg-yellow-100 rounded-full w-fit">
             <Mail className="h-8 w-8 text-yellow-600" />
@@ -150,6 +182,7 @@ export default function VerifikasiPage() {
           </div>
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }
