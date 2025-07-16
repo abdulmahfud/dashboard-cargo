@@ -29,19 +29,19 @@ export default function ZipResults({ selectedZip }: ZipResultsProps) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <p className="text-gray-700 font-semibold">Provinsi</p>
-          <p className="text-gray-900">{selectedZip.provinsi}</p>
+          <p className="text-gray-900">{selectedZip.provinsi || "N/A"}</p>
         </div>
         <div>
           <p className="text-gray-700 font-semibold">Kabupaten / Kota</p>
-          <p className="text-gray-900">{selectedZip.kabupaten}</p>
+          <p className="text-gray-900">{selectedZip.kabupaten || "N/A"}</p>
         </div>
         <div>
           <p className="text-gray-700 font-semibold">Kecamatan / Distrik</p>
-          <p className="text-gray-900">{selectedZip.kecamatan}</p>
+          <p className="text-gray-900">{selectedZip.kecamatan || "N/A"}</p>
         </div>
         <div>
           <p className="text-gray-700 font-semibold">Kelurahan / Desa</p>
-          <p className="text-gray-900">{selectedZip.desa}</p>
+          <p className="text-gray-900">{selectedZip.desa || "N/A"}</p>
         </div>
         <div className="col-span-2">
           <p className="text-gray-700 font-semibold">Kode Pos</p>

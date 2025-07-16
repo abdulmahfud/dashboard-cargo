@@ -53,6 +53,10 @@ const transformOrderToDeliveryReport = (order: Order): DeliveryReport => {
   const shippingMethod: DeliveryReport["shippingMethod"] =
     order.service_type_code === "COD" ? "COD" : "REGULER";
 
+  // Map shipment_type to service (DROPOFF or PICKUP)
+  const service: DeliveryReport["service"] =
+    order.shipment_type === "PICKUP" ? "PICKUP" : "DROPOFF";
+
   // Calculate total shipment from cod_value or item_value
   const totalShipment =
     parseFloat(order.cod_value) || parseFloat(order.item_value) || 0;
@@ -68,6 +72,7 @@ const transformOrderToDeliveryReport = (order: Order): DeliveryReport => {
     courierService,
     totalShipment,
     shippingMethod,
+    service,
     status,
   };
 };

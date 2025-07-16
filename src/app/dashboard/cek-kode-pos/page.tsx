@@ -27,10 +27,11 @@ export default function CekKodePos() {
   // Handle proses pencarian kode pos
   const handleSelectZip = (zip: ZipCode) => {
     setIsLoading(true);
+    // Small delay to show loading animation
     setTimeout(() => {
       setSelectedZip(zip);
       setIsLoading(false);
-    }, 1000); // Simulasi delay untuk efek loading
+    }, 500);
   };
 
   return (

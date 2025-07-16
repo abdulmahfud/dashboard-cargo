@@ -38,6 +38,10 @@ export const columns: ColumnDef<DeliveryReport>[] = [
     header: "METODE PENGIRIMAN",
   },
   {
+    accessorKey: "service",
+    header: "TIPE LAYANAN",
+  },
+  {
     accessorKey: "status",
     header: "STATUS",
   },

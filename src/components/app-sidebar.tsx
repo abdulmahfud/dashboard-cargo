@@ -20,6 +20,7 @@ import {
   Truck,
   User,
   Wallet,
+  PackageX,
 } from "lucide-react";
 import * as React from "react";
 
@@ -72,6 +73,11 @@ const data = {
       title: "Kirim Paket Instant",
       url: "/dashboard/paket/paket-instant",
       icon: Package,
+    },
+    {
+      title: "Cancel Order",
+      url: "/dashboard/paket/cancel-order",
+      icon: PackageX,
     },
   ],
   navClouds: [

@@ -26,6 +26,7 @@ import type {
   OrderResponse,
   ExpeditionVendor,
 } from "@/types/order";
+import type { AddressSearchResponse } from "@/types/addressSearch";
 
 // Ambil URL dari .env
 const API_URL =
@@ -288,6 +289,41 @@ export const submitSapOrder = async (
   orderData: OrderRequest
 ): Promise<OrderResponse> => {
   const res = await apiClient.post("/admin/expedition/sap/order", orderData);
+  return res.data;
+};
+
+// ✅ Search address (provinces, regencies, districts, subdistricts, postal codes)
+export const searchAddress = async (
+  query: string
+): Promise<AddressSearchResponse> => {
+  const res = await apiClient.get(
+    `/public/search-address?query=${encodeURIComponent(query)}`
+  );
+  return res.data;
+};
+
+// ✅ Cancel order functions for different vendors
+export const cancelJntExpressOrder = async (data: {
+  orderid: string;
+  remark: string;
+}) => {
+  const res = await apiClient.post("/admin/expedition/jntexpress/cancel", data);
+  return res.data;
+};
+
+export const cancelLionOrder = async (data: {
+  orderid: string;
+  remark: string;
+}) => {
+  const res = await apiClient.post("/admin/expedition/lion/cancel", data);
+  return res.data;
+};
+
+export const cancelSapOrder = async (data: {
+  orderid: string;
+  remark: string;
+}) => {
+  const res = await apiClient.post("/admin/expedition/sap/cancel", data);
   return res.data;
 };
 

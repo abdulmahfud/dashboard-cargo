@@ -1,7 +1,6 @@
 "use client";
 
 import { AppSidebar } from "@/components/app-sidebar";
-import CalculationResults from "@/components/PaketReguler/CalculationResults";
 import { SiteHeader } from "@/components/site-header";
 import TopNav from "@/components/top-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +9,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useState, useCallback } from "react";
 import RegularPackageForm from "../../../../components/PaketReguler/RegularPackageForm";
+import CalculationResults from "@/components/PaketReguler/CalculationResults";
 
 const PaketReguler = () => {
   const [isSearching, setIsSearching] = useState(false);

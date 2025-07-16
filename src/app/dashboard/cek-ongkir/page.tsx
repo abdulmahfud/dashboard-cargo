@@ -62,7 +62,7 @@ const CekOngkir = () => {
                         </CardTitle>
                       </CardHeader>
 
-                      <CardContent className="min-h-[300px] flex items-center justify-center">
+                      <CardContent className="flex items-center justify-center">
                         {isSearching ? (
                           <motion.div
                             key="loading"

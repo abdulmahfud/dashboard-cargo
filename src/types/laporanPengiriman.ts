@@ -35,6 +35,7 @@ export interface Order {
   awb_no: string;
   status: string;
   service_type_code: string;
+  shipment_type: string;
   cod_value: string;
   item_value: string;
   pickup: OrderPickup;
@@ -57,6 +58,7 @@ export interface DeliveryReport {
   courierService: string;
   totalShipment: number;
   shippingMethod: "COD" | "REGULER";
+  service: "DROPOFF" | "PICKUP";
   status: string;
 }
 

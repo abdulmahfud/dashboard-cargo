@@ -26,7 +26,7 @@ export function NavSendPackage({
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
-        <SidebarGroupLabel>Kirim Paket</SidebarGroupLabel>
+        <SidebarGroupLabel>Paket</SidebarGroupLabel>
         <SidebarMenu>
           {items.map((item) => {
             const isActive = pathname === item.url;
