@@ -43,13 +43,18 @@ export default function VerifikasiPage() {
   const handleCheckStatus = async () => {
     setIsCheckingStatus(true);
     try {
-      await refreshUser();
-      
-      // Check if user is now verified
+      // Make direct API call to check current status
       const response = await apiClient.get("/admin/me");
-      if (response.data.data.email_verified_at) {
+      const userData = response.data.data;
+      
+      if (userData.email_verified_at) {
+        // Update the context with fresh data
+        await refreshUser();
         toast.success("Email berhasil diverifikasi!");
-        router.push("/dashboard");
+        // Small delay to ensure state is updated
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 100);
       } else {
         toast.info("Email belum diverifikasi. Silakan cek inbox Anda.");
       }
