@@ -48,6 +48,11 @@ import type {
   PermissionListResponse,
   SimpleRoleListResponse,
 } from "@/types/roles";
+import type {
+  BankAccountListResponse,
+  BankAccountCreateRequest,
+  BankAccountCreateResponse,
+} from "@/types/bankAccount";
 
 // Ambil URL dari .env
 const API_URL =
@@ -469,6 +474,37 @@ export const getPermissions = async (): Promise<PermissionListResponse> => {
 
 export const getAllPermissions = async (): Promise<PermissionListResponse> => {
   const res = await apiClient.get("/admin/permissions/all");
+  return res.data;
+};
+
+// ✅ Bank Account CRUD operations
+export const getBankAccounts = async (): Promise<BankAccountListResponse> => {
+  const res = await apiClient.get("/admin/bank-accounts");
+  return res.data;
+};
+
+export const createBankAccount = async (
+  data: BankAccountCreateRequest
+): Promise<BankAccountCreateResponse> => {
+  const res = await apiClient.post("/admin/bank-accounts", data);
+  return res.data;
+};
+
+export const updateBankAccount = async (
+  id: number,
+  data: BankAccountCreateRequest
+): Promise<BankAccountCreateResponse> => {
+  const res = await apiClient.put(`/admin/bank-accounts/${id}`, data);
+  return res.data;
+};
+
+export const deleteBankAccount = async (id: number): Promise<BankAccountCreateResponse> => {
+  const res = await apiClient.delete(`/admin/bank-accounts/${id}`);
+  return res.data;
+};
+
+export const getBankAccountById = async (id: number): Promise<BankAccountCreateResponse> => {
+  const res = await apiClient.get(`/admin/bank-accounts/${id}`);
   return res.data;
 };
 
