@@ -49,7 +49,7 @@ export default function ZipCodeForm({ onSelectZip }: ZipCodeFormProps) {
           }
         }
 
-        setFilteredResults(results);
+      setFilteredResults(results);
       } catch (error) {
         console.error("Error searching address:", error);
         setFilteredResults([]);

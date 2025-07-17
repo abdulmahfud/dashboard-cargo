@@ -1,7 +1,6 @@
 "use client";
 
-import {
-  Calculator,
+import {  
   CameraIcon,
   ClipboardListIcon,
   FileCodeIcon,
@@ -11,21 +10,25 @@ import {
   FileText,
   FileTextIcon,
   HelpCircleIcon,
-  House,
-  MessageCircleCode,
+  House,  
   Package,
   PackageSearch,
-  PrinterCheck,
   SettingsIcon,
   Truck,
   User,
   Wallet,
   PackageX,
+  UserRoundSearch,
+  UserRoundPlus,
+  UserCheck,
+  UserCog,
+  ShieldUser,
 } from "lucide-react";
 import * as React from "react";
 
 import { NavAccount } from "@/components/nav-account";
 import { NavData } from "@/components/nav-data";
+import { NavManagementUser } from "@/components/nav-management-user";
 import { NavMain } from "@/components/nav-main";
 import { NavReport } from "@/components/nav-report";
 import { NavSecondary } from "@/components/nav-secondary";
@@ -57,11 +60,11 @@ const data = {
       url: "/dashboard/cek-kode-pos",
       icon: FileSearch,
     },
-    {
-      title: "Cetak Resi Massal",
-      url: "/dashboard/cetak-resi-massal",
-      icon: PrinterCheck,
-    },
+    // {
+    //   title: "Cetak Resi Massal",
+    //   url: "/dashboard/cetak-resi-massal",
+    //   icon: PrinterCheck,
+    // },
   ],
   sendPackage: [
     {
@@ -158,21 +161,21 @@ const data = {
       url: "/dashboard/akun/profil",
       icon: User,
     },
-    {
-      title: "Withdraw",
-      url: "#",
-      icon: Calculator,
-    },
+    // {
+    //   title: "Laporan Withdraw",
+    //   url: "#",
+    //   icon: Calculator,
+    // },
     {
       title: "Rekening",
       url: "/dashboard/akun/rekening",
       icon: Wallet,
     },
-    {
-      title: "Social Media",
-      url: "/dashboard/akun/social-media",
-      icon: MessageCircleCode,
-    },
+    // {
+    //   title: "Social Media",
+    //   url: "/dashboard/akun/social-media",
+    //   icon: MessageCircleCode,
+    // },
   ],
   data: [
     {
@@ -184,6 +187,33 @@ const data = {
       title: "Data Penerima",
       url: "/dashboard/data/data-penerima",
       icon: FileDown,
+    },
+  ],
+  managementUser: [
+    {
+      title: "List User",
+      url: "/dashboard/users",
+      icon: UserRoundSearch,
+    },
+    {
+      title: "Tambah User",
+      url: "/dashboard/users/create",
+      icon: UserRoundPlus,
+    },
+    {
+      title: "List Role",
+      url: "/dashboard/roles",
+      icon: UserCheck,
+    },
+    {
+      title: "Tambah Role",
+      url: "/dashboard/roles/create",
+      icon: UserCog,
+    },
+    {
+      title: "List Permission",
+      url: "/dashboard/permissions",
+      icon: ShieldUser,
     },
   ],
 };
@@ -205,6 +235,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavReport items={data.report} />
         <NavData items={data.data} />
         <NavAccount items={data.account} />
+        <NavManagementUser items={data.managementUser} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

@@ -27,6 +27,27 @@ import type {
   ExpeditionVendor,
 } from "@/types/order";
 import type { AddressSearchResponse } from "@/types/addressSearch";
+import type {
+  UserListResponse,
+  UserDetailResponse,
+  UserCreateRequest,
+  UserCreateResponse,
+  UserUpdateRequest,
+  UserUpdateResponse,
+  UserDeleteResponse,
+  RolesListResponse,
+} from "@/types/users";
+import type {
+  RoleListResponse,
+  RoleDetailResponse,
+  RoleCreateRequest,
+  RoleCreateResponse,
+  RoleUpdateRequest,
+  RoleUpdateResponse,
+  RoleDeleteResponse,
+  PermissionListResponse,
+  SimpleRoleListResponse,
+} from "@/types/roles";
 
 // Ambil URL dari .env
 const API_URL =
@@ -342,6 +363,112 @@ export const cancelSapOrder = async (data: {
   remark: string;
 }) => {
   const res = await apiClient.post("/admin/expedition/sap/cancel", data);
+  return res.data;
+};
+
+// ✅ User management functions
+export const getCurrentUser = async (): Promise<UserDetailResponse> => {
+  try {
+    const res = await apiClient.get("/admin/me");
+    return res.data;
+  } catch (error) {
+    console.error("Failed to fetch current user:", error);
+    throw error;
+  }
+};
+
+export const getUsers = async (
+  search?: string,
+  page?: number
+): Promise<UserListResponse> => {
+  const params:       { search?: string; page?: number } = {};
+  if (search) params.search = search;
+  if (page) params.page = page;
+
+  const res = await apiClient.get("/admin/users", { params });
+  return res.data;
+};
+
+export const getUserById = async (id: number): Promise<UserDetailResponse> => {
+  const res = await apiClient.get(`/admin/users/${id}`);
+  return res.data;
+};
+
+export const createUser = async (
+  data: UserCreateRequest
+): Promise<UserCreateResponse> => {
+  const res = await apiClient.post("/admin/users", data);
+  return res.data;
+};
+
+export const updateUser = async (
+  id: number,
+  data: UserUpdateRequest
+): Promise<UserUpdateResponse> => {
+  const res = await apiClient.put(`/admin/users/${id}`, data);
+  return res.data;
+};
+
+export const deleteUser = async (id: number): Promise<UserDeleteResponse> => {
+  const res = await apiClient.delete(`/admin/users/${id}`);
+  return res.data;
+};
+
+export const getRoles = async (): Promise<RolesListResponse> => {
+  const res = await apiClient.get("/admin/roles");
+  return res.data;
+};
+
+// ✅ Role management functions
+export const getRolesWithPagination = async (
+  search?: string,
+  page?: number
+): Promise<RoleListResponse> => {
+  const params: { search?: string; page?: number } = {};
+  if (search) params.search = search;
+  if (page) params.page = page;
+
+  const res = await apiClient.get("/admin/roles", { params });
+  return res.data;
+};
+
+export const getRoleById = async (id: number): Promise<RoleDetailResponse> => {
+  const res = await apiClient.get(`/admin/roles/${id}`);
+  return res.data;
+};
+
+export const createRole = async (
+  data: RoleCreateRequest
+): Promise<RoleCreateResponse> => {
+  const res = await apiClient.post("/admin/roles", data);
+  return res.data;
+};
+
+export const updateRole = async (
+  id: number,
+  data: RoleUpdateRequest
+): Promise<RoleUpdateResponse> => {
+  const res = await apiClient.put(`/admin/roles/${id}`, data);
+  return res.data;
+};
+
+export const deleteRole = async (id: number): Promise<RoleDeleteResponse> => {
+  const res = await apiClient.delete(`/admin/roles/${id}`);
+  return res.data;
+};
+
+export const getAllRoles = async (): Promise<SimpleRoleListResponse> => {
+  const res = await apiClient.get("/admin/roles/all");
+  return res.data;
+};
+
+export const getPermissions = async (): Promise<PermissionListResponse> => {
+  const res = await apiClient.get("/admin/permissions");
+  return res.data;
+};
+
+export const getAllPermissions = async (): Promise<PermissionListResponse> => {
+  const res = await apiClient.get("/admin/permissions/all");
   return res.data;
 };
 

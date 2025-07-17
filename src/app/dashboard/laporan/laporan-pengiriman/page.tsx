@@ -175,106 +175,106 @@ const LaporanPengiriman = () => {
   const statusStats = calculateStatusStatistics();
 
   // Updated data arrays using real statistics
-  const data = [
-    {
-      label: "Total Pengiriman",
+const data = [
+  {
+    label: "Total Pengiriman",
       value: stats.totalPengiriman,
-      icon: (
-        <LayoutGrid
-          size={30}
-          className="bg-blue-200 text-blue-500 rounded-full p-1"
-        />
-      ),
-      percentage: null,
-    },
-    {
-      label: "Paket Reguler",
+    icon: (
+      <LayoutGrid
+        size={30}
+        className="bg-blue-200 text-blue-500 rounded-full p-1"
+      />
+    ),
+    percentage: null,
+  },
+  {
+    label: "Paket Reguler",
       value: stats.paketReguler,
-      icon: (
-        <Package
-          size={30}
-          className="bg-blue-200 text-blue-500 rounded-full p-1"
-        />
-      ),
+    icon: (
+      <Package
+        size={30}
+        className="bg-blue-200 text-blue-500 rounded-full p-1"
+      />
+    ),
       percentage: stats.paketRegulerPercentage,
-    },
-    {
-      label: "Paket Instant",
+  },
+  {
+    label: "Paket Instant",
       value: stats.paketInstant,
-      icon: (
+    icon: (
         <Truck
           size={30}
           className="bg-blue-200 text-blue-500 rounded-full p-1"
         />
-      ),
+    ),
       percentage: stats.paketInstantPercentage,
-    },
-    {
-      label: "COD",
+  },
+  {
+    label: "COD",
       value: stats.cod,
-      icon: (
-        <Package2
-          size={30}
-          className="bg-blue-200 text-blue-500 rounded-full p-1"
-        />
-      ),
+    icon: (
+      <Package2
+        size={30}
+        className="bg-blue-200 text-blue-500 rounded-full p-1"
+      />
+    ),
       percentage: stats.codPercentage,
-    },
-  ];
+  },
+];
 
-  const statusData = [
-    {
-      label: "Belum Proses",
+const statusData = [
+  {
+    label: "Belum Proses",
       value: statusStats.find((s) => s.status === "Belum Proses")?.count || 0,
-      icon: <Hourglass size={20} className="text-yellow-500" />,
+    icon: <Hourglass size={20} className="text-yellow-500" />,
       percentage:
         statusStats.find((s) => s.status === "Belum Proses")?.percentage || 0,
-    },
-    {
-      label: "Belum di Expedisi",
+  },
+  {
+    label: "Belum di Expedisi",
       value:
         statusStats.find((s) => s.status === "Belum di Expedisi")?.count || 0,
-      icon: <Info size={20} className="text-blue-500" />,
+    icon: <Info size={20} className="text-blue-500" />,
       percentage:
         statusStats.find((s) => s.status === "Belum di Expedisi")?.percentage ||
         0,
-    },
-    {
-      label: "Proses Pengiriman",
+  },
+  {
+    label: "Proses Pengiriman",
       value:
         statusStats.find((s) => s.status === "Proses Pengiriman")?.count || 0,
-      icon: <Truck size={20} className="text-blue-500" />,
+    icon: <Truck size={20} className="text-blue-500" />,
       percentage:
         statusStats.find((s) => s.status === "Proses Pengiriman")?.percentage ||
         0,
-    },
-    {
-      label: "Kendala Pengiriman",
+  },
+  {
+    label: "Kendala Pengiriman",
       value:
         statusStats.find((s) => s.status === "Kendala Pengiriman")?.count || 0,
-      icon: <XCircle size={20} className="text-red-500" />,
+    icon: <XCircle size={20} className="text-red-500" />,
       percentage:
         statusStats.find((s) => s.status === "Kendala Pengiriman")
           ?.percentage || 0,
-    },
-    {
-      label: "Sampai Tujuan",
+  },
+  {
+    label: "Sampai Tujuan",
       value: statusStats.find((s) => s.status === "Sampai Tujuan")?.count || 0,
-      icon: <CheckCircle size={20} className="text-green-500" />,
+    icon: <CheckCircle size={20} className="text-green-500" />,
       percentage:
         statusStats.find((s) => s.status === "Sampai Tujuan")?.percentage || 0,
-    },
-    {
-      label: "Retur",
+  },
+  {
+    label: "Retur",
       value: statusStats.find((s) => s.status === "Retur")?.count || 0,
-      icon: <RefreshCw size={20} className="text-blue-500" />,
+    icon: <RefreshCw size={20} className="text-blue-500" />,
       percentage:
         statusStats.find((s) => s.status === "Retur")?.percentage || 0,
-    },
-    {
-      label: "Dibatalkan",
+  },
+  {
+    label: "Dibatalkan",
       value: statusStats.find((s) => s.status === "Dibatalkan")?.count || 0,
-      icon: <XCircle size={20} className="text-red-600" />,
+    icon: <XCircle size={20} className="text-red-600" />,
       percentage:
         statusStats.find((s) => s.status === "Dibatalkan")?.percentage || 0,
     },

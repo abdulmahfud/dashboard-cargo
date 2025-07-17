@@ -180,7 +180,7 @@ export default function VerifikasiPage() {
             <Button
               onClick={handleLogout}
               variant="ghost"
-              className="w-full text-gray-600 hover:text-gray-800 bg-red-500"
+              className="w-full text-white hover:text-white bg-red-500 hover:bg-red-600"
             >
               Logout
             </Button>

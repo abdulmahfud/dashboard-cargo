@@ -47,3 +47,4 @@ export interface SearchResult {
   province?: Province;
   postal_code: PostalCode;
 }
+ 

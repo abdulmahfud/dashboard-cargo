@@ -5,8 +5,8 @@ import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import TopNav from "@/components/top-nav";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,44 +17,48 @@ import {
   Phone,
   User as UserIcon,
   Calendar,
+  Shield,
   CheckCircle,
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext";
+import { getUserById } from "@/lib/apiClient";
 import { User } from "@/types/users";
 
-export default function UserProfilePage() {
+export default function UserDetailPage() {
   const router = useRouter();
-  const { user: authUser, loading } = useAuth();
+  const params = useParams();
+  const userId = parseInt(params.id as string);
 
-  // Convert AuthContext user to User type for compatibility
-  const user: User | null = authUser
-    ? {
-        id: authUser.id,
-        name: authUser.name,
-        email: authUser.email,
-        whatsapp: authUser.whatsapp || "",
-        email_verified_at: authUser.email_verified_at,
-        created_at: authUser.created_at || "",
-        updated_at: authUser.updated_at || "",
-        roles: [], // AuthContext doesn't include roles, but that's ok for profile
-      }
-    : null;
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchUser = async () => {
+    try {
+      setLoading(true);
+      const response = await getUserById(userId);
+      setUser(response.data);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      toast.error("Gagal memuat data pengguna");
+      router.push("/dashboard/users");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (!loading && !authUser) {
-      toast.error("Sesi Anda telah berakhir. Silakan login kembali.");
-      router.push("/login");
+    if (userId) {
+      fetchUser();
     }
-  }, [loading, authUser, router]);
+  }, [userId]);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="flex items-center gap-2">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-          Memuat data profil...
+          Memuat data pengguna...
         </div>
       </div>
     );
@@ -66,18 +70,18 @@ export default function UserProfilePage() {
         <div className="text-center">
           <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900">
-            Gagal memuat profil
+            Pengguna tidak ditemukan
           </h2>
           <p className="text-gray-600 mt-2">
-            Terjadi kesalahan saat memuat data profil Anda.
+            Pengguna dengan ID {userId} tidak dapat ditemukan.
           </p>
           <Button
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push("/dashboard/users")}
             className="mt-4"
             variant="outline"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Kembali ke Dashboard
+            Kembali ke Daftar User
           </Button>
         </div>
       </div>
@@ -99,16 +103,26 @@ export default function UserProfilePage() {
 
         <div className="container mx-auto p-6">
           <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold">Profil Saya</h1>
-              <p className="text-gray-600">Kelola informasi profil Anda</p>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                onClick={() => router.push("/dashboard/users")}
+                className="gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Kembali
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold">Detail Pengguna</h1>
+                <p className="text-gray-600">Informasi lengkap pengguna</p>
+              </div>
             </div>
             <Button
-              onClick={() => router.push(`/dashboard/akun/profil/edit`)}
+              onClick={() => router.push(`/dashboard/users/${user.id}/edit`)}
               className="gap-2 bg-blue-500 text-white hover:bg-blue-600"
             >
               <Edit className="h-4 w-4" />
-              Edit Profil
+              Edit Pengguna
             </Button>
           </div>
 
@@ -147,6 +161,34 @@ export default function UserProfilePage() {
                       </label>
                       <p className="text-lg font-mono">{user.whatsapp}</p>
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    Role
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {user.roles.length > 0 ? (
+                      user.roles.map((role) => (
+                        <Badge
+                          key={role.id}
+                          variant="secondary"
+                          className="px-3 py-1 text-sm bg-blue-100 text-blue-800 hover:bg-blue-200"
+                        >
+                          {role.name.toUpperCase()}
+                        </Badge>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 italic">
+                        Tidak ada role yang ditetapkan
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -242,38 +284,45 @@ export default function UserProfilePage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Pengaturan</CardTitle>
+                  <CardTitle className="text-lg">Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <Button
                     variant="outline"
                     className="w-full justify-start gap-2"
-                    onClick={() => router.push(`/dashboard/akun/profil/edit`)}
+                    onClick={() =>
+                      router.push(`/dashboard/users/${user.id}/edit`)
+                    }
                   >
                     <Edit className="h-4 w-4" />
-                    Edit Profil
+                    Edit Pengguna
                   </Button>
                   <Button
                     variant="outline"
                     className="w-full justify-start gap-2"
-                    onClick={() => router.push(`/dashboard/akun/rekening`)}
+                    onClick={() =>
+                      window.open(`mailto:${user.email}`, "_blank")
+                    }
                   >
-                    <UserIcon className="h-4 w-4" />
-                    Rekening Bank
+                    <Mail className="h-4 w-4" />
+                    Kirim Email
                   </Button>
                   <Button
                     variant="outline"
                     className="w-full justify-start gap-2"
-                    onClick={() => router.push(`/dashboard/akun/social-media`)}
+                    onClick={() =>
+                      window.open(`https://wa.me/${user.whatsapp}`, "_blank")
+                    }
                   >
                     <Phone className="h-4 w-4" />
-                    Social Media
+                    WhatsApp
                   </Button>
                 </CardContent>
               </Card>
             </div>
           </div>
         </div>
+
       </SidebarInset>
     </SidebarProvider>
   );

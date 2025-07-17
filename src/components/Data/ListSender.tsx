@@ -437,19 +437,19 @@ export default function ListSender({ refreshTrigger }: ListSenderProps) {
         {/* Table */}
         {!loading && (
           <>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nama Pengirim</TableHead>
-                    <TableHead>Nomor Telepon</TableHead>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nama Pengirim</TableHead>
+                <TableHead>Nomor Telepon</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Alamat</TableHead>
                     <TableHead>Lokasi</TableHead>
-                    <TableHead className="text-center">Aksi</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+                <TableHead className="text-center">Aksi</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
                   {data.length > 0 ? (
                     data.map((shipper) => (
                       <TableRow key={shipper.id}>
@@ -472,24 +472,24 @@ export default function ListSender({ refreshTrigger }: ListSenderProps) {
                           </div>
                         </TableCell>
                         <TableCell className="text-center">
-                          <Button
-                            size="icon"
+                      <Button
+                        size="icon"
                             variant="outline"
                             onClick={() => handleEditClick(shipper)}
                             disabled={editLoading}
-                          >
+                      >
                             {editLoading &&
                             editingShipper?.id === shipper.id ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
                               <Pencil className="w-4 h-4" />
                             )}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
                       <TableCell
                         colSpan={6}
                         className="text-center text-gray-500 py-8"
@@ -497,12 +497,12 @@ export default function ListSender({ refreshTrigger }: ListSenderProps) {
                         {searchTerm
                           ? "Tidak ada data yang sesuai dengan pencarian."
                           : "Belum ada data pengirim."}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
             {/* Pagination */}
             {totalPages > 1 && (

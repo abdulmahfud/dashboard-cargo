@@ -3,8 +3,9 @@
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import TopNav from "@/components/top-nav";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, AlertTriangle } from "lucide-react";
 import CancelOrderTable from "@/components/CancelOrder/CancelOrderTable";
 
@@ -54,6 +55,7 @@ export default function CancelOrderPage() {
             </div>
           </div>
         </div>
+        
       </SidebarInset>
     </SidebarProvider>
   );

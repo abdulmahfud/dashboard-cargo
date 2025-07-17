@@ -565,7 +565,7 @@ export default function CalculationResults({
       {showPaymentSection && selectedShippingOption && (
         <div className="space-y-4 mt-6">
           {/* Insurance */}
-          <Card>
+      <Card>
             <CardContent className="p-4">
               <h3 className="text-lg font-semibold mb-3">Asuransi</h3>
               <div className="flex items-center space-x-2">
@@ -577,7 +577,7 @@ export default function CalculationResults({
                 <label htmlFor="insurance" className="text-sm font-medium">
                   Asuransikan Kiriman Saya
                 </label>
-              </div>
+          </div>
             </CardContent>
           </Card>
 
@@ -606,9 +606,9 @@ export default function CalculationResults({
                     }}
                     className="flex-1"
                   />
-                </div>
-              </CardContent>
-            </Card>
+                    </div>
+                </CardContent>
+      </Card>
           )}
 
           {/* Promo Section */}
@@ -619,13 +619,13 @@ export default function CalculationResults({
                 <div className="flex items-center space-x-2">
                   <span className="text-2xl">💡</span>
                   <span className="text-sm font-medium">
-                    Lebih hemat, gunakan voucher promo
+              Lebih hemat, gunakan voucher promo
                   </span>
-                </div>
+            </div>
                 <Button variant="ghost" size="sm">
                   <span className="text-lg">➤</span>
                 </Button>
-              </div>
+          </div>
             </CardContent>
           </Card>
 
@@ -633,27 +633,27 @@ export default function CalculationResults({
           <Card>
             <CardContent className="p-4">
               <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span>Ekspedisi</span>
+          <div className="flex justify-between">
+            <span>Ekspedisi</span>
                   <span className="font-medium">
                     {selectedShippingOption.name}
                   </span>
-                </div>
-                <div className="flex justify-between">
+          </div>
+          <div className="flex justify-between">
                   <span>Nilai Barang</span>
                   <span className="font-medium">
                     Rp{getItemValue().toLocaleString("id-ID")}
-                  </span>
-                </div>
-                <div className="flex justify-between">
+            </span>
+          </div>
+          <div className="flex justify-between">
                   <span>Pengiriman</span>
                   <span className="font-medium">
                     {selectedShippingOption.price}
                   </span>
-                </div>
+          </div>
                 {isInsured && (
-                  <div className="flex justify-between">
-                    <span>Asuransi</span>
+          <div className="flex justify-between">
+            <span>Asuransi</span>
                     <span className="font-medium">
                       Rp{getInsuranceCost().toLocaleString("id-ID")}
                     </span>
@@ -707,12 +707,12 @@ export default function CalculationResults({
                       <span className="font-medium text-green-600">
                         Rp{getItemValue().toLocaleString("id-ID")}
                       </span>
-                    </div>
+          </div>
                   </>
                 ) : (
                   /* Non-COD: Show total payment */
                   <div className="flex justify-between text-lg font-bold text-blue-600">
-                    <span>Total Pembayaran</span>
+            <span>Total Pembayaran</span>
                     <span>Rp{calculateTotal().toLocaleString("id-ID")}</span>
                   </div>
                 )}
@@ -746,8 +746,8 @@ export default function CalculationResults({
                   <CirclePlus className="w-4 h-4" />
                   {isSubmittingOrder ? "Memproses Order..." : "Proses Paket"}
                 </Button>
-              </div>
-            </CardContent>
+          </div>
+        </CardContent>
           </Card>
 
           {orderResult && (
@@ -766,7 +766,7 @@ export default function CalculationResults({
                 {orderResult.awb_no && (
                   <span className="text-sm text-gray-600">
                     AWB: {orderResult.awb_no}
-                  </span>
+              </span>
                 )}
               </div>
             </Card>
@@ -790,8 +790,8 @@ export default function CalculationResults({
                   <div className="text-sm text-gray-600">AWB Number:</div>
                   <div className="text-lg font-mono font-bold text-gray-900">
                     {orderResult.awb_no}
-                  </div>
-                </div>
+            </div>
+          </div>
               </DialogDescription>
             )}
           </DialogHeader>
