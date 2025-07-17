@@ -155,20 +155,30 @@ export default function EditUserPage() {
       await updateUser(userId, updateData);
       toast.success("Data pengguna berhasil diperbarui");
       router.push(`/dashboard/users/${userId}/view`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error updating user:", error);
 
-      if (error.response?.data?.errors) {
-        const errors = error.response.data.errors;
-        Object.keys(errors).forEach((key) => {
-          errors[key].forEach((message: string) => {
-            toast.error(`${key}: ${message}`);
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as {
+          response?: {
+            data?: { errors?: Record<string, string[]>; message?: string };
+          };
+        };
+        if (axiosError.response?.data?.errors) {
+          const errors = axiosError.response.data.errors;
+          Object.keys(errors).forEach((key) => {
+            errors[key].forEach((message: string) => {
+              toast.error(`${key}: ${message}`);
+            });
           });
-        });
+        } else {
+          toast.error(
+            axiosError.response?.data?.message ||
+              "Gagal memperbarui data pengguna"
+          );
+        }
       } else {
-        toast.error(
-          error.response?.data?.message || "Gagal memperbarui data pengguna"
-        );
+        toast.error("Gagal memperbarui data pengguna");
       }
     } finally {
       setSaving(false);
@@ -306,7 +316,11 @@ export default function EditUserPage() {
                 <Checkbox
                   id="changePassword"
                   checked={changePassword}
-                  onCheckedChange={setChangePassword}
+                  onCheckedChange={(checked) =>
+                    setChangePassword(
+                      checked === "indeterminate" ? false : checked
+                    )
+                  }
                 />
                 <Label htmlFor="changePassword" className="font-medium">
                   Ubah Password
