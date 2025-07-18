@@ -175,7 +175,6 @@ export default function RegularPackageForm({
   // Loading state sekarang dikontrol parent
 
   useEffect(() => {
-
     getShippers().then((res) => {
       const mapped = res.data.data.map((shipper: Shipper) => ({
         id: shipper.id,
@@ -189,7 +188,6 @@ export default function RegularPackageForm({
       }));
       setBusinessData(mapped);
       setSelectedBusiness(mapped[0] || null);
-      
     });
 
     getReceivers().then((res) => {
@@ -384,7 +382,6 @@ export default function RegularPackageForm({
 
     // Jika user edit field penerima manual, reset receiverId
     if (["receiverName", "receiverPhone", "receiverAddress"].includes(field)) {
-      
       setReceiverId(null);
     }
   };
@@ -394,7 +391,6 @@ export default function RegularPackageForm({
 
     // Validate all required fields first
     if (!validateAllFields()) {
-      
       onResult?.({
         error: true,
         message: "Silakan lengkapi semua field yang wajib diisi",
@@ -480,7 +476,7 @@ export default function RegularPackageForm({
             ? (err as { message?: string }).message || "Gagal cek ongkir"
             : "Gagal cek ongkir",
       };
-      
+
       onResult?.(errorResult);
     } finally {
       if (setIsSearching) setIsSearching(false);
@@ -1108,7 +1104,7 @@ export default function RegularPackageForm({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="weight">
                   Berat (gram) <span className="text-red-500">*</span>
@@ -1127,6 +1123,9 @@ export default function RegularPackageForm({
                   </p>
                 )}
               </div>
+            </div>
+
+            <div className="grid grid-cols-3 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="length">
                   Panjang (cm) <span className="text-red-500">*</span>

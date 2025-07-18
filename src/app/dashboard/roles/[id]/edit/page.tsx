@@ -105,7 +105,7 @@ export default function EditRolePage() {
     if (!authLoading && !hasPermission("roles.update")) {
       router.replace("/dashboard");
     }
-    }, [authLoading, hasPermission, router]);
+  }, [authLoading, hasPermission, router]);
 
   useEffect(() => {
     if (roleId) {

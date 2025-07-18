@@ -175,106 +175,106 @@ const LaporanPengiriman = () => {
   const statusStats = calculateStatusStatistics();
 
   // Updated data arrays using real statistics
-const data = [
-  {
-    label: "Total Pengiriman",
+  const data = [
+    {
+      label: "Total Pengiriman",
       value: stats.totalPengiriman,
-    icon: (
-      <LayoutGrid
-        size={30}
-        className="bg-blue-200 text-blue-500 rounded-full p-1"
-      />
-    ),
-    percentage: null,
-  },
-  {
-    label: "Paket Reguler",
-      value: stats.paketReguler,
-    icon: (
-      <Package
-        size={30}
-        className="bg-blue-200 text-blue-500 rounded-full p-1"
-      />
-    ),
-      percentage: stats.paketRegulerPercentage,
-  },
-  {
-    label: "Paket Instant",
-      value: stats.paketInstant,
-    icon: (
-        <Truck
-          size={30}
+      icon: (
+        <LayoutGrid
+          size={24}
           className="bg-blue-200 text-blue-500 rounded-full p-1"
         />
-    ),
+      ),
+      percentage: null,
+    },
+    {
+      label: "Paket Reguler",
+      value: stats.paketReguler,
+      icon: (
+        <Package
+          size={24}
+          className="bg-blue-200 text-blue-500 rounded-full p-1"
+        />
+      ),
+      percentage: stats.paketRegulerPercentage,
+    },
+    {
+      label: "Paket Instant",
+      value: stats.paketInstant,
+      icon: (
+        <Truck
+          size={24}
+          className="bg-blue-200 text-blue-500 rounded-full p-1"
+        />
+      ),
       percentage: stats.paketInstantPercentage,
-  },
-  {
-    label: "COD",
+    },
+    {
+      label: "COD",
       value: stats.cod,
-    icon: (
-      <Package2
-        size={30}
-        className="bg-blue-200 text-blue-500 rounded-full p-1"
-      />
-    ),
+      icon: (
+        <Package2
+          size={24}
+          className="bg-blue-200 text-blue-500 rounded-full p-1"
+        />
+      ),
       percentage: stats.codPercentage,
-  },
-];
+    },
+  ];
 
-const statusData = [
-  {
-    label: "Belum Proses",
+  const statusData = [
+    {
+      label: "Belum Proses",
       value: statusStats.find((s) => s.status === "Belum Proses")?.count || 0,
-    icon: <Hourglass size={20} className="text-yellow-500" />,
+      icon: <Hourglass size={18} className="text-yellow-500" />,
       percentage:
         statusStats.find((s) => s.status === "Belum Proses")?.percentage || 0,
-  },
-  {
-    label: "Belum di Expedisi",
+    },
+    {
+      label: "Belum di Expedisi",
       value:
         statusStats.find((s) => s.status === "Belum di Expedisi")?.count || 0,
-    icon: <Info size={20} className="text-blue-500" />,
+      icon: <Info size={18} className="text-blue-500" />,
       percentage:
         statusStats.find((s) => s.status === "Belum di Expedisi")?.percentage ||
         0,
-  },
-  {
-    label: "Proses Pengiriman",
+    },
+    {
+      label: "Proses Pengiriman",
       value:
         statusStats.find((s) => s.status === "Proses Pengiriman")?.count || 0,
-    icon: <Truck size={20} className="text-blue-500" />,
+      icon: <Truck size={18} className="text-blue-500" />,
       percentage:
         statusStats.find((s) => s.status === "Proses Pengiriman")?.percentage ||
         0,
-  },
-  {
-    label: "Kendala Pengiriman",
+    },
+    {
+      label: "Kendala Pengiriman",
       value:
         statusStats.find((s) => s.status === "Kendala Pengiriman")?.count || 0,
-    icon: <XCircle size={20} className="text-red-500" />,
+      icon: <XCircle size={18} className="text-red-500" />,
       percentage:
         statusStats.find((s) => s.status === "Kendala Pengiriman")
           ?.percentage || 0,
-  },
-  {
-    label: "Sampai Tujuan",
+    },
+    {
+      label: "Sampai Tujuan",
       value: statusStats.find((s) => s.status === "Sampai Tujuan")?.count || 0,
-    icon: <CheckCircle size={20} className="text-green-500" />,
+      icon: <CheckCircle size={18} className="text-green-500" />,
       percentage:
         statusStats.find((s) => s.status === "Sampai Tujuan")?.percentage || 0,
-  },
-  {
-    label: "Retur",
+    },
+    {
+      label: "Retur",
       value: statusStats.find((s) => s.status === "Retur")?.count || 0,
-    icon: <RefreshCw size={20} className="text-blue-500" />,
+      icon: <RefreshCw size={18} className="text-blue-500" />,
       percentage:
         statusStats.find((s) => s.status === "Retur")?.percentage || 0,
-  },
-  {
-    label: "Dibatalkan",
+    },
+    {
+      label: "Dibatalkan",
       value: statusStats.find((s) => s.status === "Dibatalkan")?.count || 0,
-    icon: <XCircle size={20} className="text-red-600" />,
+      icon: <XCircle size={18} className="text-red-600" />,
       percentage:
         statusStats.find((s) => s.status === "Dibatalkan")?.percentage || 0,
     },
@@ -293,7 +293,7 @@ const statusData = [
           </div>
           <div className="flex flex-1 flex-col bg-blue-100">
             <div className="@container/main flex flex-1 flex-col gap-2">
-              <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 md:px-6">
+              <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-3 md:px-6">
                 <div className="flex items-center justify-center h-64">
                   <div className="text-lg">Loading...</div>
                 </div>
@@ -318,7 +318,7 @@ const statusData = [
           </div>
           <div className="flex flex-1 flex-col bg-blue-100">
             <div className="@container/main flex flex-1 flex-col gap-2">
-              <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 md:px-6">
+              <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-3 md:px-6">
                 <div className="flex items-center justify-center h-64">
                   <div className="text-lg text-red-500">{error}</div>
                 </div>
@@ -342,60 +342,74 @@ const statusData = [
         </div>
         <div className="flex flex-1 flex-col bg-blue-100">
           <div className="@container/main flex flex-1 flex-col gap-2">
-            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 md:px-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold">Laporan Pengiriman</h2>
-                <Button className="rounded-full px-4 bg-blue-500 hover:bg-blue-600 text-white">
+            <div className="flex flex-col gap-3 sm:gap-4 md:gap-6 py-3 sm:py-4 md:py-6 px-3 md:px-6">
+              {/* Header - Mobile responsive */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <h2 className="text-lg sm:text-xl font-bold">
+                  Laporan Pengiriman
+                </h2>
+                <Button className="rounded-full px-3 sm:px-4 bg-blue-500 hover:bg-blue-600 text-white text-sm">
                   <CloudDownload className="w-4 h-4 mr-2" />
-                  Export Data
+                  <span className="hidden sm:inline">Export Data</span>
+                  <span className="sm:hidden">Export</span>
                 </Button>
               </div>
-              {/* Kartu Statistik Pengiriman */}
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+
+              {/* Kartu Statistik Pengiriman - Responsive Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {data.map((item, index) => (
                   <Card key={index} className="shadow-md">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-md font-medium flex items-center gap-2">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
                         {item.icon}
-                        {item.label}
+                        <span className="text-xs sm:text-sm leading-tight">
+                          {item.label}
+                        </span>
                       </CardTitle>
                       {item.percentage !== null && (
-                        <span className="text-sm text-blue-700 rounded-full bg-blue-100 px-1 py-2">
+                        <span className="text-xs text-blue-700 rounded-full bg-blue-100 px-2 py-1 flex-shrink-0">
                           {item.percentage}%
                         </span>
                       )}
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-3xl font-bold">{item.value}</p>
+                    <CardContent className="p-3 sm:p-4 pt-0">
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold">
+                        {item.value}
+                      </p>
                       {item.percentage !== null && (
-                        <Progress value={item.percentage} />
+                        <Progress value={item.percentage} className="mt-2" />
                       )}
                     </CardContent>
                   </Card>
                 ))}
               </div>
 
-              {/* Kartu Status Pengiriman */}
-              <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+              {/* Kartu Status Pengiriman - Better Mobile Layout */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-4">
                 {statusData.map((status, index) => (
                   <Card key={index} className="shadow-md">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-md font-medium flex items-center gap-2">
+                    <CardHeader className="flex flex-col space-y-2 pb-2 p-3 sm:p-4">
+                      <div className="flex items-center justify-between">
                         {status.icon}
+                        <span className="text-xs text-blue-700 rounded-full bg-blue-100 px-2 py-1 flex-shrink-0">
+                          {status.percentage}%
+                        </span>
+                      </div>
+                      <CardTitle className="text-xs sm:text-sm font-medium leading-tight">
                         {status.label}
                       </CardTitle>
-                      <span className="text-sm text-blue-700 rounded-full bg-blue-100 px-1 py-2">
-                        {status.percentage}%
-                      </span>
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-3xl font-bold">{status.value}</p>
-                      <Progress value={status.percentage} />
+                    <CardContent className="pt-0 p-3 sm:p-4">
+                      <p className="text-lg sm:text-xl lg:text-2xl font-bold">
+                        {status.value}
+                      </p>
+                      <Progress value={status.percentage} className="mt-2" />
                     </CardContent>
                   </Card>
                 ))}
               </div>
-              <Card>
+
+              <Card className="overflow-hidden">
                 <DataTable
                   columns={columns}
                   data={dataReport}
