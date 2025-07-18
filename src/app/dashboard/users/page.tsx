@@ -73,7 +73,7 @@ export default function UsersPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!authLoading && !hasPermission("users.index")) {
+    if (!authLoading && !hasPermission("roles.index")) {
       router.replace("/dashboard");
     }
   }, [authLoading, hasPermission, router]);
@@ -252,7 +252,7 @@ export default function UsersPage() {
   });
 
   if (authLoading) return null;
-  if (!hasPermission("users.index")) return null;
+  if (!hasPermission("roles.index")) return null;
 
   if (loading && data.length === 0) {
     return (

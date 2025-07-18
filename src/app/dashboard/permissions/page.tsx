@@ -45,8 +45,14 @@ import {
 import { toast } from "sonner";
 import { getAllPermissions } from "@/lib/apiClient";
 import { Permission } from "@/types/roles";
+import { useAuth } from "@/context/AuthContext";
+
+import { useRouter } from "next/navigation";
 
 export default function PermissionsPage() {
+  const { hasPermission, loading: authLoading } = useAuth();
+  const router = useRouter();
+
   const [data, setData] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -208,6 +214,12 @@ export default function PermissionsPage() {
     },
   });
 
+  useEffect(() => {
+    if (!authLoading && !hasPermission("permissions.index")) {
+      router.replace("/dashboard");
+    }
+  }, [authLoading, hasPermission, router]);
+
   // Reset to first page when search changes
   useEffect(() => {
     setCurrentPage(1);
@@ -222,6 +234,9 @@ export default function PermissionsPage() {
   const goToNextPage = () =>
     setCurrentPage(Math.min(currentPage + 1, totalPages));
   const goToPreviousPage = () => setCurrentPage(Math.max(currentPage - 1, 1));
+
+  if (authLoading) return null;
+  if (!hasPermission("permissions.index")) return null;
 
   return (
     <SidebarProvider>

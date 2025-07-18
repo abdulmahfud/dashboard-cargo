@@ -9,7 +9,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, AlertTriangle } from "lucide-react";
 import CancelOrderTable from "@/components/CancelOrder/CancelOrderTable";
 
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+
 export default function CancelOrderPage() {
+  const { hasPermission, loading: authLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!authLoading && !hasPermission("expedition.orders.cancel")) {
+      router.replace("/dashboard");
+    }
+  }, [authLoading, hasPermission, router]);
+
+  if (authLoading) return null;
+  if (!hasPermission("expedition.orders.cancel")) return null;
+
   return (
     <SidebarProvider>
       <AppSidebar variant="inset" />
@@ -55,7 +71,6 @@ export default function CancelOrderPage() {
             </div>
           </div>
         </div>
-        
       </SidebarInset>
     </SidebarProvider>
   );

@@ -51,6 +51,8 @@ import { toast } from "sonner";
 import { getRolesWithPagination, deleteRole } from "@/lib/apiClient";
 import { Role } from "@/types/roles";
 
+import { useAuth } from "@/context/AuthContext";
+
 export default function RolesPage() {
   const router = useRouter();
   const [data, setData] = useState<Role[]>([]);
@@ -63,6 +65,8 @@ export default function RolesPage() {
   const [deleting, setDeleting] = useState<number | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
+
+  const { hasPermission, loading: authLoading } = useAuth();
 
   const fetchRoles = async (page = 1, searchQuery = "") => {
     try {
@@ -82,6 +86,12 @@ export default function RolesPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!authLoading && !hasPermission("roles.index")) {
+      router.replace("/dashboard");
+    }
+  }, [authLoading, hasPermission, router]);
 
   useEffect(() => {
     fetchRoles(currentPage, search);
@@ -214,6 +224,9 @@ export default function RolesPage() {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+
+  if (authLoading) return null;
+  if (!hasPermission("roles.index")) return null;
 
   if (loading && data.length === 0) {
     return (

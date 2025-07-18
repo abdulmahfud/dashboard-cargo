@@ -1,13 +1,13 @@
 "use client";
 
-import {  
+import {
   ClipboardListIcon,
   FileDown,
   FileSearch,
   FileSymlink,
   FileText,
   HelpCircleIcon,
-  House,  
+  House,
   Package,
   PackageSearch,
   Truck,
@@ -30,6 +30,8 @@ import { NavReport } from "@/components/nav-report";
 import { NavSecondary } from "@/components/nav-secondary";
 import { NavSendPackage } from "@/components/nav-send-package";
 import { NavUser } from "@/components/nav-user";
+
+import { useAuth } from "@/context/AuthContext";
 
 import {
   Sidebar,
@@ -77,6 +79,7 @@ const data = {
       title: "Cancel Order",
       url: "/dashboard/paket/cancel-order",
       icon: PackageX,
+      permission: "expedition.orders.cancel",
     },
   ],
   navSecondary: [
@@ -162,6 +165,16 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { hasPermission, loading: authLoading } = useAuth();
+
+  if (authLoading) return null;
+
+  // ✅ Filter sendPackage berdasarkan permission
+  const filteredSendPackage = data.sendPackage.filter((item: { permission?: string }) => {
+    if (!item.permission) return true; // menu tanpa permission = selalu tampil
+    return hasPermission(item.permission);
+  });
+  
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader className="pt-0 pb-0 mb-5 mt-5">
@@ -174,11 +187,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavSendPackage items={data.sendPackage} />
+        <NavSendPackage items={filteredSendPackage} />
         <NavReport items={data.report} />
         <NavData items={data.data} />
         <NavAccount items={data.account} />
-        <NavManagementUser items={data.managementUser} />
+        {hasPermission("roles.index") && (
+          <NavManagementUser items={data.managementUser} />
+        )}
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

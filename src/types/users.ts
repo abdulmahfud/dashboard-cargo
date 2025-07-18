@@ -86,15 +86,3 @@ export interface UserDeleteResponse {
   success: boolean;
   message: string;
 }
-
-export interface RoleOption {
-  id: number;
-  name: string;
-  display_name: string;
-}
-
-export interface RolesListResponse {
-  success: boolean;
-  message: string;
-  data: RoleOption[];
-}

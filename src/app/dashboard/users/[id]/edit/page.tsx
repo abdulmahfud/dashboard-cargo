@@ -1,5 +1,10 @@
 "use client";
 
+import { AppSidebar } from "@/components/app-sidebar";
+import { SiteHeader } from "@/components/site-header";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import TopNav from "@/components/top-nav";
+
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -16,13 +21,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Save, Eye, EyeOff, UserCheck } from "lucide-react";
 import { toast } from "sonner";
-import { getUserById, updateUser, getRoles } from "@/lib/apiClient";
-import { User, UserUpdateRequest, RoleOption } from "@/types/users";
+import { getUserById, updateUser, getAllRoles } from "@/lib/apiClient";
+import { User, UserUpdateRequest } from "@/types/users";
+import { SimpleRole } from "@/types/roles";
+
+import { useAuth } from "@/context/AuthContext";
 
 export default function EditUserPage() {
   const router = useRouter();
   const params = useParams();
   const userId = parseInt(params.id as string);
+  const { hasPermission, loading: authLoading } = useAuth();
 
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,7 +39,7 @@ export default function EditUserPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [changePassword, setChangePassword] = useState(false);
-  const [roles, setRoles] = useState<RoleOption[]>([]);
+  const [roles, setRoles] = useState<SimpleRole[]>([]);
   const [formData, setFormData] = useState<UserUpdateRequest>({
     name: "",
     email: "",
@@ -45,7 +54,7 @@ export default function EditUserPage() {
       setLoading(true);
       const [userResponse, rolesResponse] = await Promise.all([
         getUserById(userId),
-        getRoles(),
+        getAllRoles(),
       ]);
 
       const userData = userResponse.data;
@@ -68,6 +77,12 @@ export default function EditUserPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!authLoading && !hasPermission("roles.index")) {
+      router.replace("/dashboard");
+    }
+    }, [authLoading, hasPermission, router]);
 
   useEffect(() => {
     if (userId) {
@@ -185,6 +200,9 @@ export default function EditUserPage() {
     }
   };
 
+  if (authLoading) return null;
+  if (!hasPermission("roles.index")) return null;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -220,219 +238,242 @@ export default function EditUserPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-2xl">
-      <div className="flex items-center gap-4 mb-6">
-        <Button
-          variant="outline"
-          onClick={() => router.push(`/dashboard/users/${userId}/view`)}
-          className="gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Kembali
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold">Edit Pengguna</h1>
-          <p className="text-gray-600">
-            Perbarui informasi pengguna {user.name}
-          </p>
+    <SidebarProvider>
+      <AppSidebar variant="inset" />
+      <SidebarInset>
+        <div className="flex items-center justify-between w-full">
+          <div className="flex-1">
+            <SiteHeader />
+          </div>
+          <TopNav />
         </div>
-      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <UserCheck className="h-5 w-5" />
-            Form Edit Pengguna
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nama Lengkap *</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange("name", e.target.value)}
-                  placeholder="Masukkan nama lengkap"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                  placeholder="contoh@email.com"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="whatsapp">Nomor WhatsApp *</Label>
-              <Input
-                id="whatsapp"
-                type="text"
-                value={formData.whatsapp}
-                onChange={(e) => handleInputChange("whatsapp", e.target.value)}
-                placeholder="08xxxxxxxxx atau +62xxxxxxxxx"
-                required
-              />
-              <p className="text-xs text-gray-500">
-                Format: 08xxxxxxxxx atau +62xxxxxxxxx
+        <div className="container mx-auto p-6">
+          <div className="flex items-center gap-4 mb-6">
+            <Button
+              variant="outline"
+              onClick={() => router.push(`/dashboard/users/${userId}/view`)}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Kembali
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold">Edit Pengguna</h1>
+              <p className="text-gray-600">
+                Perbarui informasi pengguna {user.name}
               </p>
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Select
-                value={formData.role || "user"}
-                onValueChange={(value) => handleInputChange("role", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih role pengguna" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">User</SelectItem>
-                  {roles.map((role) => (
-                    <SelectItem key={role.id} value={role.name}>
-                      {role.display_name || role.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-gray-500">
-                Tentukan level akses pengguna dalam sistem
-              </p>
-            </div>
-
-            <div className="space-y-4 p-4 border rounded-lg">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="changePassword"
-                  checked={changePassword}
-                  onCheckedChange={(checked) =>
-                    setChangePassword(
-                      checked === "indeterminate" ? false : checked
-                    )
-                  }
-                />
-                <Label htmlFor="changePassword" className="font-medium">
-                  Ubah Password
-                </Label>
-              </div>
-
-              {changePassword && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserCheck className="h-5 w-5" />
+                Form Edit Pengguna
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="password">Password Baru *</Label>
-                    <div className="relative">
-                      <Input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        value={formData.password}
-                        onChange={(e) =>
-                          handleInputChange("password", e.target.value)
-                        }
-                        placeholder="Minimal 8 karakter"
-                        required={changePassword}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
+                    <Label htmlFor="name">Nama Lengkap *</Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) =>
+                        handleInputChange("name", e.target.value)
+                      }
+                      placeholder="Masukkan nama lengkap"
+                      required
+                    />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="password_confirmation">
-                      Konfirmasi Password Baru *
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        id="password_confirmation"
-                        type={showConfirmPassword ? "text" : "password"}
-                        value={formData.password_confirmation}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "password_confirmation",
-                            e.target.value
-                          )
-                        }
-                        placeholder="Ulangi password baru"
-                        required={changePassword}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() =>
-                          setShowConfirmPassword(!showConfirmPassword)
-                        }
-                      >
-                        {showConfirmPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
+                    <Label htmlFor="email">Email *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) =>
+                        handleInputChange("email", e.target.value)
+                      }
+                      placeholder="contoh@email.com"
+                      required
+                    />
                   </div>
                 </div>
-              )}
-            </div>
 
-            <div className="flex justify-end gap-3 pt-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.push(`/dashboard/users/${userId}/view`)}
-                disabled={saving}
-              >
-                Batal
-              </Button>
-              <Button type="submit" disabled={saving} className="gap-2">
-                {saving ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Menyimpan...
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4" />
-                    Simpan Perubahan
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+                <div className="space-y-2">
+                  <Label htmlFor="whatsapp">Nomor WhatsApp *</Label>
+                  <Input
+                    id="whatsapp"
+                    type="text"
+                    value={formData.whatsapp}
+                    onChange={(e) =>
+                      handleInputChange("whatsapp", e.target.value)
+                    }
+                    placeholder="08xxxxxxxxx atau +62xxxxxxxxx"
+                    required
+                  />
+                  <p className="text-xs text-gray-500">
+                    Format: 08xxxxxxxxx atau +62xxxxxxxxx
+                  </p>
+                </div>
 
-      <div className="mt-6 p-4 bg-amber-50 rounded-lg">
-        <h3 className="font-semibold text-amber-900 mb-2">Perhatian:</h3>
-        <ul className="text-sm text-amber-800 space-y-1">
-          <li>• Perubahan email akan memerlukan verifikasi ulang</li>
-          <li>• Jika mengubah password, pengguna harus login ulang</li>
-          <li>• Perubahan role akan mempengaruhi hak akses pengguna</li>
-          <li>• Semua perubahan akan tersimpan secara permanen</li>
-        </ul>
-      </div>
-    </div>
+                <div className="space-y-2">
+                  <Label htmlFor="role">Role</Label>
+                  <Select
+                    value={formData.role || "user"}
+                    onValueChange={(value) => handleInputChange("role", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih role pengguna" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roles.map((role) => (
+                        <SelectItem key={role.id} value={role.name}>
+                          {role.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500">
+                    Tentukan level akses pengguna dalam sistem
+                  </p>
+                </div>
+
+                <div className="space-y-4 p-4 border rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="changePassword"
+                      checked={changePassword}
+                      onCheckedChange={(checked) =>
+                        setChangePassword(
+                          checked === "indeterminate" ? false : checked
+                        )
+                      }
+                    />
+                    <Label htmlFor="changePassword" className="font-medium">
+                      Ubah Password
+                    </Label>
+                  </div>
+
+                  {changePassword && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="password">Password Baru *</Label>
+                        <div className="relative">
+                          <Input
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            value={formData.password}
+                            onChange={(e) =>
+                              handleInputChange("password", e.target.value)
+                            }
+                            placeholder="Minimal 8 karakter"
+                            required={changePassword}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="password_confirmation">
+                          Konfirmasi Password Baru *
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            id="password_confirmation"
+                            type={showConfirmPassword ? "text" : "password"}
+                            value={formData.password_confirmation}
+                            onChange={(e) =>
+                              handleInputChange(
+                                "password_confirmation",
+                                e.target.value
+                              )
+                            }
+                            placeholder="Ulangi password baru"
+                            required={changePassword}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                            onClick={() =>
+                              setShowConfirmPassword(!showConfirmPassword)
+                            }
+                          >
+                            {showConfirmPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-3 pt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      router.push(`/dashboard/users/${userId}/view`)
+                    }
+                    disabled={saving}
+                  >
+                    Batal
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={saving}
+                    className="gap-2 bg-gradient-to-r from-blue-500 to-blue-700 hover:bg-blue-700 hover:text-white"
+                  >
+                    {saving ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Menyimpan...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" />
+                        Simpan Perubahan
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+
+          <div className="mt-6 p-4 bg-amber-50 rounded-lg">
+            <h3 className="font-semibold text-amber-900 mb-2">Perhatian:</h3>
+            <ul className="text-sm text-amber-800 space-y-1">
+              <li>• Perubahan email akan memerlukan verifikasi ulang</li>
+              <li>• Jika mengubah password, pengguna harus login ulang</li>
+              <li>• Perubahan role akan mempengaruhi hak akses pengguna</li>
+              <li>• Semua perubahan akan tersimpan secara permanen</li>
+            </ul>
+          </div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

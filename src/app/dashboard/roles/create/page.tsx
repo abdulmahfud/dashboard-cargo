@@ -17,9 +17,12 @@ import { toast } from "sonner";
 import { createRole, getAllPermissions } from "@/lib/apiClient";
 import { RoleCreateRequest, Permission, PermissionGroup } from "@/types/roles";
 
+import { useAuth } from "@/context/AuthContext";
+
 export default function CreateRolePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const { hasPermission, loading: authLoading } = useAuth();
   const [permissionGroups, setPermissionGroups] = useState<PermissionGroup[]>(
     []
   );
@@ -70,6 +73,12 @@ export default function CreateRolePage() {
       toast.error("Gagal memuat data permissions");
     }
   };
+
+  useEffect(() => {
+    if (!authLoading && !hasPermission("roles.store")) {
+      router.replace("/dashboard");
+    }
+  }, [authLoading, hasPermission, router]);
 
   useEffect(() => {
     fetchPermissions();
@@ -195,6 +204,9 @@ export default function CreateRolePage() {
       setLoading(false);
     }
   };
+
+  if (authLoading) return null;
+  if (!hasPermission("roles.store")) return null;
 
   return (
     <SidebarProvider>

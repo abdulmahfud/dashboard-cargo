@@ -24,12 +24,16 @@ import { createUser, getAllRoles } from "@/lib/apiClient";
 import { UserCreateRequest } from "@/types/users";
 import { SimpleRole } from "@/types/roles";
 
+import { useAuth } from "@/context/AuthContext";
+
 export default function CreateUserPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [roles, setRoles] = useState<SimpleRole[]>([]);
+  const { hasPermission, loading: authLoading } = useAuth();
+
   const [formData, setFormData] = useState<UserCreateRequest>({
     name: "",
     email: "",
@@ -48,6 +52,12 @@ export default function CreateUserPage() {
       toast.error("Gagal memuat data roles");
     }
   };
+
+  useEffect(() => {
+    if (!authLoading && !hasPermission("roles.index")) {
+      router.replace("/dashboard");
+    }
+    }, [authLoading, hasPermission, router]);
 
   useEffect(() => {
     fetchRoles();
@@ -186,6 +196,9 @@ export default function CreateUserPage() {
       setLoading(false);
     }
   };
+
+  if (authLoading) return null;
+  if (!hasPermission("roles.index")) return null;
 
   return (
     <SidebarProvider>

@@ -35,7 +35,6 @@ import type {
   UserUpdateRequest,
   UserUpdateResponse,
   UserDeleteResponse,
-  RolesListResponse,
 } from "@/types/users";
 import type {
   RoleListResponse,
@@ -386,7 +385,7 @@ export const getUsers = async (
   search?: string,
   page?: number
 ): Promise<UserListResponse> => {
-  const params:       { search?: string; page?: number } = {};
+  const params: { search?: string; page?: number } = {};
   if (search) params.search = search;
   if (page) params.page = page;
 
@@ -419,7 +418,7 @@ export const deleteUser = async (id: number): Promise<UserDeleteResponse> => {
   return res.data;
 };
 
-export const getRoles = async (): Promise<RolesListResponse> => {
+export const getRoles = async (): Promise<RoleListResponse> => {
   const res = await apiClient.get("/admin/roles");
   return res.data;
 };
@@ -498,12 +497,16 @@ export const updateBankAccount = async (
   return res.data;
 };
 
-export const deleteBankAccount = async (id: number): Promise<BankAccountCreateResponse> => {
+export const deleteBankAccount = async (
+  id: number
+): Promise<BankAccountCreateResponse> => {
   const res = await apiClient.delete(`/admin/bank-accounts/${id}`);
   return res.data;
 };
 
-export const getBankAccountById = async (id: number): Promise<BankAccountCreateResponse> => {
+export const getBankAccountById = async (
+  id: number
+): Promise<BankAccountCreateResponse> => {
   const res = await apiClient.get(`/admin/bank-accounts/${id}`);
   return res.data;
 };

@@ -22,10 +22,14 @@ import {
   PermissionGroup,
 } from "@/types/roles";
 
+import { useAuth } from "@/context/AuthContext";
+
 export default function EditRolePage() {
   const router = useRouter();
   const params = useParams();
   const roleId = parseInt(params.id as string);
+
+  const { hasPermission, loading: authLoading } = useAuth();
 
   const [role, setRole] = useState<Role | null>(null);
   const [loading, setLoading] = useState(true);
@@ -96,6 +100,12 @@ export default function EditRolePage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!authLoading && !hasPermission("roles.update")) {
+      router.replace("/dashboard");
+    }
+    }, [authLoading, hasPermission, router]);
 
   useEffect(() => {
     if (roleId) {
@@ -223,6 +233,9 @@ export default function EditRolePage() {
       setSaving(false);
     }
   };
+
+  if (authLoading) return null;
+  if (!hasPermission("roles.update")) return null;
 
   if (loading) {
     return (

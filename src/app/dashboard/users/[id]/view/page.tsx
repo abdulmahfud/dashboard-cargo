@@ -25,10 +25,13 @@ import { toast } from "sonner";
 import { getUserById } from "@/lib/apiClient";
 import { User } from "@/types/users";
 
+import { useAuth } from "@/context/AuthContext";
+
 export default function UserDetailPage() {
   const router = useRouter();
   const params = useParams();
   const userId = parseInt(params.id as string);
+  const { hasPermission, loading: authLoading } = useAuth();
 
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,10 +51,19 @@ export default function UserDetailPage() {
   };
 
   useEffect(() => {
+    if (!authLoading && !hasPermission("roles.index")) {
+      router.replace("/dashboard");
+    }
+    }, [authLoading, hasPermission, router]);
+
+  useEffect(() => {
     if (userId) {
       fetchUser();
     }
   }, [userId]);
+
+  if (authLoading) return null;
+  if (!hasPermission("roles.index")) return null;
 
   if (loading) {
     return (
