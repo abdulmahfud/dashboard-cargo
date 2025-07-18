@@ -6,7 +6,6 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import TopNav from "@/components/top-nav";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import {
   ColumnDef,
   flexRender,
@@ -50,13 +49,15 @@ import { toast } from "sonner";
 import { getUsers, deleteUser } from "@/lib/apiClient";
 import { User } from "@/types/users";
 
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+
 const STATUS_COLORS = {
   verified: "bg-green-100 text-green-800",
   unverified: "bg-yellow-100 text-yellow-800",
 };
 
 export default function UsersPage() {
-  const router = useRouter();
   const [data, setData] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -67,6 +68,15 @@ export default function UsersPage() {
   const [deleting, setDeleting] = useState<number | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+
+  const { hasPermission, loading: authLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!authLoading && !hasPermission("users.index")) {
+      router.replace("/dashboard");
+    }
+  }, [authLoading, hasPermission, router]);
 
   const fetchUsers = async (page = 1, searchQuery = "") => {
     try {
@@ -240,6 +250,9 @@ export default function UsersPage() {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+
+  if (authLoading) return null;
+  if (!hasPermission("users.index")) return null;
 
   if (loading && data.length === 0) {
     return (

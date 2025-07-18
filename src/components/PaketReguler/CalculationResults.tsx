@@ -96,23 +96,11 @@ export default function CalculationResults({
 
   // Debug: Log when props change - FIXED: Use useEffect instead of useState
   useEffect(() => {
-    console.log(
-      "🎯 CalculationResults - Component initialized/updated with props:",
-      {
-        isSearching,
-        result,
-        formData,
-      }
-    );
   }, [isSearching, result, formData]);
 
   // Build shippingOptions from API result if present
   const shippingOptions: ShippingOption[] = useMemo(() => {
-    console.log(
-      "🔍 CalculationResults - Building shipping options from result:",
-      result
-    );
-
+    
     const apiResult = result as JntApiResult;
 
     if (
@@ -128,11 +116,6 @@ export default function CalculationResults({
           productType: string;
         }>;
 
-        console.log(
-          "📊 CalculationResults - Parsed content array:",
-          contentArr
-        );
-
         if (Array.isArray(contentArr) && contentArr.length > 0) {
           // Map semua opsi dari API JNT Express
           const options = contentArr.map((item, index) => ({
@@ -145,11 +128,6 @@ export default function CalculationResults({
             recommended: index === 0, // Opsi pertama sebagai rekomendasi
             tags: [{ label: "Potensi retur Rendah", type: "success" as const }],
           }));
-
-          console.log(
-            "✅ CalculationResults - Generated shipping options:",
-            options
-          );
           return options;
         }
       } catch (error) {
@@ -160,8 +138,6 @@ export default function CalculationResults({
         return [];
       }
     }
-
-    console.log("⚠️ CalculationResults - No valid shipping options found");
     return [];
   }, [result]);
 
@@ -243,14 +219,6 @@ export default function CalculationResults({
   };
 
   const handleSubmitOrder = async () => {
-    console.log("🚀 CalculationResults - handleSubmitOrder started");
-    console.log("📋 CalculationResults - Current state:", {
-      selectedOption,
-      selectedShippingOption,
-      isInsured,
-      customCODValue,
-      formData,
-    });
 
     if (
       !selectedShippingOption ||
@@ -270,10 +238,6 @@ export default function CalculationResults({
       alert("Data tidak lengkap untuk melakukan order");
       return;
     }
-
-    console.log(
-      "✅ CalculationResults - All required data present, proceeding with order"
-    );
 
     setIsSubmittingOrder(true);
     setOrderResult(null);
@@ -302,18 +266,6 @@ export default function CalculationResults({
           ).toString();
         }
       }
-
-      console.log("💰 CalculationResults - COD calculation:", {
-        paymentMethod: formData.formData.paymentMethod,
-        customCODValue,
-        itemValue: getItemValue(),
-        shippingCost: parseInt(
-          selectedShippingOption.price.replace(/[^\d]/g, "")
-        ),
-        codFee: getCODFee(),
-        insuranceCost: getInsuranceCost(),
-        finalCodValue: codValue,
-      });
 
       // Build order data
       const orderData: OrderRequest = {
@@ -345,22 +297,11 @@ export default function CalculationResults({
         },
       };
 
-      console.log(
-        "📦 CalculationResults - Base order data created:",
-        orderData
-      );
-
       // Use receiver_id if available, otherwise use receiver object
       if (formData.receiverId) {
         orderData.receiver_id = parseInt(formData.receiverId);
         orderData.shipper_id = formData.businessData.id;
-        console.log(
-          "👥 CalculationResults - Using saved shipper/receiver IDs:",
-          {
-            receiver_id: orderData.receiver_id,
-            shipper_id: orderData.shipper_id,
-          }
-        );
+        
       } else {
         orderData.sender = {
           name: formData.businessData.senderName,
@@ -378,36 +319,12 @@ export default function CalculationResults({
           regency: formData.formData.regency,
           district: formData.formData.district,
         };
-
-        console.log(
-          "📝 CalculationResults - Using direct sender/receiver objects:",
-          {
-            sender: orderData.sender,
-            receiver: orderData.receiver,
-          }
-        );
       }
-
-      console.log(
-        "🌐 CalculationResults - Final order data before API call:",
-        orderData
-      );
-      console.log(
-        "📡 CalculationResults - Making API call to submitJntExpressOrder..."
-      );
 
       const response = await submitJntExpressOrder(orderData);
 
-      console.log("📥 CalculationResults - API response received:", response);
-
       // Check for success based on response structure
       if (response.status === "success" || response.order) {
-        console.log("✅ CalculationResults - Order successful:", {
-          awb_no: response.data?.awb_no,
-          order: response.order,
-          status: response.status,
-        });
-
         setOrderResult({
           success: true,
           message: "Order berhasil dibuat!",
@@ -415,16 +332,10 @@ export default function CalculationResults({
         });
         setShowSuccessDialog(true);
       } else {
-        console.log(
-          "⚠️ CalculationResults - Order response unclear:",
-          response
-        );
 
         // Check if order was actually created despite error status
         if (response.order || response.data) {
-          console.log(
-            "✅ CalculationResults - Order seems to be created despite error status"
-          );
+          
           setOrderResult({
             success: true,
             message: "Order berhasil dibuat!",
@@ -468,9 +379,6 @@ export default function CalculationResults({
           data?: { awb_no?: string };
         };
         if (responseData?.order || responseData?.data) {
-          console.log(
-            "✅ CalculationResults - Order was created despite API error"
-          );
           setOrderResult({
             success: true,
             message: "Order berhasil dibuat!",
@@ -488,7 +396,6 @@ export default function CalculationResults({
             : "Terjadi kesalahan saat membuat order",
       });
     } finally {
-      console.log("🏁 CalculationResults - Order submission completed");
       setIsSubmittingOrder(false);
     }
   };

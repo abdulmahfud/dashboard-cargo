@@ -94,10 +94,7 @@ export default function RecipientList({ refreshTrigger }: RecipientListProps) {
   const fetchReceivers = async (search?: string, page?: number) => {
     setLoading(true);
     try {
-      console.log("Fetching receivers with:", { search, page });
       const response = await getReceiversData(search, page);
-      console.log("API Response:", response);
-
       setReceivers(response.data.data);
       setTotalPages(response.data.last_page);
       setTotalRecords(response.data.total);
@@ -439,7 +436,6 @@ export default function RecipientList({ refreshTrigger }: RecipientListProps) {
                                 href="#"
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  console.log("Clicking page:", page);
                                   handlePageChange(page);
                                 }}
                                 isActive={currentPage === page}
@@ -468,7 +464,6 @@ export default function RecipientList({ refreshTrigger }: RecipientListProps) {
                                 href="#"
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  console.log("Clicking page:", page);
                                   handlePageChange(page);
                                 }}
                                 isActive={currentPage === page}

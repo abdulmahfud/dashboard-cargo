@@ -207,23 +207,11 @@ export default function ShippingForm({
     }
 
     try {
-      console.log("Payload ke API:", {
-        weight: formData.weight,
-        sendSiteCode: selectedOriginRegencyName,
-        destAreaCode: selectedDestDistrictName,
-      });
-      console.log("Form data state:", {
-        originRegency: formData.originRegency,
-        destDistrict: formData.destDistrict,
-        selectedOriginRegencyName,
-        selectedDestDistrictName,
-      });
       const result = await getJntExpressShipmentCost({
         weight: formData.weight,
         sendSiteCode: selectedOriginRegencyName,
         destAreaCode: selectedDestDistrictName,
       });
-      console.log("API Response:", result);
       onResult?.(result);
     } catch (err) {
       console.error("API Error:", err);

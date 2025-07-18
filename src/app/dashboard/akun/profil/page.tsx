@@ -274,6 +274,7 @@ export default function UserProfilePage() {
             </div>
           </div>
         </div>
+        
       </SidebarInset>
     </SidebarProvider>
   );

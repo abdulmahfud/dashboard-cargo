@@ -13,6 +13,7 @@ export interface UserData {
   created_at?: string;
   updated_at?: string;
   roles: string[];
+  permissions: string[];
 }
 
 export interface UsersResponse {

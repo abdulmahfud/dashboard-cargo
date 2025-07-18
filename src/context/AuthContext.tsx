@@ -9,6 +9,7 @@ type AuthContextType = {
   loading: boolean;
   refreshUser: () => Promise<void>;
   isVerified: boolean;
+  hasPermission: (permission: string) => boolean;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   refreshUser: async () => {},
   isVerified: false,
+  hasPermission: () => false,
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -40,8 +42,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const isVerified = !!user?.email_verified_at;
 
+  const hasPermission = (permission: string) => {
+    return user?.permissions?.includes(permission) ?? false;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, refreshUser: fetchUser, isVerified }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        refreshUser: fetchUser,
+        isVerified,
+        hasPermission,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

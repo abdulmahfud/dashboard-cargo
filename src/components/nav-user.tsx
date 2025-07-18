@@ -30,6 +30,8 @@ import { ApiService } from "@/lib/ApiService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/context/AuthContext";
 
+import Link from "next/link";
+
 export function NavUser() {
   const { user, loading } = useAuth(); // ⬅ Ambil user dari context
   const { isMobile } = useSidebar();
@@ -78,10 +80,7 @@ export function NavUser() {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg grayscale">
-                <AvatarImage
-                  src={"/images/user.png"}
-                  alt={user.name}
-                />
+                <AvatarImage src={"/images/user.png"} alt={user.name} />
                 <AvatarFallback className="rounded-lg">
                   {user.name ? user.name[0] : "U"}
                 </AvatarFallback>
@@ -120,9 +119,14 @@ export function NavUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <UserCircleIcon />
-                Profile
+              <DropdownMenuItem asChild>
+                <Link
+                  href="/dashboard/akun/profil"
+                  className="flex items-center gap-2"
+                >
+                  <UserCircleIcon />
+                  Profile
+                </Link>
               </DropdownMenuItem>
               {/* <DropdownMenuItem>
                 <CreditCardIcon />
@@ -136,9 +140,14 @@ export function NavUser() {
                 <CreditCardIcon />
                 Withdraw
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <BellIcon />
-                Rekening
+              <DropdownMenuItem asChild>
+                <Link
+                  href="/dashboard/akun/rekening"
+                  className="flex items-center gap-2"
+                >
+                  <BellIcon />
+                  Rekening
+                </Link>
               </DropdownMenuItem>
               {/* <DropdownMenuItem>
                 <BellIcon />

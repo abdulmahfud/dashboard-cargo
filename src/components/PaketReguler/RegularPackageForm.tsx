@@ -175,10 +175,8 @@ export default function RegularPackageForm({
   // Loading state sekarang dikontrol parent
 
   useEffect(() => {
-    console.log("🏪 RegularPackageForm - Loading initial data...");
 
     getShippers().then((res) => {
-      console.log("📋 RegularPackageForm - Shippers loaded:", res.data.data);
       const mapped = res.data.data.map((shipper: Shipper) => ({
         id: shipper.id,
         businessName: shipper.name,
@@ -191,14 +189,10 @@ export default function RegularPackageForm({
       }));
       setBusinessData(mapped);
       setSelectedBusiness(mapped[0] || null);
-      console.log("✅ RegularPackageForm - Business data set:", {
-        mapped,
-        selectedBusiness: mapped[0] || null,
-      });
+      
     });
 
     getReceivers().then((res) => {
-      console.log("👥 RegularPackageForm - Receivers loaded:", res.data.data);
       setBusinessRecipients(res.data.data);
     });
   }, []);
@@ -213,11 +207,6 @@ export default function RegularPackageForm({
         businessData: selectedBusiness,
         receiverId: receiverId,
       };
-
-      console.log("🔄 RegularPackageForm - useEffect notification:", {
-        trigger: "formData/selectedBusiness/receiverId change",
-        notificationData,
-      });
 
       onFormDataChange(notificationData);
     }
@@ -377,15 +366,6 @@ export default function RegularPackageForm({
       [field]: error,
     }));
 
-    // Debug logging for form changes
-    console.log("🔍 RegularPackageForm - handleChange:", {
-      field,
-      value,
-      newData,
-      receiverId,
-      selectedBusiness,
-    });
-
     // Notify parent of relevant form data changes
     if (
       (field === "itemValue" || field === "paymentMethod") &&
@@ -399,19 +379,12 @@ export default function RegularPackageForm({
         receiverId: receiverId,
       };
 
-      console.log(
-        "📤 RegularPackageForm - Notifying parent with data:",
-        changeData
-      );
-
       onFormDataChange(changeData);
     }
 
     // Jika user edit field penerima manual, reset receiverId
     if (["receiverName", "receiverPhone", "receiverAddress"].includes(field)) {
-      console.log(
-        "🔄 RegularPackageForm - Resetting receiverId due to manual edit"
-      );
+      
       setReceiverId(null);
     }
   };
@@ -419,18 +392,9 @@ export default function RegularPackageForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log("🚀 RegularPackageForm - handleSubmit started with data:", {
-      formData,
-      selectedBusiness,
-      receiverId,
-      selectedDistrictName,
-    });
-
     // Validate all required fields first
     if (!validateAllFields()) {
-      console.log(
-        "❌ RegularPackageForm - Validation failed: Required fields missing"
-      );
+      
       onResult?.({
         error: true,
         message: "Silakan lengkapi semua field yang wajib diisi",
@@ -446,23 +410,10 @@ export default function RegularPackageForm({
       ? selectedDistrictName && selectedBusiness?.regency
       : selectedDistrictName && selectedBusiness?.regency && formData.district;
 
-    console.log("✅ RegularPackageForm - Location validation check:", {
-      isUsingExistingReceiver,
-      hasLocationData,
-      selectedDistrictName,
-      businessRegency: selectedBusiness?.regency,
-      formDistrict: formData.district,
-    });
-
     if (!hasLocationData) {
       const errorMessage = isUsingExistingReceiver
         ? "Alamat pengirim dan tujuan wajib diisi."
         : "Alamat pengirim dan kecamatan tujuan wajib diisi.";
-
-      console.log(
-        "❌ RegularPackageForm - Location validation failed:",
-        errorMessage
-      );
 
       onResult?.({
         error: true,
@@ -513,22 +464,12 @@ export default function RegularPackageForm({
     const sendSiteCode = selectedBusiness?.regency || "";
     const destAreaCode = selectedDistrictName;
 
-    console.log("📦 RegularPackageForm - Prepared payload:", {
-      payload,
-      apiParams: { weight, sendSiteCode, destAreaCode },
-    });
-
     try {
-      console.log(
-        "🌐 RegularPackageForm - Making API call to getJntExpressShipmentCost"
-      );
       const result = await getJntExpressShipmentCost({
         weight,
         sendSiteCode,
         destAreaCode,
       });
-
-      console.log("✅ RegularPackageForm - API call successful:", result);
       onResult?.(result);
     } catch (err) {
       console.error("❌ RegularPackageForm - API call failed:", err);
@@ -539,7 +480,7 @@ export default function RegularPackageForm({
             ? (err as { message?: string }).message || "Gagal cek ongkir"
             : "Gagal cek ongkir",
       };
-      console.log("📤 RegularPackageForm - Sending error result:", errorResult);
+      
       onResult?.(errorResult);
     } finally {
       if (setIsSearching) setIsSearching(false);

@@ -1,19 +1,15 @@
 "use client";
 
 import {  
-  CameraIcon,
   ClipboardListIcon,
-  FileCodeIcon,
   FileDown,
   FileSearch,
   FileSymlink,
   FileText,
-  FileTextIcon,
   HelpCircleIcon,
   House,  
   Package,
   PackageSearch,
-  SettingsIcon,
   Truck,
   User,
   Wallet,
@@ -83,63 +79,10 @@ const data = {
       icon: PackageX,
     },
   ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: CameraIcon,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: FileTextIcon,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: FileCodeIcon,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
   navSecondary: [
     {
-      title: "Syarat & Panduan",
-      url: "#",
-      icon: SettingsIcon,
-    },
-    {
       title: "Dapatkan Bantuan",
-      url: "#",
+      url: "/dashboard/bantuan",
       icon: HelpCircleIcon,
     },
   ],

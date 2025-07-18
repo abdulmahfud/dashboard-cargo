@@ -51,22 +51,8 @@ const PaketReguler = () => {
     receiverId?: string | null;
   }>({});
 
-  // Debug: Log when form data changes
   useEffect(() => {
-    console.log("🏗️ PaketReguler - Form data updated:", formData);
-  }, [formData]);
-
-  // Debug: Log when calculation result changes
-  useEffect(() => {
-    console.log(
-      "📊 PaketReguler - Calculation result updated:",
-      calculationResult
-    );
-  }, [calculationResult]);
-
-  // Initialize the 'framer-motion' module for animations
-  useEffect(() => {
-    console.log("🎬 PaketReguler - Component initialized");
+    
     // This is just to ensure framer-motion is properly initialized
     const container = document.getElementById("app-container");
     if (container) {
@@ -74,10 +60,8 @@ const PaketReguler = () => {
     }
   }, []);
 
-  // Memoized callback functions to prevent infinite loops
   const handleCalculationResult = useCallback(
     (result: Record<string, unknown>) => {
-      console.log("📥 PaketReguler - Received calculation result:", result);
       setCalculationResult(result);
       setIsSearching(false);
     },
@@ -85,12 +69,12 @@ const PaketReguler = () => {
   );
 
   const handleFormDataChange = useCallback((data: typeof formData) => {
-    console.log("📝 PaketReguler - Received form data change:", data);
+    
     setFormData(data);
   }, []);
 
   const handleResetForm = useCallback(() => {
-    console.log("🔄 PaketReguler - Resetting form");
+    
     setFormData({});
     setCalculationResult(undefined);
     // Form will be reset via prop passing

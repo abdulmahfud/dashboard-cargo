@@ -28,6 +28,7 @@ import {
 import { ApiService } from "@/lib/ApiService";
 import { useAuth } from "@/context/AuthContext";
 import { Skeleton } from "./ui/skeleton";
+import Link from "next/link";
 
 export function NavUserTop() {
   const { user, loading } = useAuth();
@@ -108,9 +109,14 @@ export function NavUserTop() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <UserCircleIcon />
-                Profile
+              <DropdownMenuItem asChild>
+                <Link
+                  href="/dashboard/akun/profil"
+                  className="flex items-center gap-2"
+                >
+                  <UserCircleIcon />
+                  Profile
+                </Link>
               </DropdownMenuItem>
               {/* <DropdownMenuItem>
                 <CreditCardIcon />
@@ -124,9 +130,14 @@ export function NavUserTop() {
                 <CreditCardIcon />
                 Withdraw
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <BellIcon />
-                Rekening
+              <DropdownMenuItem asChild>
+                <Link
+                  href="/dashboard/akun/rekening"
+                  className="flex items-center gap-2"
+                >
+                  <BellIcon />
+                  Rekening
+                </Link>
               </DropdownMenuItem>
               {/* <DropdownMenuItem>
                 <BellIcon />
