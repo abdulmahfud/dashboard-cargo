@@ -515,7 +515,7 @@ export default function RegularPackageForm({
                   <div className="text-sm text-gray-500">
                     Paket akan dijemput ke tempatmu
                   </div>
-                </div>
+              </div>
               </label>
 
               {/* Drop Off Option */}
@@ -533,7 +533,7 @@ export default function RegularPackageForm({
                   <div className="text-sm text-gray-500">
                     Paket perlu diantar ke agen ekspedisi
                   </div>
-                </div>
+              </div>
               </label>
             </RadioGroup>
           </div>
@@ -559,7 +559,7 @@ export default function RegularPackageForm({
                   <div className="font-medium">COD (Cash on Delivery)</div>
                   <div className="text-sm text-gray-500">
                     Pembayaran akan dilakukan saat paket sampai di tujuan
-                  </div>
+              </div>
                 </div>
               </label>
 
@@ -577,7 +577,7 @@ export default function RegularPackageForm({
                   <div className="font-medium">Non-COD</div>
                   <div className="text-sm text-gray-500">
                     Pembayaran akan dilakukan sebelum paket dikirim
-                  </div>
+              </div>
                 </div>
               </label>
             </RadioGroup>
@@ -742,8 +742,8 @@ export default function RegularPackageForm({
               <div className="relative">
                 <Label htmlFor="province">
                   Provinsi <span className="text-red-500">*</span>
-                </Label>
-                <Input
+              </Label>
+              <Input
                   id="province"
                   placeholder="Cari provinsi..."
                   value={provinceSearch}

@@ -1,4 +1,8 @@
+"use client";
+
 import { RefreshCcw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { format, addDays } from "date-fns";
 
 import {
   Card,
@@ -8,17 +12,61 @@ import {
 } from "@/components/ui/card";
 
 import Image from "next/image";
-import { DatePickerWithRange } from "./date-picker-with-range";
+import { getOrderStatistics } from "@/lib/apiClient";
+
+interface TroubleStats {
+  noUpdate4to7Days: number;
+  noUpdate8to30Days: number;
+  noUpdateOver30Days: number;
+}
 
 export function SectionCardsTrouble() {
+  const [dateRange] = useState({
+    from: addDays(new Date(), -30), // Last 30 days
+    to: new Date(),
+  });
+  const [stats, setStats] = useState<TroubleStats>({
+    noUpdate4to7Days: 0,
+    noUpdate8to30Days: 0,
+    noUpdateOver30Days: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  const fetchTroubleStats = async () => {
+    try {
+      setLoading(true);
+      const startDate = dateRange?.from
+        ? format(dateRange.from, "yyyy-MM-dd")
+        : undefined;
+      const endDate = dateRange?.to
+        ? format(dateRange.to, "yyyy-MM-dd")
+        : undefined;
+
+      // Use the new efficient statistics API
+      const response = await getOrderStatistics(startDate, endDate);
+      const troubleStats = response.data.trouble_stats;
+
+      const newStats: TroubleStats = {
+        noUpdate4to7Days: troubleStats.no_update_4_to_7_days,
+        noUpdate8to30Days: troubleStats.no_update_8_to_30_days,
+        noUpdateOver30Days: troubleStats.no_update_over_30_days,
+      };
+
+      setStats(newStats);
+    } catch (error) {
+      console.error("Failed to fetch trouble statistics:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTroubleStats();
+  }, []);
+
   return (
     <>
       <Card className="@container/card px-4 py-8 relative">
-        {/* Date Picker di pojok kanan atas */}
-        <div className="absolute pt-5 pr-5 top-2 right-2">
-          <DatePickerWithRange />
-        </div>
-
         <div className="flex items-center py-3 pt-12 pl-5">
           <Image
             src="/images/alarm.png"
@@ -45,7 +93,7 @@ export function SectionCardsTrouble() {
                   Tidak ada update 4-7 hari
                 </CardDescription>
                 <CardTitle className="text-sm font-semibold md:text-lg tabular-nums group-hover:text-blue-700">
-                  0
+                  {loading ? "..." : stats.noUpdate4to7Days.toLocaleString()}
                 </CardTitle>
               </CardHeader>
             </div>
@@ -62,7 +110,7 @@ export function SectionCardsTrouble() {
                   Tidak ada update 8-30 hari
                 </CardDescription>
                 <CardTitle className="text-sm font-semibold md:text-lg tabular-nums group-hover:text-blue-700">
-                  0
+                  {loading ? "..." : stats.noUpdate8to30Days.toLocaleString()}
                 </CardTitle>
               </CardHeader>
             </div>
@@ -79,7 +127,7 @@ export function SectionCardsTrouble() {
                   Tidak ada update {">"} 30 hari
                 </CardDescription>
                 <CardTitle className="text-sm font-semibold md:text-lg tabular-nums group-hover:text-blue-700">
-                  0
+                  {loading ? "..." : stats.noUpdateOver30Days.toLocaleString()}
                 </CardTitle>
               </CardHeader>
             </div>

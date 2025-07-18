@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Box,
   Vault,
@@ -6,6 +8,8 @@ import {
   PackageX,
   PackageMinus,
 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 
 import {
   Card,
@@ -15,17 +19,81 @@ import {
 } from "@/components/ui/card";
 
 import Image from "next/image";
-import { DatePickerWithRange } from "./date-picker-with-range";
+import { getOrderStatistics } from "@/lib/apiClient";
+
+interface RegularStats {
+  totalPaket: number;
+  prosesPengiriman: number;
+  kendalaPengiriman: number;
+  sampaiTujuan: number;
+  totalRetur: number;
+  dibatalkan: number;
+}
 
 export function SectionCardsReguler() {
+  // Set date range to current month only
+  const currentDate = new Date();
+  const [dateRange] = useState({
+    from: startOfMonth(currentDate),
+    to: endOfMonth(currentDate),
+  });
+
+  const [stats, setStats] = useState<RegularStats>({
+    totalPaket: 0,
+    prosesPengiriman: 0,
+    kendalaPengiriman: 0,
+    sampaiTujuan: 0,
+    totalRetur: 0,
+    dibatalkan: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchRegularStats = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const startDate = dateRange?.from
+        ? format(dateRange.from, "yyyy-MM-dd")
+        : undefined;
+      const endDate = dateRange?.to
+        ? format(dateRange.to, "yyyy-MM-dd")
+        : undefined;
+
+      // Use the new efficient statistics API
+      const response = await getOrderStatistics(startDate, endDate);
+      const regularPackageStats = response.data.regular_package_stats;
+
+      const newStats: RegularStats = {
+        totalPaket: regularPackageStats.total,
+        prosesPengiriman: regularPackageStats.proses_pengiriman,
+        kendalaPengiriman: regularPackageStats.kendala_pengiriman,
+        sampaiTujuan: regularPackageStats.sampai_tujuan,
+        totalRetur: regularPackageStats.retur,
+        dibatalkan: regularPackageStats.dibatalkan,
+      };
+
+      setStats(newStats);
+    } catch (err) {
+      console.error("Failed to fetch regular package statistics:", err);
+      setError("Failed to fetch regular package statistics");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRegularStats();
+  }, []);
+
+  if (error) {
+    console.error("Error in SectionCardsReguler:", error);
+  }
+
   return (
     <>
       <Card className="@container/card px-4 py-8 relative">
-        {/* Date Picker di pojok kanan atas */}
-        <div className="absolute pt-5 pr-5 top-2 right-2">
-          <DatePickerWithRange />
-        </div>
-
         <div className="flex items-center py-3 pt-12 pl-5">
           <Image
             src="/images/delivery.png"
@@ -52,7 +120,7 @@ export function SectionCardsReguler() {
                   Total Paket
                 </CardDescription>
                 <CardTitle className="text-sm font-semibold md:text-lg tabular-nums group-hover:text-blue-700">
-                  0
+                  {loading ? "..." : stats.totalPaket.toLocaleString()}
                 </CardTitle>
               </CardHeader>
             </div>
@@ -69,7 +137,7 @@ export function SectionCardsReguler() {
                   Proses Pengiriman
                 </CardDescription>
                 <CardTitle className="text-sm font-semibold md:text-lg tabular-nums group-hover:text-blue-700">
-                  0
+                  {loading ? "..." : stats.prosesPengiriman.toLocaleString()}
                 </CardTitle>
               </CardHeader>
             </div>
@@ -86,7 +154,7 @@ export function SectionCardsReguler() {
                   Kendala Pengiriman
                 </CardDescription>
                 <CardTitle className="text-sm font-semibold md:text-lg group-hover:text-blue-700 tabular-nums">
-                  0
+                  {loading ? "..." : stats.kendalaPengiriman.toLocaleString()}
                 </CardTitle>
               </CardHeader>
             </div>
@@ -103,7 +171,7 @@ export function SectionCardsReguler() {
                   Sampai Tujuan
                 </CardDescription>
                 <CardTitle className="text-sm font-semibold md:text-lg group-hover:text-blue-700 tabular-nums">
-                  0
+                  {loading ? "..." : stats.sampaiTujuan.toLocaleString()}
                 </CardTitle>
               </CardHeader>
             </div>
@@ -120,7 +188,7 @@ export function SectionCardsReguler() {
                   Total Retur
                 </CardDescription>
                 <CardTitle className="text-sm font-semibold md:text-lg group-hover:text-blue-700 tabular-nums">
-                  0
+                  {loading ? "..." : stats.totalRetur.toLocaleString()}
                 </CardTitle>
               </CardHeader>
             </div>
@@ -137,7 +205,7 @@ export function SectionCardsReguler() {
                   Dibatalkan
                 </CardDescription>
                 <CardTitle className="text-sm font-semibold md:text-lg group-hover:text-blue-700 tabular-nums">
-                  0
+                  {loading ? "..." : stats.dibatalkan.toLocaleString()}
                 </CardTitle>
               </CardHeader>
             </div>

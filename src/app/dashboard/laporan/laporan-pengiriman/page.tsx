@@ -3,13 +3,11 @@
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import TopNav from "@/components/top-nav";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import {
   CheckCircle,
-  CloudDownload,
   Info,
   LayoutGrid,
   Package,
@@ -348,11 +346,11 @@ const LaporanPengiriman = () => {
                 <h2 className="text-lg sm:text-xl font-bold">
                   Laporan Pengiriman
                 </h2>
-                <Button className="rounded-full px-3 sm:px-4 bg-blue-500 hover:bg-blue-600 text-white text-sm">
+                {/* <Button className="rounded-full px-3 sm:px-4 bg-blue-500 hover:bg-blue-600 text-white text-sm">
                   <CloudDownload className="w-4 h-4 mr-2" />
                   <span className="hidden sm:inline">Export Data</span>
                   <span className="sm:hidden">Export</span>
-                </Button>
+                </Button> */}
               </div>
 
               {/* Kartu Statistik Pengiriman - Responsive Grid */}
@@ -384,6 +382,7 @@ const LaporanPengiriman = () => {
                 ))}
               </div>
 
+              <h2 className="text-lg sm:text-xl font-bold">Status Pengiriman</h2>
               {/* Kartu Status Pengiriman - Better Mobile Layout */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-4">
                 {statusData.map((status, index) => (

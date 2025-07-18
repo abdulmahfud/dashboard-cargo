@@ -54,8 +54,7 @@ import type {
 } from "@/types/bankAccount";
 
 // Ambil URL dari .env
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://api.bhisakirim.com/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const API_TIMEOUT = 30000;
 
@@ -273,8 +272,93 @@ export const getShipperById = async (id: number): Promise<ShipperResponse> => {
 };
 
 // ✅ Orders/Laporan Pengiriman operations
-export const getOrders = async (): Promise<OrderListResponse> => {
-  const res = await apiClient.get("/admin/list-orders");
+export const getOrders = async (
+  startDate?: string,
+  endDate?: string
+): Promise<OrderListResponse> => {
+  const params: { start_date?: string; end_date?: string } = {};
+  if (startDate) params.start_date = startDate;
+  if (endDate) params.end_date = endDate;
+
+  const res = await apiClient.get("/admin/list-orders", { params });
+  return res.data;
+};
+
+// ✅ Get order statistics from backend
+export const getOrderStatistics = async (
+  startDate?: string,
+  endDate?: string
+): Promise<{
+  data: {
+    date_range: { start_date: string; end_date: string };
+    total_orders: number;
+    package_types: {
+      regular: number;
+      cod: number;
+      instant: number;
+    };
+    status_overview: {
+      belum_proses: number;
+      belum_di_expedisi: number;
+      proses_pengiriman: number;
+      kendala_pengiriman: number;
+      sampai_tujuan: number;
+      retur: number;
+      dibatalkan: number;
+    };
+    regular_package_stats: {
+      total: number;
+      belum_proses: number;
+      belum_di_expedisi: number;
+      proses_pengiriman: number;
+      kendala_pengiriman: number;
+      sampai_tujuan: number;
+      retur: number;
+      dibatalkan: number;
+    };
+    cod_package_stats: {
+      total: number;
+      belum_proses: number;
+      belum_di_expedisi: number;
+      proses_pengiriman: number;
+      kendala_pengiriman: number;
+      sampai_tujuan: number;
+      retur: number;
+      dibatalkan: number;
+    };
+    trouble_stats: {
+      no_update_4_to_7_days: number;
+      no_update_8_to_30_days: number;
+      no_update_over_30_days: number;
+    };
+  };
+}> => {
+  const params: { start_date?: string; end_date?: string } = {};
+  if (startDate) params.start_date = startDate;
+  if (endDate) params.end_date = endDate;
+
+  const res = await apiClient.get("/admin/order-statistics", { params });
+  return res.data;
+};
+
+// ✅ Get monthly summary
+export const getMonthlySummary = async (
+  year?: number,
+  month?: number
+): Promise<{
+  data: {
+    month: number;
+    year: number;
+    total_orders: number;
+    total_revenue: number;
+    period: string;
+  };
+}> => {
+  const params: { year?: number; month?: number } = {};
+  if (year) params.year = year;
+  if (month) params.month = month;
+
+  const res = await apiClient.get("/admin/monthly-summary", { params });
   return res.data;
 };
 

@@ -210,7 +210,7 @@ const Rekening = () => {
                           variant="outline"
                           className="border-amber-300 text-amber-700 hover:bg-amber-100"
                           onClick={() =>
-                            window.open("https://wa.me/6281234567890", "_blank")
+                            window.open("https://wa.me/6281330323559", "_blank")
                           }
                         >
                           WhatsApp CS
@@ -220,7 +220,7 @@ const Rekening = () => {
                           variant="outline"
                           className="border-amber-300 text-amber-700 hover:bg-amber-100"
                           onClick={() =>
-                            window.open("mailto:cs@bhisakirim.com", "_blank")
+                            window.open("mailto:support@bhisakirim.com", "_blank")
                           }
                         >
                           Email CS

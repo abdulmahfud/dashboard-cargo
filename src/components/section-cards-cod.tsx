@@ -1,4 +1,8 @@
+"use client";
+
 import { BookX, Boxes, PackageX, RefreshCcwDot, Truck } from "lucide-react";
+import { useState, useEffect } from "react";
+import { format, addDays } from "date-fns";
 
 import {
   Card,
@@ -8,17 +12,68 @@ import {
 } from "@/components/ui/card";
 
 import Image from "next/image";
-import { DatePickerWithRange } from "./date-picker-with-range";
+import { getOrderStatistics } from "@/lib/apiClient";
+
+interface CODStats {
+  belumDiEkspedisi: number;
+  prosesPengiriman: number;
+  sampaiTujuan: number;
+  kendalaPengiriman: number;
+  totalRetur: number;
+}
 
 export function SectionCardsCod() {
+  const [dateRange] = useState({
+    from: addDays(new Date(), -30), // Last 30 days
+    to: new Date(),
+  });
+  const [stats, setStats] = useState<CODStats>({
+    belumDiEkspedisi: 0,
+    prosesPengiriman: 0,
+    sampaiTujuan: 0,
+    kendalaPengiriman: 0,
+    totalRetur: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  const fetchCODStats = async () => {
+    try {
+      setLoading(true);
+      const startDate = dateRange?.from
+        ? format(dateRange.from, "yyyy-MM-dd")
+        : undefined;
+      const endDate = dateRange?.to
+        ? format(dateRange.to, "yyyy-MM-dd")
+        : undefined;
+
+      // Use the new efficient statistics API
+      const response = await getOrderStatistics(startDate, endDate);
+      const codPackageStats = response.data.cod_package_stats;
+
+      const newStats: CODStats = {
+        belumDiEkspedisi:
+          codPackageStats.belum_di_expedisi + codPackageStats.belum_proses,
+        prosesPengiriman: codPackageStats.proses_pengiriman,
+        sampaiTujuan: codPackageStats.sampai_tujuan,
+        kendalaPengiriman: codPackageStats.kendala_pengiriman,
+        totalRetur: codPackageStats.retur,
+      };
+
+      setStats(newStats);
+    } catch (error) {
+      console.error("Failed to fetch COD statistics:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCODStats();
+  }, []);
+
   return (
     <>
       <Card className="@container/card px-4 py-8 relative">
-        {/* Date Picker di pojok kanan atas */}
-        <div className="absolute pt-5 pr-5 top-2 right-2">
-          <DatePickerWithRange />
-        </div>
-
         <div className="flex items-center py-3 pt-12 pl-5">
           <Image
             src="/images/cod.png"
@@ -45,7 +100,7 @@ export function SectionCardsCod() {
                   Belum di Ekspedisi
                 </CardDescription>
                 <CardTitle className="text-sm font-semibold md:text-lg tabular-nums group-hover:text-blue-700">
-                  0
+                  {loading ? "..." : stats.belumDiEkspedisi.toLocaleString()}
                 </CardTitle>
               </CardHeader>
             </div>
@@ -62,7 +117,7 @@ export function SectionCardsCod() {
                   Proses Pengiriman
                 </CardDescription>
                 <CardTitle className="text-sm font-semibold md:text-lg tabular-nums group-hover:text-blue-700">
-                  0
+                  {loading ? "..." : stats.prosesPengiriman.toLocaleString()}
                 </CardTitle>
               </CardHeader>
             </div>
@@ -79,7 +134,7 @@ export function SectionCardsCod() {
                   Sampai Tujuan
                 </CardDescription>
                 <CardTitle className="text-sm font-semibold md:text-lg tabular-nums group-hover:text-blue-700">
-                  0
+                  {loading ? "..." : stats.sampaiTujuan.toLocaleString()}
                 </CardTitle>
               </CardHeader>
             </div>
@@ -96,7 +151,7 @@ export function SectionCardsCod() {
                   Kendala Pengiriman
                 </CardDescription>
                 <CardTitle className="text-sm font-semibold md:text-lg tabular-nums group-hover:text-blue-700">
-                  0
+                  {loading ? "..." : stats.kendalaPengiriman.toLocaleString()}
                 </CardTitle>
               </CardHeader>
             </div>
@@ -113,7 +168,7 @@ export function SectionCardsCod() {
                   Total Retur
                 </CardDescription>
                 <CardTitle className="text-sm font-semibold md:text-lg tabular-nums group-hover:text-blue-700">
-                  0
+                  {loading ? "..." : stats.totalRetur.toLocaleString()}
                 </CardTitle>
               </CardHeader>
             </div>
