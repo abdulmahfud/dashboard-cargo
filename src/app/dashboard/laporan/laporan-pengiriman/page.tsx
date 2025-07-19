@@ -72,6 +72,7 @@ const transformOrderToDeliveryReport = (order: Order): DeliveryReport => {
     shippingMethod,
     service,
     status,
+    vendor: order.vendor, // Add vendor information for label URL
   };
 };
 
@@ -382,7 +383,9 @@ const LaporanPengiriman = () => {
                 ))}
               </div>
 
-              <h2 className="text-lg sm:text-xl font-bold">Status Pengiriman</h2>
+              <h2 className="text-lg sm:text-xl font-bold">
+                Status Pengiriman
+              </h2>
               {/* Kartu Status Pengiriman - Better Mobile Layout */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-4">
                 {statusData.map((status, index) => (

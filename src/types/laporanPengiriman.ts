@@ -60,6 +60,7 @@ export interface DeliveryReport {
   shippingMethod: "COD" | "REGULER";
   service: "DROPOFF" | "PICKUP";
   status: string;
+  vendor: string; // Add vendor field for label URL functionality
 }
 
 // Status mapping

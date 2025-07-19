@@ -760,25 +760,48 @@ export default function CalculationResults({
             </Button>
           </div>
 
+          {/* Label URL Section - Only for JNT Express */}
           {orderResult?.awb_no && (
-            <div className="mt-6">
+            <div className="mt-6 space-y-3">
+              <div className="text-center">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">
+                  Print Label JNT Express
+                </h4>
+                <p className="text-xs text-gray-500 mb-3">
+                  Klik tombol di bawah untuk mendapatkan URL label dari JNT
+                  Express
+                </p>
+              </div>
+
               <Button
                 onClick={handleGetLabelUrl}
                 disabled={isLoadingLabel}
                 className="w-full"
                 variant="outline"
               >
-                {isLoadingLabel ? "Loading..." : "📄 Get Label URL"}
+                {isLoadingLabel ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
+                    Mengambil Label URL...
+                  </>
+                ) : (
+                  <>📄 Get Label URL</>
+                )}
               </Button>
+
               {labelUrl && (
-                <div className="mt-4 space-y-2">
-                  <div className="text-sm text-gray-600 break-all">
+                <div className="space-y-2">
+                  <div className="text-xs text-gray-600 font-medium">
+                    Label URL dari JNT Express:
+                  </div>
+                  <div className="text-xs text-gray-800 break-all bg-gray-50 p-2 rounded border">
                     {labelUrl}
                   </div>
                   <Button
                     onClick={handlePrintLabel}
                     className="w-full"
                     variant="outline"
+                    size="sm"
                   >
                     🖨️ Print Label
                   </Button>

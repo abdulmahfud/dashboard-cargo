@@ -2,6 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { DeliveryReport } from "@/types/laporanPengiriman";
+import { LabelUrlButton } from "@/components/Laporan/LabelUrlButton";
 
 // Kolom tabel
 export const columns: ColumnDef<DeliveryReport>[] = [
@@ -48,5 +49,19 @@ export const columns: ColumnDef<DeliveryReport>[] = [
   {
     accessorKey: "createdAt",
     header: "TANGGAL DIBUAT",
+  },
+  {
+    id: "actions",
+    header: "LABEL URL",
+    cell: ({ row }) => {
+      const order = row.original;
+      return (
+        <LabelUrlButton
+          awbNo={order.shipmentNo}
+          vendor={order.vendor}
+          className="w-32"
+        />
+      );
+    },
   },
 ];
