@@ -595,4 +595,22 @@ export const getBankAccountById = async (
   return res.data;
 };
 
+// ✅ Get label URL for JNT Express orders
+export const getLabelUrl = async (
+  awbNo: string
+): Promise<{
+  status: string;
+  message: string;
+  data?: {
+    awb_no: string;
+    label_url: string;
+    billcode: string;
+  };
+}> => {
+  const res = await apiClient.post("/admin/get-label-url", {
+    awb_no: awbNo,
+  });
+  return res.data;
+};
+
 export default apiClient;

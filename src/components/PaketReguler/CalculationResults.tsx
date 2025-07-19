@@ -22,6 +22,8 @@ import { submitJntExpressOrder } from "@/lib/apiClient";
 import type { OrderRequest } from "@/types/order";
 import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
+import { getLabelUrl } from "@/lib/apiClient";
+import { toast } from "sonner";
 
 interface CalculationResultsProps {
   isSearching: boolean;
@@ -93,14 +95,14 @@ export default function CalculationResults({
   } | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [labelUrl, setLabelUrl] = useState<string>("");
+  const [isLoadingLabel, setIsLoadingLabel] = useState(false);
 
   // Debug: Log when props change - FIXED: Use useEffect instead of useState
-  useEffect(() => {
-  }, [isSearching, result, formData]);
+  useEffect(() => {}, [isSearching, result, formData]);
 
   // Build shippingOptions from API result if present
   const shippingOptions: ShippingOption[] = useMemo(() => {
-    
     const apiResult = result as JntApiResult;
 
     if (
@@ -219,7 +221,6 @@ export default function CalculationResults({
   };
 
   const handleSubmitOrder = async () => {
-
     if (
       !selectedShippingOption ||
       !formData?.formData ||
@@ -301,7 +302,6 @@ export default function CalculationResults({
       if (formData.receiverId) {
         orderData.receiver_id = parseInt(formData.receiverId);
         orderData.shipper_id = formData.businessData.id;
-        
       } else {
         orderData.sender = {
           name: formData.businessData.senderName,
@@ -332,10 +332,8 @@ export default function CalculationResults({
         });
         setShowSuccessDialog(true);
       } else {
-
         // Check if order was actually created despite error status
         if (response.order || response.data) {
-          
           setOrderResult({
             success: true,
             message: "Order berhasil dibuat!",
@@ -398,6 +396,48 @@ export default function CalculationResults({
     } finally {
       setIsSubmittingOrder(false);
     }
+  };
+
+  const handleGetLabelUrl = async () => {
+    if (!orderResult?.awb_no) {
+      toast.error("AWB number not found");
+      return;
+    }
+
+    try {
+      setIsLoadingLabel(true);
+      const response = await getLabelUrl(orderResult.awb_no!);
+
+      if (response.status === "success" && response.data) {
+        setLabelUrl(response.data.label_url);
+        toast.success("Label URL retrieved successfully!");
+      } else {
+        toast.error(response.message || "Failed to get label URL");
+      }
+    } catch (error) {
+      console.error("Error getting label URL:", error);
+      toast.error("Failed to get label URL");
+    } finally {
+      setIsLoadingLabel(false);
+    }
+  };
+
+  const handlePrintLabel = () => {
+    if (labelUrl) {
+      window.open(labelUrl, "_blank");
+    } else {
+      toast.error("Please get label URL first");
+    }
+  };
+
+  const handleViewOrder = () => {
+    router.push("/dashboard/laporan/laporan-pengiriman");
+    setShowSuccessDialog(false);
+  };
+
+  const handleCreateNewOrder = () => {
+    router.push("/dashboard/paket/paket-reguler");
+    setShowSuccessDialog(false);
   };
 
   return (
@@ -472,7 +512,7 @@ export default function CalculationResults({
       {showPaymentSection && selectedShippingOption && (
         <div className="space-y-4 mt-6">
           {/* Insurance */}
-      <Card>
+          <Card>
             <CardContent className="p-4">
               <h3 className="text-lg font-semibold mb-3">Asuransi</h3>
               <div className="flex items-center space-x-2">
@@ -484,7 +524,7 @@ export default function CalculationResults({
                 <label htmlFor="insurance" className="text-sm font-medium">
                   Asuransikan Kiriman Saya
                 </label>
-          </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -513,9 +553,9 @@ export default function CalculationResults({
                     }}
                     className="flex-1"
                   />
-                    </div>
-                </CardContent>
-      </Card>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Promo Section */}
@@ -526,13 +566,13 @@ export default function CalculationResults({
                 <div className="flex items-center space-x-2">
                   <span className="text-2xl">💡</span>
                   <span className="text-sm font-medium">
-              Lebih hemat, gunakan voucher promo
+                    Lebih hemat, gunakan voucher promo
                   </span>
-            </div>
+                </div>
                 <Button variant="ghost" size="sm">
                   <span className="text-lg">➤</span>
                 </Button>
-          </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -540,27 +580,27 @@ export default function CalculationResults({
           <Card>
             <CardContent className="p-4">
               <div className="space-y-3">
-          <div className="flex justify-between">
-            <span>Ekspedisi</span>
+                <div className="flex justify-between">
+                  <span>Ekspedisi</span>
                   <span className="font-medium">
                     {selectedShippingOption.name}
                   </span>
-          </div>
-          <div className="flex justify-between">
+                </div>
+                <div className="flex justify-between">
                   <span>Nilai Barang</span>
                   <span className="font-medium">
                     Rp{getItemValue().toLocaleString("id-ID")}
-            </span>
-          </div>
-          <div className="flex justify-between">
+                  </span>
+                </div>
+                <div className="flex justify-between">
                   <span>Pengiriman</span>
                   <span className="font-medium">
                     {selectedShippingOption.price}
                   </span>
-          </div>
+                </div>
                 {isInsured && (
-          <div className="flex justify-between">
-            <span>Asuransi</span>
+                  <div className="flex justify-between">
+                    <span>Asuransi</span>
                     <span className="font-medium">
                       Rp{getInsuranceCost().toLocaleString("id-ID")}
                     </span>
@@ -614,12 +654,12 @@ export default function CalculationResults({
                       <span className="font-medium text-green-600">
                         Rp{getItemValue().toLocaleString("id-ID")}
                       </span>
-          </div>
+                    </div>
                   </>
                 ) : (
                   /* Non-COD: Show total payment */
                   <div className="flex justify-between text-lg font-bold text-blue-600">
-            <span>Total Pembayaran</span>
+                    <span>Total Pembayaran</span>
                     <span>Rp{calculateTotal().toLocaleString("id-ID")}</span>
                   </div>
                 )}
@@ -653,8 +693,8 @@ export default function CalculationResults({
                   <CirclePlus className="w-4 h-4" />
                   {isSubmittingOrder ? "Memproses Order..." : "Proses Paket"}
                 </Button>
-          </div>
-        </CardContent>
+              </div>
+            </CardContent>
           </Card>
 
           {orderResult && (
@@ -673,7 +713,7 @@ export default function CalculationResults({
                 {orderResult.awb_no && (
                   <span className="text-sm text-gray-600">
                     AWB: {orderResult.awb_no}
-              </span>
+                  </span>
                 )}
               </div>
             </Card>
@@ -697,18 +737,15 @@ export default function CalculationResults({
                   <div className="text-sm text-gray-600">AWB Number:</div>
                   <div className="text-lg font-mono font-bold text-gray-900">
                     {orderResult.awb_no}
-            </div>
-          </div>
+                  </div>
+                </div>
               </DialogDescription>
             )}
           </DialogHeader>
 
           <div className="grid grid-cols-2 gap-3 mt-6">
             <Button
-              onClick={() => {
-                setShowSuccessDialog(false);
-                router.push("/dashboard/laporan/laporan-pengiriman");
-              }}
+              onClick={handleViewOrder}
               className="h-11 px-6 py-4 font-semibold bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 text-sm flex items-center gap-2 rounded-full shadow-md transition duration-300 ease-in-out"
             >
               <FileText className="h-4 w-4" />
@@ -716,19 +753,40 @@ export default function CalculationResults({
             </Button>
 
             <Button
-              onClick={() => {
-                setShowSuccessDialog(false);
-                if (onResetForm) {
-                  onResetForm();
-                }
-                router.push("/dashboard/paket/paket-reguler");
-              }}
+              onClick={handleCreateNewOrder}
               className="h-11 px-6 py-4 font-semibold bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 text-sm flex items-center gap-2 rounded-full shadow-md transition duration-300 ease-in-out"
             >
               <Package className="h-4 w-4" />
               Kirim Paket Lagi
             </Button>
           </div>
+
+          {orderResult?.awb_no && (
+            <div className="mt-6">
+              <Button
+                onClick={handleGetLabelUrl}
+                disabled={isLoadingLabel}
+                className="w-full"
+                variant="outline"
+              >
+                {isLoadingLabel ? "Loading..." : "📄 Get Label URL"}
+              </Button>
+              {labelUrl && (
+                <div className="mt-4 space-y-2">
+                  <div className="text-sm text-gray-600 break-all">
+                    {labelUrl}
+                  </div>
+                  <Button
+                    onClick={handlePrintLabel}
+                    className="w-full"
+                    variant="outline"
+                  >
+                    🖨️ Print Label
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
