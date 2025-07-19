@@ -80,7 +80,6 @@ export default function CalculationResults({
   isSearching,
   result,
   formData,
-  onResetForm,
 }: CalculationResultsProps) {
   const router = useRouter();
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
