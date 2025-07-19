@@ -27,7 +27,7 @@ import type {
   ShipperFormData,
   ShipperFormErrors,
 } from "@/types/dataPengirim";
-import { getCookie } from "cookies-next";
+import { useAuth } from "@/context/AuthContext";
 
 interface InputFormPengirimProps {
   onShipperCreated?: () => void;
@@ -36,6 +36,7 @@ interface InputFormPengirimProps {
 export default function InputFormPengirim({
   onShipperCreated,
 }: InputFormPengirimProps) {
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [provinceOptions, setProvinceOptions] = useState<Province[]>([]);
   const [regencyOptions, setRegencyOptions] = useState<Regency[]>([]);
@@ -153,10 +154,11 @@ export default function InputFormPengirim({
       newErrors.phone = "Nomor telepon harus berupa angka minimal 10 digit";
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = "Email wajib diisi";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Format email tidak valid";
+    if (formData.email.trim()) {
+      // Hanya cek format jika ada isi
+      if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        newErrors.email = "Format email tidak valid";
+      }
     }
 
     if (!formData.address.trim()) {
@@ -196,21 +198,14 @@ export default function InputFormPengirim({
     try {
       setIsLoading(true);
 
-      // Get user ID from token/cookie (you might need to decode JWT or get from context)
-      const userDataStr = getCookie("userData");
-      let userId = 1; // default fallback
-
-      if (userDataStr) {
-        try {
-          const userData = JSON.parse(userDataStr as string);
-          userId = userData.id;
-        } catch (error) {
-          console.error("Error parsing user data:", error);
-        }
+      // Get user ID from AuthContext
+      if (!user || !user.id) {
+        toast.error("Sesi Anda telah berakhir. Silakan login kembali.");
+        return;
       }
 
       const shipperData = {
-        user_id: userId,
+        user_id: user.id,
         name: formData.name.trim(),
         phone: formData.phone.trim(),
         contact: formData.name.trim(), // contact sama dengan name sesuai requirement
@@ -312,7 +307,7 @@ export default function InputFormPengirim({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="email" className="text-shipping-label">
-                Email<span className="text-red-500">*</span>
+                Email
               </Label>
               <Input
                 id="email"

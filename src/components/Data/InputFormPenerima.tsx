@@ -21,6 +21,7 @@ import {
 } from "@/lib/apiClient";
 import type { Province, Regency, District } from "@/types/dataRegulerForm";
 import type { ReceiverFormData } from "@/types/dataPenerima";
+import { useAuth } from "@/context/AuthContext";
 
 interface InputFormPenerimaProps {
   onReceiverAdded?: () => void;
@@ -29,6 +30,7 @@ interface InputFormPenerimaProps {
 export default function InputFormPenerima({
   onReceiverAdded,
 }: InputFormPenerimaProps) {
+  const { user } = useAuth();
   const [provinceOptions, setProvinceOptions] = useState<Province[]>([]);
   const [regencyOptions, setRegencyOptions] = useState<Regency[]>([]);
   const [districtOptions, setDistrictOptions] = useState<District[]>([]);
@@ -147,10 +149,6 @@ export default function InputFormPenerima({
       newErrors.email = "Format email tidak valid";
     }
 
-    if (!formData.email) {
-      newErrors.email = "Email harus diisi";
-    }
-
     if (!formData.province) {
       newErrors.province = "Provinsi harus dipilih";
     }
@@ -183,11 +181,14 @@ export default function InputFormPenerima({
     setIsSubmitting(true);
 
     try {
-      // Get current user from auth context or localStorage
-      const userId = 1; // TODO: Get from auth context
+      // Get current user from AuthContext
+      if (!user || !user.id) {
+        toast.error("Sesi Anda telah berakhir. Silakan login kembali.");
+        return;
+      }
 
       const receiverData = {
-        user_id: userId,
+        user_id: user.id,
         name: formData.name,
         phone: formData.phone,
         contact: formData.name, // Set contact sama dengan name sesuai requirement
