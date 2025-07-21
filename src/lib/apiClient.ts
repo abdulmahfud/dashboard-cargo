@@ -51,6 +51,7 @@ import type {
   BankAccountListResponse,
   BankAccountCreateRequest,
   BankAccountCreateResponse,
+  BankAccount,
 } from "@/types/bankAccount";
 
 // Ambil URL dari .env
