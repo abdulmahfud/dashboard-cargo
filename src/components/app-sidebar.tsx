@@ -19,6 +19,7 @@ import {
   UserCheck,
   UserCog,
   ShieldUser,
+  Banknote,
 } from "lucide-react";
 import * as React from "react";
 
@@ -136,6 +137,11 @@ const data = {
     },
   ],
   managementUser: [
+    {
+      title: "List Bank Account",
+      url: "/dashboard/list-bank-accounts",
+      icon: Banknote,
+    },
     {
       title: "List User",
       url: "/dashboard/users",

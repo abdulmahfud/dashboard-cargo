@@ -569,7 +569,18 @@ export const getBankAccounts = async (): Promise<BankAccountListResponse> => {
 export const createBankAccount = async (
   data: BankAccountCreateRequest
 ): Promise<BankAccountCreateResponse> => {
-  const res = await apiClient.post("/admin/bank-accounts", data);
+  const formData = new FormData();
+  formData.append("bank_name", data.bank_name);
+  formData.append("account_name", data.account_name);
+  formData.append("account_number", data.account_number);
+  formData.append("photo_rekening", data.photo_rekening);
+  formData.append("photo_ktp", data.photo_ktp);
+
+  const res = await apiClient.post("/admin/bank-accounts", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return res.data;
 };
 
@@ -590,9 +601,58 @@ export const deleteBankAccount = async (
 
 export const getBankAccountById = async (
   id: number
-): Promise<BankAccountCreateResponse> => {
+): Promise<{
+  success: boolean;
+  data: BankAccount & {
+    photo_rekening_url: string;
+    photo_ktp_url: string;
+    user: {
+      id: number;
+      name: string;
+      email: string;
+      whatsapp: string | null;
+      email_verified_at: string | null;
+      balance: string;
+      created_at: string;
+      updated_at: string;
+    };
+  };
+}> => {
   const res = await apiClient.get(`/admin/bank-accounts/${id}`);
   return res.data;
+};
+
+export const approveBankAccount = async (
+  id: number
+): Promise<{
+  success: boolean;
+  message: string;
+}> => {
+  const res = await apiClient.post(`/admin/bank-accounts/${id}/approve`);
+  return res.data;
+};
+
+export const rejectBankAccount = async (
+  id: number,
+  reason: string
+): Promise<{
+  success: boolean;
+  message: string;
+}> => {
+  const res = await apiClient.post(`/admin/bank-accounts/${id}/reject`, {
+    reason,
+  });
+  return res.data;
+};
+
+export const getBankAccountFile = async (
+  id: number,
+  type: "rekening" | "ktp"
+): Promise<string> => {
+  const res = await apiClient.get(`/admin/bank-accounts/${id}/file/${type}`, {
+    responseType: "blob",
+  });
+  return URL.createObjectURL(res.data);
 };
 
 // ✅ Get label URL for JNT Express orders

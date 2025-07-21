@@ -7,22 +7,91 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { useState, useEffect } from "react";
-import { Wallet, Plus, Building2, Phone, RefreshCw } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { useState, useEffect, useRef } from "react";
+import {
+  Wallet,
+  Plus,
+  Building2,
+  Phone,
+  RefreshCw,
+  Upload,
+  FileText,
+  Image as ImageIcon,
+  CheckCircle,
+  Clock,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import TopNav from "@/components/top-nav";
 import { getBankAccounts, createBankAccount } from "@/lib/apiClient";
 import { BankAccount, BankAccountCreateRequest } from "@/types/bankAccount";
 
+const BANK_LIST = [
+  "Bank Mandiri",
+  "Bank Rakyat Indonesia (BRI)",
+  "Bank Negara Indonesia (BNI)",
+  "Bank Central Asia (BCA)",
+  "Bank Tabungan Negara (BTN)",
+  "Bank CIMB Niaga",
+  "Bank Danamon",
+  "Bank Permata",
+  "Bank OCBC NISP",
+  "Bank Maybank Indonesia",
+  "Bank Mega",
+  "Bank Panin",
+  "Bank UOB Indonesia",
+  "Bank Sinarmas",
+  "Bank BTPN",
+  "Bank Jago",
+  "Bank Neo Commerce (BNC)",
+  "Bank Syariah Indonesia (BSI)",
+  "Bank Muamalat",
+  "Bank Mega Syariah",
+  "SeaBank",
+  "Blue by BCA Digital",
+  "Jenius",
+  "TMRW by UOB",
+  "Line Bank by Hana Bank",
+  "Bank DKI",
+  "Bank Jabar Banten (BJB)",
+  "Bank Jateng",
+  "Bank Jatim",
+  "Bank Sumut",
+  "Bank Nagari (Sumbar)",
+  "Bank Sumsel Babel",
+  "Bank Kalbar",
+  "Bank Kaltimtara",
+  "Bank Sulselbar",
+  "Bank Aceh Syariah",
+];
+
 const Rekening = () => {
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [formData, setFormData] = useState<BankAccountCreateRequest>({
+  const [formData, setFormData] = useState({
     bank_name: "",
     account_name: "",
     account_number: "",
   });
+  const [files, setFiles] = useState<{
+    photo_rekening: File | null;
+    photo_ktp: File | null;
+  }>({
+    photo_rekening: null,
+    photo_ktp: null,
+  });
+  const [previews, setPreviews] = useState<{
+    photo_rekening: string | null;
+    photo_ktp: string | null;
+  }>({
+    photo_rekening: null,
+    photo_ktp: null,
+  });
+
+  const rekeningInputRef = useRef<HTMLInputElement>(null);
+  const ktpInputRef = useRef<HTMLInputElement>(null);
 
   const fetchBankAccounts = async () => {
     try {
@@ -41,14 +110,82 @@ const Rekening = () => {
     fetchBankAccounts();
   }, []);
 
-  const handleInputChange = (
-    field: keyof BankAccountCreateRequest,
-    value: string
-  ) => {
+  const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
+  };
+
+  const handleFileChange = (
+    field: "photo_rekening" | "photo_ktp",
+    file: File | null
+  ) => {
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        toast.error("File harus berupa gambar");
+        return;
+      }
+
+      // Validate file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("Ukuran file maksimal 2MB");
+        return;
+      }
+
+      setFiles((prev) => ({ ...prev, [field]: file }));
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreviews((prev) => ({
+          ...prev,
+          [field]: e.target?.result as string,
+        }));
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFiles((prev) => ({ ...prev, [field]: null }));
+      setPreviews((prev) => ({ ...prev, [field]: null }));
+    }
+  };
+
+  const removeFile = (field: "photo_rekening" | "photo_ktp") => {
+    setFiles((prev) => ({ ...prev, [field]: null }));
+    setPreviews((prev) => ({ ...prev, [field]: null }));
+    if (field === "photo_rekening" && rekeningInputRef.current) {
+      rekeningInputRef.current.value = "";
+    }
+    if (field === "photo_ktp" && ktpInputRef.current) {
+      ktpInputRef.current.value = "";
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "approved":
+        return (
+          <Badge className="bg-green-100 text-green-800 border-green-200">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Disetujui
+          </Badge>
+        );
+      case "rejected":
+        return (
+          <Badge className="bg-red-100 text-red-800 border-red-200">
+            <X className="h-3 w-3 mr-1" />
+            Ditolak
+          </Badge>
+        );
+      default:
+        return (
+          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+            <Clock className="h-3 w-3 mr-1" />
+            Menunggu Verifikasi
+          </Badge>
+        );
+    }
   };
 
   const validateForm = () => {
@@ -60,8 +197,20 @@ const Rekening = () => {
       toast.error("Nama rekening harus diisi");
       return false;
     }
+    if (!/^[a-zA-Z\s.]+$/.test(formData.account_name.trim())) {
+      toast.error("Nama rekening hanya boleh huruf, spasi");
+      return false;
+    }
     if (!formData.account_number.trim()) {
       toast.error("Nomor rekening harus diisi");
+      return false;
+    }
+    if (!files.photo_rekening) {
+      toast.error("Foto rekening harus diupload");
+      return false;
+    }
+    if (!files.photo_ktp) {
+      toast.error("Foto KTP harus diupload");
       return false;
     }
     return true;
@@ -76,13 +225,36 @@ const Rekening = () => {
 
     try {
       setCreating(true);
-      await createBankAccount(formData);
-      toast.success("Rekening berhasil ditambahkan");
+      const submitData: BankAccountCreateRequest = {
+        bank_name: formData.bank_name,
+        account_name: formData.account_name,
+        account_number: formData.account_number,
+        photo_rekening: files.photo_rekening!,
+        photo_ktp: files.photo_ktp!,
+      };
+
+      await createBankAccount(submitData);
+      toast.success("Rekening berhasil dikirim untuk verifikasi");
       setFormData({ bank_name: "", account_name: "", account_number: "" });
+      setFiles({ photo_rekening: null, photo_ktp: null });
+      setPreviews({ photo_rekening: null, photo_ktp: null });
+      if (rekeningInputRef.current) rekeningInputRef.current.value = "";
+      if (ktpInputRef.current) ktpInputRef.current.value = "";
       fetchBankAccounts(); // Refresh data
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error creating bank account:", error);
-      toast.error("Gagal menambahkan rekening");
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as { response?: { status?: number } };
+        if (axiosError.response?.status === 409) {
+          toast.error(
+            "Anda sudah memiliki rekening bank. Tidak dapat menambahkan lebih dari satu."
+          );
+        } else {
+          toast.error("Gagal menambahkan rekening");
+        }
+      } else {
+        toast.error("Gagal menambahkan rekening");
+      }
     } finally {
       setCreating(false);
     }
@@ -147,10 +319,13 @@ const Rekening = () => {
               {bankAccounts.map((account) => (
                 <Card key={account.id} className="shadow-sm">
                   <CardHeader>
-                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                      <Building2 className="h-5 w-5" />
-                      {account.bank_name}
-                    </CardTitle>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                        <Building2 className="h-5 w-5" />
+                        {account.bank_name}
+                      </CardTitle>
+                      {getStatusBadge(account.status)}
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -171,6 +346,17 @@ const Rekening = () => {
                         </p>
                       </div>
                     </div>
+
+                    {account.status === "rejected" &&
+                      account.rejected_reason && (
+                        <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                          <p className="text-sm text-red-800">
+                            <strong>Alasan Penolakan:</strong>{" "}
+                            {account.rejected_reason}
+                          </p>
+                        </div>
+                      )}
+
                     <div>
                       <Label className="text-sm font-medium text-gray-500">
                         Tanggal Ditambahkan
@@ -186,6 +372,24 @@ const Rekening = () => {
                         )}
                       </p>
                     </div>
+
+                    {account.verified_at && (
+                      <div>
+                        <Label className="text-sm font-medium text-gray-500">
+                          Tanggal Disetujui
+                        </Label>
+                        <p className="text-sm text-green-600">
+                          {new Date(account.verified_at).toLocaleDateString(
+                            "id-ID",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            }
+                          )}
+                        </p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
@@ -220,7 +424,10 @@ const Rekening = () => {
                           variant="outline"
                           className="border-amber-300 text-amber-700 hover:bg-amber-100"
                           onClick={() =>
-                            window.open("mailto:support@bhisakirim.com", "_blank")
+                            window.open(
+                              "mailto:support@bhisakirim.com",
+                              "_blank"
+                            )
                           }
                         >
                           Email CS
@@ -248,16 +455,22 @@ const Rekening = () => {
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="bank_name">Nama Bank *</Label>
-                      <Input
+                      <select
                         id="bank_name"
-                        type="text"
                         value={formData.bank_name}
                         onChange={(e) =>
                           handleInputChange("bank_name", e.target.value)
                         }
-                        placeholder="Contoh: BCA, Mandiri, BRI"
                         required
-                      />
+                        className="w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Pilih Bank</option>
+                        {BANK_LIST.map((bank, idx) => (
+                          <option key={idx} value={bank}>
+                            {bank}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     <div className="space-y-2">
@@ -286,6 +499,108 @@ const Rekening = () => {
                         placeholder="1234567890"
                         required
                       />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="photo_rekening">Foto Rekening *</Label>
+                      <Input
+                        id="photo_rekening"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                          handleFileChange(
+                            "photo_rekening",
+                            e.target.files?.[0] || null
+                          )
+                        }
+                        ref={rekeningInputRef}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => rekeningInputRef.current?.click()}
+                        className="w-full bg-blue-500 text-white hover:bg-blue-600"
+                        disabled={creating}
+                      >
+                        {files.photo_rekening ? (
+                          <div className="flex items-center gap-2">
+                            <ImageIcon className="h-5 w-5" />
+                            {files.photo_rekening.name}
+                            <X
+                              className="h-4 w-4 cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeFile("photo_rekening");
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <>
+                            <Upload className="h-4 w-4 mr-2" />
+                            Upload Foto Rekening
+                          </>
+                        )}
+                      </Button>
+                      {previews.photo_rekening && (
+                        <div className="mt-2">
+                          <img
+                            src={previews.photo_rekening}
+                            alt="Preview Rekening"
+                            className="max-w-sm h-auto rounded-md"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="photo_ktp">Foto KTP *</Label>
+                      <Input
+                        id="photo_ktp"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                          handleFileChange(
+                            "photo_ktp",
+                            e.target.files?.[0] || null
+                          )
+                        }
+                        ref={ktpInputRef}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => ktpInputRef.current?.click()}
+                        className="w-full bg-blue-500 text-white hover:bg-blue-600"
+                        disabled={creating}
+                      >
+                        {files.photo_ktp ? (
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-5 w-5" />
+                            {files.photo_ktp.name}
+                            <X
+                              className="h-4 w-4 cursor-pointer bg-blue-500 text-white hover:bg-blue-600"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeFile("photo_ktp");
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <>
+                            <Upload className="h-4 w-4 mr-2" />
+                            Upload Foto KTP
+                          </>
+                        )}
+                      </Button>
+                      {previews.photo_ktp && (
+                        <div className="mt-2">
+                          <img
+                            src={previews.photo_ktp}
+                            alt="Preview KTP"
+                            className="max-w-sm h-auto rounded-md"
+                          />
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex justify-end gap-3 pt-4">
@@ -321,8 +636,17 @@ const Rekening = () => {
                       • Pastikan nama rekening sesuai dengan identitas Anda
                     </li>
                     <li>• Nomor rekening harus valid dan aktif</li>
-                    <li>• Rekening akan digunakan untuk penarikan saldo</li>
-                    <li>• Setelah ditambahkan, hubungi CS untuk perubahan</li>
+                    <li>• Upload foto rekening yang jelas dan terbaca</li>
+                    <li>• Upload foto KTP yang sesuai dengan nama rekening</li>
+                    <li>• File gambar maksimal 2MB (JPG, PNG)</li>
+                    <li>
+                      • Rekening akan diverifikasi oleh admin dalam 1-3 hari
+                      kerja
+                    </li>
+                    <li>
+                      • Setelah disetujui, rekening dapat digunakan untuk
+                      penarikan saldo
+                    </li>
                   </ul>
                 </CardContent>
               </Card>
