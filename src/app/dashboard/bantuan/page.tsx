@@ -13,12 +13,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Phone, MessageCircle, Mail, Clock, HelpCircle } from "lucide-react";
+import { MessageCircle, Mail, Clock, HelpCircle } from "lucide-react";
 
 export default function BantuanPage() {
-  const handlePhoneCall = () => {
-    window.location.href = "tel:081330323559";
-  };
+  // const handlePhoneCall = () => {
+  //   window.location.href = "tel:081330323559";
+  // };
 
   const handleWhatsApp = () => {
     window.open("https://wa.me/6281330323559", "_blank");
@@ -61,7 +61,7 @@ export default function BantuanPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Phone */}
-                <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                {/* <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-blue-100 rounded-lg">
                       <Phone className="h-5 w-5 text-blue-600" />
@@ -74,7 +74,7 @@ export default function BantuanPage() {
                   <Button onClick={handlePhoneCall} variant="outline" size="sm">
                     Hubungi
                   </Button>
-                </div>
+                </div> */}
 
                 {/* WhatsApp */}
                 <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">

@@ -8,7 +8,6 @@ import {
   FileText,
   HelpCircleIcon,
   House,
-  Package,
   PackageSearch,
   Truck,
   User,
@@ -71,11 +70,11 @@ const data = {
       url: "/dashboard/paket/paket-reguler",
       icon: Truck,
     },
-    {
-      title: "Kirim Paket Instant",
-      url: "/dashboard/paket/paket-instant",
-      icon: Package,
-    },
+    // {
+    //   title: "Kirim Paket Instant",
+    //   url: "/dashboard/paket/paket-instant",
+    //   icon: Package,
+    // },
     {
       title: "Cancel Order",
       url: "/dashboard/paket/cancel-order",
