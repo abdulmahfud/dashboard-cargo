@@ -88,6 +88,11 @@ const data = {
       url: "/dashboard/bantuan",
       icon: HelpCircleIcon,
     },
+    {
+      title: "Syarat & Ketentuan",
+      url: "/dashboard/syarat-dan-ketentuan",
+      icon: FileText,
+    },
   ],
   report: [
     {
