@@ -20,7 +20,9 @@ export default function BantuanPage() {
         <div className="container mx-auto p-6">
           <div className="bg-white rounded shadow p-6 overflow-x-auto text-sm prose max-w-none">
             <h1>Syarat &amp; Ketentuan BhisaKirim</h1>
+            <br />
             <h2>A. Pendahuluan</h2>
+            <br />
             <p>
               Selamat datang di BhisaKirim — platform agregator jasa pengiriman
               dari berbagai kurir terpercaya di Indonesia. Dengan menggunakan
@@ -29,7 +31,9 @@ export default function BantuanPage() {
               menggunakan layanan kami. Harap membaca seluruh ketentuan ini
               dengan saksama sebelum menggunakan layanan BhisaKirim.
             </p>
+            <br />
             <h2>B. Ketentuan Umum</h2>
+            <br />
             <ol className="list-decimal ml-6">
               <li>
                 BhisaKirim adalah platform digital yang menghubungkan pengguna
@@ -46,7 +50,9 @@ export default function BantuanPage() {
                 penggunaan layanan BhisaKirim.
               </li>
             </ol>
+            <br />
             <h2>C. Penggunaan Platform</h2>
+            <br />
             <ol className="list-decimal ml-6">
               <li>
                 <b>Akun Pengguna</b>
@@ -85,7 +91,9 @@ export default function BantuanPage() {
                 </ul>
               </li>
             </ol>
+            <br />
             <h2>D. Layanan BhisaKirim</h2>
+            <br />
             <ol className="list-decimal ml-6">
               <li>
                 <b>Akun Reguler dan Akun Terverifikasi</b>
@@ -307,7 +315,9 @@ export default function BantuanPage() {
               </li>
             </ol>
             {/* --- Lanjutan Syarat & Ketentuan --- */}
+            <br />
             <h2>Perubahan dan Pembatalan</h2>
+            <br />
             <ul className="list-disc ml-6">
               <li>
                 <b>Perubahan Detail Pengiriman oleh Pengguna</b>
@@ -397,9 +407,11 @@ export default function BantuanPage() {
               </li>
             </ul>
 
+            <br />
             <h2>
               Cash on Delivery (COD) dan Cash on Delivery Value (COD Value)
             </h2>
+            <br />
             <ul className="list-disc ml-6">
               <li>
                 <b>Definisi Layanan COD</b>
@@ -507,7 +519,9 @@ export default function BantuanPage() {
                 </ul>
               </li>
             </ul>
+            <br />
             <h3>Fee COD per Ekspedisi</h3>
+            <br />
             <div className="overflow-x-auto">
               <table className="min-w-full border text-xs">
                 <thead>
@@ -608,7 +622,9 @@ export default function BantuanPage() {
               </li>
             </ul>
 
+            <br />
             <h2>Retur</h2>
+            <br />
             <p>
               Retur merupakan proses atau mekanisme pengembalian paket dari
               penerima ke pengirim. Apabila paket yang dikirimkan terjadi retur,
@@ -618,6 +634,7 @@ export default function BantuanPage() {
               diberangkatkan. Biaya retur akan dikenakan sesuai dengan ketentuan
               ekspedisi berikut:
             </p>
+            <br />
             <div className="overflow-x-auto">
               <table className="min-w-full border text-xs">
                 <thead>
@@ -691,7 +708,9 @@ export default function BantuanPage() {
               </table>
             </div>
 
+            <br />
             <h2>Pengajuan Klaim Barang Rusak atau Hilang</h2>
+            <br />
             <ul className="list-disc ml-6">
               <li>
                 <b>Definisi Klaim</b>
@@ -801,7 +820,9 @@ export default function BantuanPage() {
                 </ul>
               </li>
             </ul>
+            <br />
             <h3>Waktu Pelaporan Kehilangan/Rusak per Ekspedisi</h3>
+            <br />
             <div className="overflow-x-auto">
               <table className="min-w-full border text-xs">
                 <thead>
@@ -905,7 +926,9 @@ export default function BantuanPage() {
                 </tbody>
               </table>
             </div>
+            <br />
             <h3>Waktu Jawaban Klaim Ekspedisi</h3>
+            <br />
             <div className="overflow-x-auto">
               <table className="min-w-full border text-xs">
                 <thead>
@@ -983,7 +1006,9 @@ export default function BantuanPage() {
               disetujui oleh ekspedisi terkait.
             </p>
 
-            <h2>10. Asuransi</h2>
+            <br />
+            <h2>Asuransi</h2>
+            <br />
             <ul className="list-disc ml-6">
               <li>
                 <b>Ketersediaan Asuransi</b>
@@ -1090,7 +1115,9 @@ export default function BantuanPage() {
                 </ul>
               </li>
             </ul>
+            <br />
             <h3>Biaya Asuransi per Ekspedisi</h3>
+            <br />
             <div className="overflow-x-auto">
               <table className="min-w-full border text-xs">
                 <thead>
@@ -1160,7 +1187,9 @@ export default function BantuanPage() {
               </table>
             </div>
 
-            <h2>11. Nilai Penggantian Barang</h2>
+            <br />
+            <h2>Nilai Penggantian Barang</h2>
+            <br />
             <ul className="list-disc ml-6">
               <li>
                 <b>Dasar Perhitungan Penggantian</b>
@@ -1242,7 +1271,9 @@ export default function BantuanPage() {
                 </ul>
               </li>
             </ul>
+            <br />
             <h3>Nilai Penggantian Barang per Ekspedisi</h3>
+            <br />
             <div className="overflow-x-auto">
               <table className="min-w-full border text-xs">
                 <thead>
@@ -1336,7 +1367,9 @@ export default function BantuanPage() {
               </table>
             </div>
 
-            <h2>12. Saldo Aktif</h2>
+            <br />
+            <h2>Saldo Aktif</h2>
+            <br />
             <ul className="list-disc ml-6">
               <li>
                 <b>Pengertian Saldo Aktif</b>
@@ -1449,7 +1482,9 @@ export default function BantuanPage() {
               </li>
             </ul>
 
-            <h2>13. Afiliasi</h2>
+            <br />
+            <h2>Afiliasi</h2>
+            <br />
             <ul className="list-disc ml-6">
               <li>
                 <b>Program Afiliasi BhisaKirim</b>
@@ -1528,7 +1563,9 @@ export default function BantuanPage() {
               </li>
             </ul>
 
-            <h2>14. Promo BhisaKirim</h2>
+            <br />
+            <h2>Promo BhisaKirim</h2>
+            <br />
             <ul className="list-disc ml-6">
               <li>
                 <b>Ketentuan Umum Promo</b>
@@ -1593,7 +1630,9 @@ export default function BantuanPage() {
               </li>
             </ul>
 
-            <h2>15. Keamanan</h2>
+            <br />
+            <h2>Keamanan</h2>
+            <br />
             <ul className="list-disc ml-6">
               <li>
                 <b>Keamanan Informasi Pengguna</b>
@@ -1668,7 +1707,9 @@ export default function BantuanPage() {
               </li>
             </ul>
 
-            <h2>16. Kebijakan Penggunaan Data</h2>
+            <br />
+            <h2>Kebijakan Penggunaan Data</h2>
+            <br />
             <ul className="list-disc ml-6">
               <li>
                 <b>Pengumpulan Data</b>
@@ -1777,7 +1818,9 @@ export default function BantuanPage() {
               </li>
             </ul>
 
-            <h2>17. Ketentuan Lain</h2>
+            <br />
+            <h2>Ketentuan Lain</h2>
+            <br />
             <ul className="list-disc ml-6">
               <li>
                 <b>Pemisahan Ketentuan</b>
@@ -1852,7 +1895,9 @@ export default function BantuanPage() {
               </li>
             </ul>
 
-            <h2>18. Hak Kekayaan Intelektual</h2>
+            <br />
+            <h2>Hak Kekayaan Intelektual</h2>
+            <br />
             <ul className="list-disc ml-6">
               <li>
                 <b>Kepemilikan</b>
@@ -1920,7 +1965,9 @@ export default function BantuanPage() {
               </li>
             </ul>
 
-            <h2>19. Hubungi Kami</h2>
+            <br />
+            <h2>Hubungi Kami</h2>
+            <br />
             <p>
               Jika Anda memiliki pertanyaan, masukan, keluhan, atau membutuhkan
               bantuan terkait penggunaan layanan BhisaKirim, Anda dapat
