@@ -54,10 +54,15 @@ const data = {
       icon: PackageSearch,
     },
     {
+      title: "Lacak Paket",
+      url: "/dashboard/tracking",
+      icon: Truck,
+    },
+    {
       title: "Cek Kode Pos",
       url: "/dashboard/cek-kode-pos",
       icon: FileSearch,
-    },
+    },    
     // {
     //   title: "Cetak Resi Massal",
     //   url: "/dashboard/cetak-resi-massal",

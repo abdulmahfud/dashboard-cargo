@@ -87,9 +87,6 @@ export function LabelUrlButton({
 
       {labelUrl && (
         <div className="space-y-2">
-          <div className="text-xs text-gray-600 break-all bg-gray-50 p-2 rounded border">
-            {labelUrl}
-          </div>
           <Button
             onClick={handlePrintLabel}
             variant="outline"

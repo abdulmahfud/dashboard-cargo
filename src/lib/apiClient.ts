@@ -53,6 +53,7 @@ import type {
   BankAccountCreateResponse,
   BankAccount,
 } from "@/types/bankAccount";
+import type { JntTrackingApiResponse } from "@/types/tracking";
 
 // Ambil URL dari .env
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -670,6 +671,16 @@ export const getLabelUrl = async (
 }> => {
   const res = await apiClient.post("/admin/get-label-url", {
     awb_no: awbNo,
+  });
+  return res.data;
+};
+
+// ✅ JNT Express tracking function
+export const trackJntExpress = async (
+  awb_no: string
+): Promise<JntTrackingApiResponse> => {
+  const res = await apiClient.post("/admin/expedition/jntexpress/trackingjnt", {
+    awb_no,
   });
   return res.data;
 };
