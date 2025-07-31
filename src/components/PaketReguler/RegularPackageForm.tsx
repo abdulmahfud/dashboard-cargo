@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { WeightInput } from "@/components/ui/weight-input";
 import {
   Popover,
   PopoverContent,
@@ -208,7 +210,7 @@ export default function RegularPackageForm({
 
       onFormDataChange(notificationData);
     }
-  }, [formData, selectedBusiness, receiverId]); // Removed onFormDataChange from dependencies
+  }, [formData, selectedBusiness, receiverId, onFormDataChange]);
 
   // Province search and fetch
   useEffect(() => {
@@ -460,6 +462,34 @@ export default function RegularPackageForm({
     const sendSiteCode = selectedBusiness?.regency || "";
     const destAreaCode = selectedDistrictName;
 
+    // Validate required parameters
+    if (!weight || !sendSiteCode || !destAreaCode) {
+      const missingFields = [];
+      if (!weight) missingFields.push("berat");
+      if (!sendSiteCode)
+        missingFields.push(
+          "kota pengirim (data alamat pengirim tidak lengkap)"
+        );
+      if (!destAreaCode) missingFields.push("kecamatan tujuan");
+
+      const errorMessage = `Data tidak lengkap: ${missingFields.join(", ")} wajib diisi`;
+      console.error("❌ RegularPackageForm - Missing required fields:", {
+        weight,
+        sendSiteCode,
+        destAreaCode,
+        selectedBusiness,
+        selectedDistrictName,
+        missingFields,
+      });
+
+      onResult?.({
+        error: true,
+        message: errorMessage,
+      });
+      if (setIsSearching) setIsSearching(false);
+      return;
+    }
+
     try {
       const result = await getJntExpressShipmentCost({
         weight,
@@ -515,7 +545,7 @@ export default function RegularPackageForm({
                   <div className="text-sm text-gray-500">
                     Paket akan dijemput ke tempatmu
                   </div>
-              </div>
+                </div>
               </label>
 
               {/* Drop Off Option */}
@@ -533,7 +563,7 @@ export default function RegularPackageForm({
                   <div className="text-sm text-gray-500">
                     Paket perlu diantar ke agen ekspedisi
                   </div>
-              </div>
+                </div>
               </label>
             </RadioGroup>
           </div>
@@ -559,7 +589,7 @@ export default function RegularPackageForm({
                   <div className="font-medium">COD (Cash on Delivery)</div>
                   <div className="text-sm text-gray-500">
                     Pembayaran akan dilakukan saat paket sampai di tujuan
-              </div>
+                  </div>
                 </div>
               </label>
 
@@ -577,7 +607,7 @@ export default function RegularPackageForm({
                   <div className="font-medium">Non-COD</div>
                   <div className="text-sm text-gray-500">
                     Pembayaran akan dilakukan sebelum paket dikirim
-              </div>
+                  </div>
                 </div>
               </label>
             </RadioGroup>
@@ -742,8 +772,8 @@ export default function RegularPackageForm({
               <div className="relative">
                 <Label htmlFor="province">
                   Provinsi <span className="text-red-500">*</span>
-              </Label>
-              <Input
+                </Label>
+                <Input
                   id="province"
                   placeholder="Cari provinsi..."
                   value={provinceSearch}
@@ -1065,19 +1095,13 @@ export default function RegularPackageForm({
                 <Label htmlFor="itemValue">
                   Nilai Barang <span className="text-red-500">*</span>
                 </Label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                    Rp
-                  </div>
-                  <Input
-                    id="itemValue"
-                    type="number"
-                    value={formData.itemValue}
-                    placeholder="Cth : 1.000.000"
-                    onChange={(e) => handleChange("itemValue", e.target.value)}
-                    className={`pl-10 ${formErrors.itemValue ? "border-red-500" : ""}`}
-                  />
-                </div>
+                <CurrencyInput
+                  id="itemValue"
+                  value={formData.itemValue}
+                  placeholder="Cth : 1.000.000"
+                  onChange={(value) => handleChange("itemValue", value)}
+                  className={formErrors.itemValue ? "border-red-500" : ""}
+                />
                 {formErrors.itemValue && (
                   <p className="text-sm text-red-500 mt-1">
                     {formErrors.itemValue}
@@ -1107,14 +1131,13 @@ export default function RegularPackageForm({
             <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="weight">
-                  Berat (gram) <span className="text-red-500">*</span>
+                  Berat <span className="text-red-500">*</span>
                 </Label>
-                <Input
+                <WeightInput
                   id="weight"
-                  placeholder="Cth : 1000"
-                  type="number"
+                  placeholder="Cth : 1.000"
                   value={formData.weight}
-                  onChange={(e) => handleChange("weight", e.target.value)}
+                  onChange={(value) => handleChange("weight", value)}
                   className={formErrors.weight ? "border-red-500" : ""}
                 />
                 {formErrors.weight && (

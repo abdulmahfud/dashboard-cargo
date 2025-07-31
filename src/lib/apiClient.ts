@@ -191,7 +191,6 @@ export const getJntExpressShipmentCost = async ({
     "/admin/expedition/jntexpress/shipment_cost",
     requestPayload
   );
-
   return res.data;
 };
 
@@ -682,6 +681,91 @@ export const trackJntExpress = async (
   const res = await apiClient.post("/admin/expedition/jntexpress/trackingjnt", {
     awb_no,
   });
+  return res.data;
+};
+
+// ✅ Payment functions
+export const createPayment = async (data: {
+  shipping_data: Record<string, unknown>;
+  amount: number;
+}): Promise<{
+  success: boolean;
+  message: string;
+  data?: {
+    payment_id: number;
+    reference_no: string;
+    invoice_id: string;
+    invoice_url: string;
+    amount: number;
+    expired_at: string;
+    status: string;
+  };
+  errors?: Record<string, unknown>;
+}> => {
+  const res = await apiClient.post("/admin/payments/create", data);
+  return res.data;
+};
+
+export const getPaymentStatus = async (
+  referenceNo: string
+): Promise<{
+  success: boolean;
+  message?: string;
+  data?: {
+    reference_no: string;
+    invoice_id: string;
+    amount: number;
+    status: "pending" | "paid" | "expired" | "failed";
+    payment_method?: string;
+    payment_channel?: string;
+    invoice_url?: string;
+    paid_at?: string;
+    expired_at?: string;
+    created_at: string;
+  };
+}> => {
+  const res = await apiClient.get(`/admin/payments/status/${referenceNo}`);
+  return res.data;
+};
+
+export const getPaymentHistory = async (params?: {
+  per_page?: number;
+  status?: string;
+}): Promise<{
+  success: boolean;
+  message?: string;
+  data?: Record<string, unknown>[];
+  pagination?: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+}> => {
+  const res = await apiClient.get("/admin/payments/history", { params });
+  return res.data;
+};
+
+export const cancelPayment = async (
+  referenceNo: string
+): Promise<{
+  success: boolean;
+  message: string;
+}> => {
+  const res = await apiClient.post(`/admin/payments/cancel/${referenceNo}`);
+  return res.data;
+};
+
+export const checkInvoiceStatus = async (
+  invoiceId: string
+): Promise<{
+  success: boolean;
+  message?: string;
+  data?: Record<string, unknown>;
+}> => {
+  const res = await apiClient.get(
+    `/admin/payments/invoice/${invoiceId}/status`
+  );
   return res.data;
 };
 

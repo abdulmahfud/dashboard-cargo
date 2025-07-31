@@ -18,12 +18,11 @@ import {
 import { ShippingOption } from "@/types/dataRegulerForm";
 import Image from "next/image";
 import { CirclePlus, CheckCircle, Package, FileText } from "lucide-react";
-import { submitJntExpressOrder } from "@/lib/apiClient";
-import type { OrderRequest } from "@/types/order";
-import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import { getLabelUrl } from "@/lib/apiClient";
 import { toast } from "sonner";
+import PaymentFlow from "@/components/Payment/PaymentFlow";
+import { CurrencyInput } from "@/components/ui/currency-input";
 
 interface CalculationResultsProps {
   isSearching: boolean;
@@ -86,7 +85,7 @@ export default function CalculationResults({
   const [isInsured, setIsInsured] = useState(false);
   const [showPaymentSection, setShowPaymentSection] = useState(false);
   const [customCODValue, setCustomCODValue] = useState<string>("");
-  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const [showPaymentFlow, setShowPaymentFlow] = useState(false);
   const [orderResult, setOrderResult] = useState<{
     success: boolean;
     message: string;
@@ -219,7 +218,98 @@ export default function CalculationResults({
     return isInsured ? Math.round(itemValue * 0.002) : 0;
   };
 
-  const handleSubmitOrder = async () => {
+  // Build shipping data for payment
+  const buildShippingData = () => {
+    if (
+      !selectedShippingOption ||
+      !formData?.formData ||
+      !formData?.businessData
+    ) {
+      return null;
+    }
+
+    // Calculate COD value properly - total amount charged to recipient
+    let codValue = "0";
+    if (formData.formData.paymentMethod === "cod") {
+      if (customCODValue) {
+        // Use custom COD value if provided
+        codValue = customCODValue.replace(/\./g, "");
+      } else {
+        // Calculate total: Item Value + Shipping + COD Fee + Insurance
+        const itemValue = getItemValue();
+        const shippingCost = parseInt(
+          selectedShippingOption.price.replace(/[^\d]/g, "")
+        );
+        const codFee = getCODFee();
+        const insuranceCost = getInsuranceCost();
+
+        codValue = (
+          itemValue +
+          shippingCost +
+          codFee +
+          insuranceCost
+        ).toString();
+      }
+    }
+
+    // Build order data that will be used after payment
+    const shippingData: Record<string, unknown> = {
+      vendor: "jntexpress",
+      service_code: "1", // JNT Express service code
+      expresstype: "1",
+      servicetype: formData.formData.deliveryType === "pickup" ? "1" : "6",
+      detail: {
+        pieces: formData.formData.itemQuantity || "1",
+        weight: (parseInt(formData.formData.weight) / 1000).toString(), // Convert grams to kg
+        remark:
+          formData.formData.notes ||
+          formData.formData.itemContent ||
+          "GENERAL_GOODS",
+        item_value: formData.formData.itemValue || "0",
+        use_insurance: isInsured,
+        insurance: isInsured
+          ? Math.round(
+              parseInt(formData.formData.itemValue || "0") * 0.002
+            ).toString()
+          : "0",
+        cod: codValue, // Use calculated COD value
+        items: [
+          {
+            name: formData.formData.itemContent || "General Item",
+            quantity: parseInt(formData.formData.itemQuantity) || 1,
+            price: parseInt(formData.formData.itemValue) || 0,
+          },
+        ],
+      },
+    };
+
+    // Add sender/receiver data
+    if (formData.receiverId) {
+      shippingData.receiver_id = parseInt(formData.receiverId);
+      shippingData.shipper_id = formData.businessData.id;
+    } else {
+      shippingData.sender = {
+        name: formData.businessData.senderName,
+        phone: formData.businessData.contact,
+        address: formData.businessData.address,
+        province: formData.businessData.province || "",
+        regency: formData.businessData.regency || "",
+        district: formData.businessData.district || "",
+      };
+      shippingData.receiver = {
+        name: formData.formData.receiverName,
+        phone: formData.formData.receiverPhone,
+        address: formData.formData.receiverAddress,
+        province: formData.formData.province,
+        regency: formData.formData.regency,
+        district: formData.formData.district,
+      };
+    }
+
+    return shippingData;
+  };
+
+  const handleSubmitOrder = () => {
     if (
       !selectedShippingOption ||
       !formData?.formData ||
@@ -235,166 +325,35 @@ export default function CalculationResults({
         "❌ CalculationResults - Missing required data:",
         missingData
       );
-      alert("Data tidak lengkap untuk melakukan order");
+      toast.error("Data tidak lengkap untuk melakukan order");
       return;
     }
 
-    setIsSubmittingOrder(true);
-    setOrderResult(null);
+    // Show payment flow instead of creating order directly
+    setShowPaymentFlow(true);
+  };
 
-    try {
-      // Calculate COD value properly - total amount charged to recipient
-      let codValue = "0";
-      if (formData.formData.paymentMethod === "cod") {
-        if (customCODValue) {
-          // Use custom COD value if provided
-          codValue = customCODValue.replace(/\./g, "");
-        } else {
-          // Calculate total: Item Value + Shipping + COD Fee + Insurance
-          const itemValue = getItemValue();
-          const shippingCost = parseInt(
-            selectedShippingOption.price.replace(/[^\d]/g, "")
-          );
-          const codFee = getCODFee();
-          const insuranceCost = getInsuranceCost();
+  const handlePaymentSuccess = () => {
+    toast.success("Pembayaran berhasil! Order sedang diproses...");
 
-          codValue = (
-            itemValue +
-            shippingCost +
-            codFee +
-            insuranceCost
-          ).toString();
-        }
-      }
+    // Set order result to show success
+    setOrderResult({
+      success: true,
+      message: "Pembayaran berhasil! Order sedang diproses...",
+      awb_no: undefined, // AWB will be available after order creation
+    });
 
-      // Build order data
-      const orderData: OrderRequest = {
-        service_code: "1", // JNT Express service code
-        expresstype: "1",
-        servicetype: formData.formData.deliveryType === "pickup" ? "1" : "6",
-        detail: {
-          pieces: formData.formData.itemQuantity || "1",
-          weight: (parseInt(formData.formData.weight) / 1000).toString(), // Convert grams to kg
-          remark:
-            formData.formData.notes ||
-            formData.formData.itemContent ||
-            "GENERAL_GOODS",
-          item_value: formData.formData.itemValue || "0",
-          use_insurance: isInsured,
-          insurance: isInsured
-            ? Math.round(
-                parseInt(formData.formData.itemValue || "0") * 0.002
-              ).toString()
-            : "0",
-          cod: codValue, // Use calculated COD value
-          items: [
-            {
-              name: formData.formData.itemContent || "General Item",
-              quantity: parseInt(formData.formData.itemQuantity) || 1,
-              price: parseInt(formData.formData.itemValue) || 0,
-            },
-          ],
-        },
-      };
+    setShowPaymentFlow(false);
+    setShowSuccessDialog(true);
+  };
 
-      // Use receiver_id if available, otherwise use receiver object
-      if (formData.receiverId) {
-        orderData.receiver_id = parseInt(formData.receiverId);
-        orderData.shipper_id = formData.businessData.id;
-      } else {
-        orderData.sender = {
-          name: formData.businessData.senderName,
-          phone: formData.businessData.contact,
-          address: formData.businessData.address,
-          province: formData.businessData.province || "",
-          regency: formData.businessData.regency || "",
-          district: formData.businessData.district || "",
-        };
-        orderData.receiver = {
-          name: formData.formData.receiverName,
-          phone: formData.formData.receiverPhone,
-          address: formData.formData.receiverAddress,
-          province: formData.formData.province,
-          regency: formData.formData.regency,
-          district: formData.formData.district,
-        };
-      }
+  const handlePaymentFailed = (error: string) => {
+    toast.error(error);
+    setShowPaymentFlow(false);
+  };
 
-      const response = await submitJntExpressOrder(orderData);
-
-      // Check for success based on response structure
-      if (response.status === "success" || response.order) {
-        setOrderResult({
-          success: true,
-          message: "Order berhasil dibuat!",
-          awb_no: response.data?.awb_no,
-        });
-        setShowSuccessDialog(true);
-      } else {
-        // Check if order was actually created despite error status
-        if (response.order || response.data) {
-          setOrderResult({
-            success: true,
-            message: "Order berhasil dibuat!",
-            awb_no: response.data?.awb_no,
-          });
-          setShowSuccessDialog(true);
-        } else {
-          setOrderResult({
-            success: false,
-            message: response.message || "Gagal membuat order",
-          });
-        }
-      }
-    } catch (error) {
-      console.error("❌ CalculationResults - Order submission error:", error);
-
-      // Enhanced error logging
-      if (error instanceof Error) {
-        console.error("❌ CalculationResults - Error message:", error.message);
-        console.error("❌ CalculationResults - Error stack:", error.stack);
-      }
-
-      // If it's an axios error, log more details
-      if (typeof error === "object" && error !== null && "response" in error) {
-        const axiosError = error as AxiosError;
-        console.error("❌ CalculationResults - Axios error details:", {
-          status: axiosError.response?.status,
-          statusText: axiosError.response?.statusText,
-          data: axiosError.response?.data,
-          headers: axiosError.response?.headers,
-          config: {
-            url: axiosError.config?.url,
-            method: axiosError.config?.method,
-            data: axiosError.config?.data,
-          },
-        });
-
-        // Check if the error response contains order data (order created but API returned error)
-        const responseData = axiosError.response?.data as {
-          order?: { awb_no?: string };
-          data?: { awb_no?: string };
-        };
-        if (responseData?.order || responseData?.data) {
-          setOrderResult({
-            success: true,
-            message: "Order berhasil dibuat!",
-            awb_no: responseData.data?.awb_no || responseData.order?.awb_no,
-          });
-          return;
-        }
-      }
-
-      setOrderResult({
-        success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : "Terjadi kesalahan saat membuat order",
-      });
-    } finally {
-      setIsSubmittingOrder(false);
-    }
+  const handleCancelPayment = () => {
+    setShowPaymentFlow(false);
   };
 
   const handleGetLabelUrl = async () => {
@@ -438,6 +397,30 @@ export default function CalculationResults({
     router.push("/dashboard/paket/paket-reguler");
     setShowSuccessDialog(false);
   };
+
+  // Show payment flow if triggered
+  if (showPaymentFlow) {
+    const shippingData = buildShippingData();
+    const totalAmount = calculateTotal();
+
+    if (!shippingData) {
+      return (
+        <div className="p-4 text-red-600">
+          Gagal membangun data pengiriman untuk pembayaran
+        </div>
+      );
+    }
+
+    return (
+      <PaymentFlow
+        shippingData={shippingData}
+        amount={totalAmount}
+        onPaymentSuccess={handlePaymentSuccess}
+        onPaymentFailed={handlePaymentFailed}
+        onCancel={handleCancelPayment}
+      />
+    );
+  }
 
   return (
     <div className="animate-slide-up space-y-4">
@@ -535,24 +518,19 @@ export default function CalculationResults({
                 <p className="text-sm text-gray-600 mb-3">
                   Ubah nilai COD yang ditagihkan ke penerima
                 </p>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm font-medium">Rp</span>
-                  <Input
-                    type="text"
-                    placeholder="Cth: 100.000"
-                    value={customCODValue}
-                    onChange={(e) => {
-                      // Format number with thousands separator
-                      const value = e.target.value.replace(/[^\d]/g, "");
-                      const formatted = value.replace(
-                        /\B(?=(\d{3})+(?!\d))/g,
-                        "."
-                      );
-                      setCustomCODValue(formatted);
-                    }}
-                    className="flex-1"
-                  />
-                </div>
+                <CurrencyInput
+                  placeholder="100.000"
+                  value={customCODValue.replace(/\./g, "")} // Remove dots for internal value
+                  onChange={(value) => {
+                    // Format for display with dots
+                    const formatted = value.replace(
+                      /\B(?=(\d{3})+(?!\d))/g,
+                      "."
+                    );
+                    setCustomCODValue(formatted);
+                  }}
+                  className="w-full"
+                />
               </CardContent>
             </Card>
           )}
@@ -687,10 +665,10 @@ export default function CalculationResults({
                 <Button
                   className="w-full h-11 px-6 py-4 font-semibold bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 text-sm flex items-center gap-2 rounded-full shadow-md transition duration-300 ease-in-out"
                   onClick={handleSubmitOrder}
-                  disabled={isSubmittingOrder || !termsAccepted}
+                  disabled={!termsAccepted}
                 >
                   <CirclePlus className="w-4 h-4" />
-                  {isSubmittingOrder ? "Memproses Order..." : "Proses Paket"}
+                  Lanjut ke Pembayaran
                 </Button>
               </div>
             </CardContent>
@@ -760,7 +738,7 @@ export default function CalculationResults({
             </Button>
           </div>
 
-          {/* Label URL Section - Only for JNT Express */}
+          {/* Label URL Section - Only for JNT Express and when AWB is available */}
           {orderResult?.awb_no && (
             <div className="mt-6 space-y-3">
               <div className="text-center">
@@ -807,6 +785,19 @@ export default function CalculationResults({
                   </Button>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Show message when payment successful but order still processing */}
+          {orderResult?.success && !orderResult?.awb_no && (
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg text-center">
+              <p className="text-sm text-blue-700">
+                📦 Order sedang diproses setelah pembayaran berhasil.
+              </p>
+              <p className="text-xs text-blue-600 mt-2">
+                Anda akan menerima notifikasi dan dapat melihat AWB number di
+                halaman laporan pengiriman.
+              </p>
             </div>
           )}
         </DialogContent>
