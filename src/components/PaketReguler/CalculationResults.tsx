@@ -16,11 +16,17 @@ import {
 } from "@/components/ui/dialog";
 import { ShippingOption } from "@/types/dataRegulerForm";
 import Image from "next/image";
-import { CirclePlus, CheckCircle, Package, FileText } from "lucide-react";
+import {
+  CirclePlus,
+  CheckCircle,
+  Package,
+  FileText,
+  CreditCard,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getLabelUrl } from "@/lib/apiClient";
+import { getLabelUrl, createOrderWithPendingPayment } from "@/lib/apiClient";
 import { toast } from "sonner";
-import PaymentFlow from "@/components/Payment/PaymentFlow";
+
 import { CurrencyInput } from "@/components/ui/currency-input";
 
 interface CalculationResultsProps {
@@ -84,11 +90,13 @@ export default function CalculationResults({
   const [isInsured, setIsInsured] = useState(false);
   const [showPaymentSection, setShowPaymentSection] = useState(false);
   const [customCODValue, setCustomCODValue] = useState<string>("");
-  const [showPaymentFlow, setShowPaymentFlow] = useState(false);
+
   const [orderResult, setOrderResult] = useState<{
     success: boolean;
     message: string;
     awb_no?: string;
+    order_id?: number;
+    reference_no?: string;
   } | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -308,7 +316,7 @@ export default function CalculationResults({
     return shippingData;
   };
 
-  const handleSubmitOrder = () => {
+  const handleSubmitOrder = async () => {
     if (
       !selectedShippingOption ||
       !formData?.formData ||
@@ -328,31 +336,54 @@ export default function CalculationResults({
       return;
     }
 
-    // Show payment flow instead of creating order directly
-    setShowPaymentFlow(true);
+    try {
+      // Create order directly with pending payment status
+      const shippingData = buildShippingData();
+      const totalAmount = calculateTotal();
+
+      if (!shippingData) {
+        toast.error("Gagal membangun data pengiriman");
+        return;
+      }
+
+      // Call API to create order with pending payment status
+      const orderResponse = await createOrderWithPendingPayment({
+        shipping_data: shippingData,
+        amount: totalAmount,
+      });
+
+      if (orderResponse.success && orderResponse.data) {
+        handleOrderSuccess({
+          order_id: orderResponse.data.order_id,
+          reference_no: orderResponse.data.reference_no,
+        });
+      } else {
+        toast.error(orderResponse.message || "Gagal membuat order");
+      }
+    } catch (error) {
+      console.error("Error creating order:", error);
+      toast.error("Terjadi kesalahan saat membuat order");
+    }
   };
 
-  const handlePaymentSuccess = () => {
-    toast.success("Pembayaran berhasil! Order sedang diproses...");
+  const handleOrderSuccess = (orderData: {
+    order_id: number;
+    reference_no: string;
+  }) => {
+    toast.success(
+      "Order berhasil dibuat! Silakan lakukan pembayaran di menu Pembayaran Paket."
+    );
 
-    // Set order result to show success
+    // Set order result to show success with order ID
     setOrderResult({
       success: true,
-      message: "Pembayaran berhasil! Order sedang diproses...",
-      awb_no: undefined, // AWB will be available after order creation
+      message: "Order berhasil dibuat! Silakan lakukan pembayaran.",
+      awb_no: undefined, // AWB will be available after payment and expedition processing
+      order_id: orderData.order_id,
+      reference_no: orderData.reference_no,
     });
 
-    setShowPaymentFlow(false);
     setShowSuccessDialog(true);
-  };
-
-  const handlePaymentFailed = (error: string) => {
-    toast.error(error);
-    setShowPaymentFlow(false);
-  };
-
-  const handleCancelPayment = () => {
-    setShowPaymentFlow(false);
   };
 
   const handleGetLabelUrl = async () => {
@@ -397,29 +428,7 @@ export default function CalculationResults({
     setShowSuccessDialog(false);
   };
 
-  // Show payment flow if triggered
-  if (showPaymentFlow) {
-    const shippingData = buildShippingData();
-    const totalAmount = calculateTotal();
-
-    if (!shippingData) {
-      return (
-        <div className="p-4 text-red-600">
-          Gagal membangun data pengiriman untuk pembayaran
-        </div>
-      );
-    }
-
-    return (
-      <PaymentFlow
-        shippingData={shippingData}
-        amount={totalAmount}
-        onPaymentSuccess={handlePaymentSuccess}
-        onPaymentFailed={handlePaymentFailed}
-        onCancel={handleCancelPayment}
-      />
-    );
-  }
+  // No payment flow needed - orders go directly to pending payment status
 
   return (
     <div className="animate-slide-up space-y-4">
@@ -667,7 +676,7 @@ export default function CalculationResults({
                   disabled={!termsAccepted}
                 >
                   <CirclePlus className="w-4 h-4" />
-                  Lanjut ke Pembayaran
+                  Buat Order
                 </Button>
               </div>
             </CardContent>
@@ -707,30 +716,38 @@ export default function CalculationResults({
             <DialogTitle className="text-xl font-bold text-green-600">
               Order Berhasil Dibuat!
             </DialogTitle>
-            {orderResult?.awb_no && (
-              <DialogDescription className="text-base">
-                <div className="bg-gray-100 p-3 rounded-lg mt-4">
-                  <div className="text-sm text-gray-600">AWB Number:</div>
-                  <div className="text-lg font-mono font-bold text-gray-900">
-                    {orderResult.awb_no}
+            <DialogDescription className="text-base">
+              <div className="bg-blue-50 p-3 rounded-lg mt-4">
+                {orderResult?.order_id && (
+                  <div className="text-sm text-blue-600 mb-2">
+                    Order ID: #{orderResult.order_id}
                   </div>
+                )}
+                {orderResult?.reference_no && (
+                  <div className="text-sm text-blue-600 mb-2">
+                    Reference: {orderResult.reference_no}
+                  </div>
+                )}
+                <div className="text-sm text-blue-700">
+                  Status: Menunggu Pembayaran
                 </div>
-              </DialogDescription>
-            )}
+              </div>
+            </DialogDescription>
           </DialogHeader>
 
           <div className="grid grid-cols-2 gap-3 mt-6">
             <Button
-              onClick={handleViewOrder}
-              className="h-11 px-6 py-4 font-semibold bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 text-sm flex items-center gap-2 rounded-full shadow-md transition duration-300 ease-in-out"
+              onClick={() => router.push("/dashboard/paket/pembayaran-paket")}
+              className="h-11 px-6 py-4 font-semibold bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600 text-sm flex items-center gap-2 rounded-full shadow-md transition duration-300 ease-in-out"
             >
-              <FileText className="h-4 w-4" />
-              Cek Pengiriman
+              <CreditCard className="h-4 w-4" />
+              Lakukan Pembayaran
             </Button>
 
             <Button
               onClick={handleCreateNewOrder}
-              className="h-11 px-6 py-4 font-semibold bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 text-sm flex items-center gap-2 rounded-full shadow-md transition duration-300 ease-in-out"
+              variant="outline"
+              className="h-11 px-6 py-4 font-semibold text-sm flex items-center gap-2 rounded-full shadow-md transition duration-300 ease-in-out"
             >
               <Package className="h-4 w-4" />
               Kirim Paket Lagi
@@ -791,11 +808,20 @@ export default function CalculationResults({
           {orderResult?.success && !orderResult?.awb_no && (
             <div className="mt-6 p-4 bg-blue-50 rounded-lg text-center">
               <p className="text-sm text-blue-700">
-                📦 Order sedang diproses setelah pembayaran berhasil.
+                📦 Order berhasil dibuat dan sedang diproses setelah pembayaran
+                berhasil.
               </p>
+              {orderResult.order_id && (
+                <p className="text-xs text-blue-600 mt-2">
+                  Order ID: #{orderResult.order_id}
+                </p>
+              )}
               <p className="text-xs text-blue-600 mt-2">
-                Anda akan menerima notifikasi dan dapat melihat AWB number di
-                halaman laporan pengiriman.
+                Status: Belum Diproses → Akan diproses ke ekspedisi dalam
+                beberapa menit.
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                Anda dapat melihat status terkini di halaman laporan pengiriman.
               </p>
             </div>
           )}

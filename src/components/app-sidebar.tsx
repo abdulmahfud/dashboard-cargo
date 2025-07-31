@@ -81,6 +81,11 @@ const data = {
     //   icon: Package,
     // },
     {
+      title: "Pembayaran Paket",
+      url: "/dashboard/paket/pembayaran-paket",
+      icon: Wallet,
+    },
+    {
       title: "Cancel Order",
       url: "/dashboard/paket/cancel-order",
       icon: PackageX,

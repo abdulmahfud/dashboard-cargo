@@ -769,4 +769,23 @@ export const checkInvoiceStatus = async (
   return res.data;
 };
 
+// ✅ Create order with pending payment status
+export const createOrderWithPendingPayment = async (data: {
+  shipping_data: Record<string, unknown>;
+  amount: number;
+}): Promise<{
+  success: boolean;
+  message: string;
+  data?: {
+    order_id: number;
+    reference_no: string;
+    status: string;
+    amount: number;
+  };
+  errors?: Record<string, unknown>;
+}> => {
+  const res = await apiClient.post("/admin/orders/create-pending", data);
+  return res.data;
+};
+
 export default apiClient;

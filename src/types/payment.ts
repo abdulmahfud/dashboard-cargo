@@ -18,6 +18,7 @@ export interface PaymentCreateResponse {
     amount: number;
     expired_at: string;
     status: string;
+    order_id?: number;
   };
   errors?: Record<string, unknown>;
 }

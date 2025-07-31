@@ -65,6 +65,7 @@ export interface DeliveryReport {
 
 // Status mapping
 export const STATUS_MAPPING: Record<string, string> = {
+  menunggu_pembayaran: "Menunggu Pembayaran",
   belum_proses: "Belum Proses",
   belum_di_expedisi: "Belum di Expedisi",
   proses_pengiriman: "Proses Pengiriman",

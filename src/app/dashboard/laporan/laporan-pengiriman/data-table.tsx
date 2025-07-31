@@ -33,7 +33,7 @@ import { Label } from "@/components/ui/label";
 import { DatePickerWithRange } from "./date-picker-with-range";
 import { DataTablePagination } from "./pagination";
 import { DateRange } from "react-day-picker";
-import { DeliveryReport } from "@/types/laporanPengiriman";
+import { DeliveryReport, STATUS_MAPPING } from "@/types/laporanPengiriman";
 
 interface DataTableProps<TData extends DeliveryReport, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -45,6 +45,12 @@ interface DataTableProps<TData extends DeliveryReport, TValue> {
   packageTypeFilter: string;
   setPackageTypeFilter: React.Dispatch<React.SetStateAction<string>>;
 }
+
+// Create reverse mapping outside component for performance
+const STATUS_MAPPING_REVERSE: Record<string, string> = {};
+Object.entries(STATUS_MAPPING).forEach(([key, value]) => {
+  STATUS_MAPPING_REVERSE[value] = key;
+});
 
 export function DataTable<TData extends DeliveryReport, TValue>({
   columns,
@@ -61,11 +67,31 @@ export function DataTable<TData extends DeliveryReport, TValue>({
   // ✨ Filter Data Berdasarkan Status dan Date
   const filteredData = React.useMemo(() => {
     return data.filter((item: DeliveryReport) => {
+      // Debug: Log status values to understand the data format
+      if (statusFilter === "Menunggu Pembayaran") {
+        console.log("Debug filter:", {
+          itemStatus: item.status,
+          statusFilter,
+          reverseMappingValue: STATUS_MAPPING_REVERSE[statusFilter],
+          directMatch: item.status === statusFilter,
+          mappingMatch:
+            STATUS_MAPPING_REVERSE[statusFilter] &&
+            item.status === STATUS_MAPPING_REVERSE[statusFilter],
+        });
+      }
+
+      // Status filter: Handle both display format and raw database format
       const statusMatch =
-        statusFilter === "Semua Status" || item.status === statusFilter;
+        statusFilter === "Semua Status" ||
+        item.status === statusFilter ||
+        // Check if the item's raw status maps to the selected display status
+        (STATUS_MAPPING_REVERSE[statusFilter] &&
+          item.status === STATUS_MAPPING_REVERSE[statusFilter]);
+
       const packageMatch =
         packageTypeFilter === "Semua Jenis Paket" ||
         item.packageType === packageTypeFilter;
+
       const dateMatch =
         !dateRange?.from || !dateRange?.to
           ? true
@@ -149,6 +175,7 @@ export function DataTable<TData extends DeliveryReport, TValue>({
                 <div className="flex flex-col p-2 space-y-1">
                   {[
                     "Semua Status",
+                    "Menunggu Pembayaran",
                     "Belum Proses",
                     "Belum di Expedisi",
                     "Proses Pengiriman",
