@@ -20,7 +20,6 @@ import {
   CirclePlus,
   CheckCircle,
   Package,
-  FileText,
   CreditCard,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -416,11 +415,6 @@ export default function CalculationResults({
     } else {
       toast.error("Please get label URL first");
     }
-  };
-
-  const handleViewOrder = () => {
-    router.push("/dashboard/laporan/laporan-pengiriman");
-    setShowSuccessDialog(false);
   };
 
   const handleCreateNewOrder = () => {
