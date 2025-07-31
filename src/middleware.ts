@@ -38,14 +38,15 @@ async function isEmailVerified(request: NextRequest): Promise<boolean> {
 
   try {
     // Use the same base URL as apiClient
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.bhisakirim.com/api";
-    
+    const API_URL =
+      process.env.NEXT_PUBLIC_API_URL || "https://api.bhisakirim.com/api";
+
     // Make API call to check user verification status
     const response = await fetch(`${API_URL}/admin/me`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+        "Content-Type": "application/json",
       },
     });
 
@@ -55,7 +56,7 @@ async function isEmailVerified(request: NextRequest): Promise<boolean> {
 
     const data = await response.json();
     const isVerified = !!data.data?.email_verified_at;
-    
+
     return isVerified;
   } catch (error) {
     console.error("Error checking email verification:", error);
@@ -68,11 +69,13 @@ export async function middleware(request: NextRequest) {
   const isAuthPage = path === "/login" || path === "/register";
   const isDashboard = path.startsWith("/dashboard");
   const isVerificationPage = path === "/dashboard/verifikasi";
+  const isPaymentPage = path.startsWith("/dashboard/payment/");
 
   const authenticated = await isAuthenticated(request);
 
   // If accessing dashboard and not authenticated, redirect to login
-  if (isDashboard && !authenticated) {
+  // Exception: payment pages (success/failed) are accessible without auth to handle redirects from external payment gateway
+  if (isDashboard && !authenticated && !isPaymentPage) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", path);
 
@@ -90,16 +93,18 @@ export async function middleware(request: NextRequest) {
   // If authenticated but accessing dashboard (not verification page), check email verification
   if (authenticated && isDashboard && !isVerificationPage) {
     const emailVerified = await isEmailVerified(request);
-    
+
     if (!emailVerified) {
-      return NextResponse.redirect(new URL("/dashboard/verifikasi", request.url));
+      return NextResponse.redirect(
+        new URL("/dashboard/verifikasi", request.url)
+      );
     }
   }
 
   // If authenticated, verified, and accessing verification page, redirect to dashboard
   if (authenticated && isVerificationPage) {
     const emailVerified = await isEmailVerified(request);
-    
+
     if (emailVerified) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }

@@ -14,16 +14,20 @@ import {
   CreditCard,
   ArrowRight,
   Copy,
+  LogIn,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getPaymentStatus } from "@/lib/apiClient";
 import type { PaymentStatus } from "@/types/payment";
+import { useAuth } from "@/context/AuthContext";
 
 export default function PaymentSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, loading: authLoading } = useAuth();
   const [payment, setPayment] = useState<PaymentStatus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState(false);
 
   const referenceNo = searchParams.get("reference_no");
 
@@ -32,6 +36,7 @@ export default function PaymentSuccessPage() {
 
     try {
       setLoading(true);
+      setAuthError(false);
       const result = await getPaymentStatus(referenceNo);
 
       if (result.success && result.data) {
@@ -39,18 +44,33 @@ export default function PaymentSuccessPage() {
       }
     } catch (error) {
       console.error("Failed to fetch payment status:", error);
+      // If error is authentication related, set auth error
+      if (
+        error instanceof Error &&
+        (error.message.includes("401") ||
+          error.message.includes("authentication"))
+      ) {
+        setAuthError(true);
+      }
     } finally {
       setLoading(false);
     }
   }, [referenceNo]);
 
   useEffect(() => {
-    if (referenceNo) {
+    // Wait for auth loading to complete before attempting API calls
+    if (authLoading) return;
+
+    if (referenceNo && user) {
       fetchPaymentStatus();
+    } else if (referenceNo && !user) {
+      // User is not authenticated, skip API call
+      setAuthError(true);
+      setLoading(false);
     } else {
       setLoading(false);
     }
-  }, [referenceNo, fetchPaymentStatus]);
+  }, [referenceNo, fetchPaymentStatus, user, authLoading]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -75,11 +95,25 @@ export default function PaymentSuccessPage() {
   };
 
   const handleViewShipments = () => {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
     router.push("/dashboard/laporan/laporan-pengiriman");
   };
 
   const handleCreateNewOrder = () => {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
     router.push("/dashboard/paket/paket-reguler");
+  };
+
+  const handleLogin = () => {
+    router.push(
+      `/login?callbackUrl=/dashboard/payment/success${referenceNo ? `?reference_no=${referenceNo}` : ""}`
+    );
   };
 
   if (loading) {
@@ -120,8 +154,31 @@ export default function PaymentSuccessPage() {
           </CardContent>
         </Card>
 
+        {/* Login Required Message */}
+        {authError && !user && (
+          <Card className="border-0 shadow-xl bg-orange-50 border-orange-200">
+            <CardContent className="p-6 text-center">
+              <LogIn className="w-12 h-12 text-orange-600 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-orange-900 mb-2">
+                Login Diperlukan
+              </h2>
+              <p className="text-orange-700 mb-4">
+                Untuk melihat detail pembayaran dan mengakses fitur lengkap,
+                silakan login terlebih dahulu.
+              </p>
+              <Button
+                onClick={handleLogin}
+                className="bg-orange-600 hover:bg-orange-700 text-white"
+              >
+                <LogIn className="w-4 h-4 mr-2" />
+                Login Sekarang
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Payment Details */}
-        {payment && (
+        {payment && user && (
           <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
             <CardContent className="p-6">
               <h2 className="text-xl font-semibold mb-4 flex items-center">
@@ -271,27 +328,44 @@ export default function PaymentSuccessPage() {
         {/* Action Buttons */}
         <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
           <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button
-                onClick={handleViewShipments}
-                className="h-12 bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-lg"
-                size="lg"
-              >
-                <FileText className="w-5 h-5 mr-2" />
-                Lihat Laporan Pengiriman
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+            {user ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button
+                  onClick={handleViewShipments}
+                  className="h-12 bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-lg"
+                  size="lg"
+                >
+                  <FileText className="w-5 h-5 mr-2" />
+                  Lihat Laporan Pengiriman
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
 
-              <Button
-                onClick={handleCreateNewOrder}
-                variant="outline"
-                className="h-12 border-2 border-blue-200 hover:bg-blue-50"
-                size="lg"
-              >
-                <Package className="w-5 h-5 mr-2" />
-                Kirim Paket Lagi
-              </Button>
-            </div>
+                <Button
+                  onClick={handleCreateNewOrder}
+                  variant="outline"
+                  className="h-12 border-2 border-blue-200 hover:bg-blue-50"
+                  size="lg"
+                >
+                  <Package className="w-5 h-5 mr-2" />
+                  Kirim Paket Lagi
+                </Button>
+              </div>
+            ) : (
+              <div className="text-center">
+                <p className="text-gray-600 mb-4">
+                  Login untuk mengakses fitur lengkap BhisaKirim
+                </p>
+                <Button
+                  onClick={handleLogin}
+                  className="h-12 bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-lg"
+                  size="lg"
+                >
+                  <LogIn className="w-5 h-5 mr-2" />
+                  Login Sekarang
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            )}
 
             <Separator className="my-4" />
 
@@ -312,8 +386,8 @@ export default function PaymentSuccessPage() {
         {/* Footer */}
         <div className="text-center text-sm text-gray-500">
           <p>
-            BhisaKirim. Pengiriman yang dapat diandalkan untuk keperluan
-            bisnis Anda.
+            BhisaKirim. Pengiriman yang dapat diandalkan untuk keperluan bisnis
+            Anda.
           </p>
         </div>
       </div>
