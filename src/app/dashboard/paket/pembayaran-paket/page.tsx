@@ -36,14 +36,24 @@ interface PendingOrder {
 
 // Helper function outside component to avoid re-renders
 const calculatePaymentAmount = (order: PendingOrder): number => {
-  // Basic shipping cost calculation
-  // You may need to adjust this based on your actual pricing logic
+  // First try to get payment_amount from order if available
+  if (order.payment_amount && order.payment_amount > 0) {
+    return order.payment_amount;
+  }
+
+  // Fallback calculation if payment_amount not available
   const itemValue = order.item_value || 0;
   const baseShippingCost = 15000; // Base shipping cost
   const codFee =
     order.shipment_type === "cod" ? Math.round(itemValue * 0.04) : 0;
 
-  return baseShippingCost + codFee;
+  if (order.shipment_type === "cod") {
+    // COD: User pays shipping + COD fee (item value collected via COD)
+    return baseShippingCost + codFee;
+  } else {
+    // Non-COD: User pays item value + shipping
+    return itemValue + baseShippingCost;
+  }
 };
 
 export default function PembayaranPaketPage() {
@@ -62,6 +72,12 @@ export default function PembayaranPaketPage() {
         const pending = response.data
           .filter((order) => order.status === "menunggu_pembayaran")
           .map((order) => {
+            // Extract payment_amount from request_payload if available
+            const requestPayload = order.request_payload;
+            const storedPaymentAmount = requestPayload?.payment_amount
+              ? Number(requestPayload.payment_amount)
+              : 0;
+
             const pendingOrder: PendingOrder = {
               id: order.id,
               reference_no: order.reference_no || "",
@@ -72,12 +88,17 @@ export default function PembayaranPaketPage() {
               item_value: Number(order.item_value) || 0,
               status: order.status || "",
               created_at: order.created_at || "",
+              // Use stored payment amount if available
+              payment_amount: storedPaymentAmount,
             };
 
             return {
               ...pendingOrder,
-              // Calculate payment amount (shipping cost + COD fee if applicable)
-              payment_amount: calculatePaymentAmount(pendingOrder),
+              // Calculate payment amount if not stored (fallback)
+              payment_amount:
+                storedPaymentAmount > 0
+                  ? storedPaymentAmount
+                  : calculatePaymentAmount(pendingOrder),
             };
           });
 

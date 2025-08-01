@@ -16,12 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { ShippingOption } from "@/types/dataRegulerForm";
 import Image from "next/image";
-import {
-  CirclePlus,
-  CheckCircle,
-  Package,
-  CreditCard,
-} from "lucide-react";
+import { CirclePlus, CheckCircle, Package, CreditCard } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getLabelUrl, createOrderWithPendingPayment } from "@/lib/apiClient";
 import { toast } from "sonner";
@@ -196,7 +191,6 @@ export default function CalculationResults({
     const shippingCost = parseInt(
       selectedShippingOption.price.replace(/[^\d]/g, "")
     );
-
     const itemValue = parseInt(formData?.itemValue || "0");
     const isCOD = formData?.paymentMethod === "cod";
 
@@ -206,7 +200,14 @@ export default function CalculationResults({
     // Insurance: 0.2% of item value when checked
     const insuranceCost = isInsured ? Math.round(itemValue * 0.002) : 0;
 
-    return shippingCost + codFee + insuranceCost;
+    if (isCOD) {
+      // For COD: User pays shipping + COD fee + insurance
+      // (Item value is collected from recipient via COD)
+      return shippingCost + codFee + insuranceCost;
+    } else {
+      // For non-COD: User pays item value + shipping + insurance
+      return itemValue + shippingCost + insuranceCost;
+    }
   };
 
   const getItemValue = () => {
