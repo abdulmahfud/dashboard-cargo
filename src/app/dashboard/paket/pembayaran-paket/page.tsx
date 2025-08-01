@@ -78,6 +78,17 @@ export default function PembayaranPaketPage() {
               ? Number(requestPayload.payment_amount)
               : 0;
 
+            // Debug logging for payment amount extraction
+            console.log(`🔍 Order ${order.id} payment extraction:`, {
+              order_id: order.id,
+              reference_no: order.reference_no,
+              has_request_payload: !!requestPayload,
+              stored_payment_amount: storedPaymentAmount,
+              raw_payment_amount: requestPayload?.payment_amount,
+              item_value: order.item_value,
+              shipment_type: order.shipment_type,
+            });
+
             const pendingOrder: PendingOrder = {
               id: order.id,
               reference_no: order.reference_no || "",
