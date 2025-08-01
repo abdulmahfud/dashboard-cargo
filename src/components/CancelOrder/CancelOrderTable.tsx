@@ -54,6 +54,8 @@ interface CancelOrderData {
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800",
+  belum_proses: "bg-orange-100 text-orange-800",
+  belum_di_expedisi: "bg-yellow-100 text-yellow-800",
   proses_pengiriman: "bg-blue-100 text-blue-800",
   sampai_tujuan: "bg-green-100 text-green-800",
   dibatalkan: "bg-red-100 text-red-800",
@@ -73,12 +75,11 @@ export default function CancelOrderTable() {
       setLoading(true);
       const response = await getOrders();
 
-      // Transform orders to cancel order format - only show cancellable orders
+      // Transform orders to cancel order format - only show specific status orders
       const transformedData: CancelOrderData[] = response.data
-        .filter(
-          (order: Order) =>
-            // Only show orders that can be cancelled (not already delivered/cancelled)
-            !["sampai_tujuan", "dibatalkan", "retur"].includes(order.status)
+        .filter((order: Order) =>
+          // Only show orders with specific status that can be cancelled
+          ["belum_proses", "belum_di_expedisi"].includes(order.status)
         )
         .map((order: Order) => ({
           id: order.id,
