@@ -47,6 +47,15 @@ const calculatePaymentAmount = (order: PendingOrder): number => {
   const codFee =
     order.shipment_type === "cod" ? Math.round(itemValue * 0.04) : 0;
 
+  console.log(`⚠️ FALLBACK calculation for Order ${order.id}:`, {
+    order_id: order.id,
+    order_payment_amount: order.payment_amount,
+    itemValue,
+    baseShippingCost,
+    codFee,
+    shipment_type: order.shipment_type,
+  });
+
   if (order.shipment_type === "cod") {
     // COD: User pays shipping + COD fee (item value collected via COD)
     return baseShippingCost + codFee;
@@ -87,6 +96,7 @@ export default function PembayaranPaketPage() {
               raw_payment_amount: requestPayload?.payment_amount,
               item_value: order.item_value,
               shipment_type: order.shipment_type,
+              full_request_payload: requestPayload,
             });
 
             const pendingOrder: PendingOrder = {
