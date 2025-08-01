@@ -43,6 +43,7 @@ export interface Order {
   receiver: OrderReceiver;
   user: OrderUser;
   created_at: string;
+  request_payload?: Record<string, unknown>;
 }
 
 export interface OrderListResponse {
