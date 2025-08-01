@@ -205,8 +205,9 @@ export default function CalculationResults({
       // (Item value is collected from recipient via COD)
       return shippingCost + codFee + insuranceCost;
     } else {
-      // For non-COD: User pays item value + shipping + insurance
-      return itemValue + shippingCost + insuranceCost;
+      // For non-COD: User pays shipping cost + insurance only
+      // (Item value is paid directly to seller, not through shipping)
+      return shippingCost + insuranceCost;
     }
   };
 

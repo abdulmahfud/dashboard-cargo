@@ -51,8 +51,8 @@ const calculatePaymentAmount = (order: PendingOrder): number => {
     // COD: User pays shipping + COD fee (item value collected via COD)
     return baseShippingCost + codFee;
   } else {
-    // Non-COD: User pays item value + shipping
-    return itemValue + baseShippingCost;
+    // Non-COD: User pays shipping cost only (item value paid directly to seller)
+    return baseShippingCost;
   }
 };
 
