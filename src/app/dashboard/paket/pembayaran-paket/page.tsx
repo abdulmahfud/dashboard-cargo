@@ -24,7 +24,7 @@ interface PendingOrder {
   id: number;
   reference_no: string;
   vendor: string;
-  shipment_type: string;
+  service_type_code: string;
   cod_value: number;
   reguler_value: number;
   item_value: number;
@@ -43,11 +43,11 @@ const calculatePaymentAmount = (order: PendingOrder): number => {
 
   // Fallback calculation if payment_amount not available
   const itemValue = order.item_value || 0;
-  const baseShippingCost = 15000; // Base shipping cost
+  const baseShippingCost = 100000; // Base shipping cost
   const codFee =
-    order.shipment_type === "cod" ? Math.round(itemValue * 0.04) : 0;
+    order.service_type_code === "cod" ? Math.round(itemValue * 0.04) : 0;
 
-  if (order.shipment_type === "cod") {
+  if (order.service_type_code === "cod") {
     // COD: User pays shipping + COD fee (item value collected via COD)
     return baseShippingCost + codFee;
   } else {
@@ -82,7 +82,7 @@ export default function PembayaranPaketPage() {
               id: order.id,
               reference_no: order.reference_no || "",
               vendor: order.vendor || "",
-              shipment_type: order.shipment_type || "",
+              service_type_code: order.service_type_code || "",
               cod_value: Number(order.cod_value) || 0,
               reguler_value: Number(order.item_value) || 0, // Use item_value as reguler_value
               item_value: Number(order.item_value) || 0,
@@ -341,12 +341,12 @@ export default function PembayaranPaketPage() {
                               </Badge>
                               <Badge
                                 variant={
-                                  order.shipment_type === "cod"
+                                  order.service_type_code === "cod"
                                     ? "default"
                                     : "secondary"
                                 }
                               >
-                                {order.shipment_type?.toUpperCase()}
+                                {order.service_type_code?.toUpperCase()}
                               </Badge>
                             </div>
                             <div>
@@ -362,7 +362,7 @@ export default function PembayaranPaketPage() {
                               <p>
                                 Nilai Barang: {formatCurrency(order.item_value)}
                               </p>
-                              {order.shipment_type === "cod" && (
+                              {order.service_type_code === "cod" && (
                                 <p>COD: {formatCurrency(order.cod_value)}</p>
                               )}
                             </div>

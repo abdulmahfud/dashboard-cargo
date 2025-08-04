@@ -19,6 +19,7 @@ import {
   UserCog,
   ShieldUser,
   Banknote,
+  MessageCircle,
 } from "lucide-react";
 import * as React from "react";
 
@@ -102,6 +103,11 @@ const data = {
       title: "Syarat & Ketentuan",
       url: "/dashboard/syarat-dan-ketentuan",
       icon: FileText,
+    },
+    {
+      title: "Kritik & Saran",
+      url: "/dashboard/kritik-dan-saran",
+      icon: MessageCircle,
     },
   ],
   report: [
