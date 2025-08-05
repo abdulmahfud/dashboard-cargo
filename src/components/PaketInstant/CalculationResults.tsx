@@ -20,18 +20,28 @@ import {
   sortOptions,
 } from "@/lib/shipping-data";
 import { AnimatePresence, motion } from "framer-motion";
-import { CheckCircle, ChevronRight } from "lucide-react";
-import { useMemo, useState } from "react";
+import { CheckCircle, ChevronRight, Tag } from "lucide-react";
+import { useMemo, useState, useEffect } from "react";
 import { ShippingCard } from "../ui/shipping-card";
+import { DiscountCalculation } from "@/types/discount";
+import { getAvailableDiscounts } from "@/lib/apiClient";
 
 interface CalculationResultsProps {
   isSearching: boolean;
 }
 
-export default function CalculationResults({ isSearching }: CalculationResultsProps) {
+export default function CalculationResults({
+  isSearching,
+}: CalculationResultsProps) {
   const [selectedServiceType, setSelectedServiceType] = useState("regular");
   const [sortBy, setSortBy] = useState("cheapest");
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
+
+  // Discount states
+  const [discountsMap, setDiscountsMap] = useState<
+    Map<string, DiscountCalculation>
+  >(new Map());
+  const [isLoadingDiscounts, setIsLoadingDiscounts] = useState(false);
 
   // Simulasi filter berdasarkan service type
   const filteredOptions = useMemo(() => {
@@ -81,6 +91,53 @@ export default function CalculationResults({ isSearching }: CalculationResultsPr
   const featuredOption =
     sortedOptions.find((option) => option.recommended) || sortedOptions[0];
 
+  // Load discounts for all options when component mounts or when options change
+  useEffect(() => {
+    const loadDiscounts = async () => {
+      if (!sortedOptions.length) return;
+
+      setIsLoadingDiscounts(true);
+      const newDiscountsMap = new Map<string, DiscountCalculation>();
+
+      try {
+        // Load discounts for each option
+        for (const option of sortedOptions) {
+          const shippingCost = parseInt(option.price.replace(/\D/g, ""));
+
+          try {
+            const discountResponse = await getAvailableDiscounts({
+              vendor: "JNTEXPRESS", // Default to JNT for instant package
+              service_type: "REGULER",
+              order_value: shippingCost,
+            });
+
+            if (
+              discountResponse.status === "success" &&
+              discountResponse.data.best_discount
+            ) {
+              newDiscountsMap.set(
+                option.id,
+                discountResponse.data.best_discount
+              );
+            }
+          } catch (error) {
+            console.error(`Error fetching discount for ${option.name}:`, error);
+          }
+        }
+
+        setDiscountsMap(newDiscountsMap);
+      } catch (error) {
+        console.error("Error loading discounts:", error);
+      } finally {
+        setIsLoadingDiscounts(false);
+      }
+    };
+
+    if (isSearching && sortedOptions.length > 0) {
+      loadDiscounts();
+    }
+  }, [sortedOptions, isSearching]);
+
   if (!isSearching) {
     return null;
   }
@@ -103,6 +160,7 @@ export default function CalculationResults({ isSearching }: CalculationResultsPr
               option={featuredOption}
               isSelected={selectedOption === featuredOption.id}
               onClick={() => setSelectedOption(featuredOption.id)}
+              discountInfo={discountsMap.get(featuredOption.id)}
             />
           </CardContent>
         </Card>
@@ -171,6 +229,7 @@ export default function CalculationResults({ isSearching }: CalculationResultsPr
                               option={option}
                               isSelected={selectedOption === option.id}
                               onClick={() => setSelectedOption(option.id)}
+                              discountInfo={discountsMap.get(option.id)}
                             />
                           </motion.div>
                         ))}
@@ -198,19 +257,68 @@ export default function CalculationResults({ isSearching }: CalculationResultsPr
         <CardContent className="text-sm space-y-2">
           <div className="flex justify-between">
             <span>Ekspedisi</span>
-            <span className="font-medium">AnterAja Regular</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Pengiriman</span>
-            <span>
-              <span className="text-red-500 line-through">Rp 19.500</span>
-              <span className="text-green-600 font-semibold"> Rp 18.525</span>
+            <span className="font-medium">
+              {selectedOption
+                ? sortedOptions.find((opt) => opt.id === selectedOption)
+                    ?.name || "Pilih ekspedisi"
+                : "Pilih ekspedisi"}
             </span>
           </div>
-          <div className="flex justify-between">
-            <span>Lebih Hemat</span>
-            <span className="font-medium">Rp 975</span>
-          </div>
+
+          {/* Show discount information if available */}
+          {selectedOption && discountsMap.get(selectedOption)?.has_discount && (
+            <>
+              <div className="flex justify-between">
+                <span>Pengiriman</span>
+                <span>
+                  <span className="text-red-500 line-through">
+                    Rp{" "}
+                    {discountsMap
+                      .get(selectedOption)!
+                      .original_price.toLocaleString("id-ID")}
+                  </span>
+                  <span className="text-green-600 font-semibold ml-2">
+                    Rp{" "}
+                    {discountsMap
+                      .get(selectedOption)!
+                      .discounted_price.toLocaleString("id-ID")}
+                  </span>
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Lebih Hemat</span>
+                <span className="font-medium text-green-600">
+                  Rp{" "}
+                  {discountsMap
+                    .get(selectedOption)!
+                    .discount_amount.toLocaleString("id-ID")}
+                </span>
+              </div>
+            </>
+          )}
+
+          {/* Show regular pricing if no discount */}
+          {selectedOption &&
+            !discountsMap.get(selectedOption)?.has_discount && (
+              <div className="flex justify-between">
+                <span>Pengiriman</span>
+                <span className="font-medium">
+                  {sortedOptions.find((opt) => opt.id === selectedOption)
+                    ?.price || "Rp 0"}
+                </span>
+              </div>
+            )}
+
+          {/* Show loading state */}
+          {isLoadingDiscounts && (
+            <div className="flex justify-between">
+              <span className="flex items-center gap-1">
+                <Tag className="h-3 w-3 animate-pulse" />
+                Mengecek diskon...
+              </span>
+              <span className="font-medium">-</span>
+            </div>
+          )}
           <div className="flex justify-between">
             <span>Asuransi</span>
             <span className="font-medium">Rp 9.000</span>
@@ -218,7 +326,13 @@ export default function CalculationResults({ isSearching }: CalculationResultsPr
           <hr className="border-gray-300" />
           <div className="flex justify-between text-lg font-semibold">
             <span>Total Pembayaran</span>
-            <span className="text-blue-700">Rp 27.525</span>
+            <span className="text-blue-700">
+              {selectedOption
+                ? discountsMap.get(selectedOption)?.has_discount
+                  ? `Rp ${(discountsMap.get(selectedOption)!.discounted_price + 9000).toLocaleString("id-ID")}`
+                  : `Rp ${(parseInt(sortedOptions.find((opt) => opt.id === selectedOption)?.price.replace(/\D/g, "") || "0") + 9000).toLocaleString("id-ID")}`
+                : "Pilih ekspedisi"}
+            </span>
           </div>
         </CardContent>
 

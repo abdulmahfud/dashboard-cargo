@@ -20,6 +20,7 @@ import {
   ShieldUser,
   Banknote,
   MessageCircle,
+  BadgePercent,
 } from "lucide-react";
 import * as React from "react";
 
@@ -91,6 +92,12 @@ const data = {
       url: "/dashboard/paket/cancel-order",
       icon: PackageX,
       permission: "expedition.orders.cancel",
+    },
+    {
+      title: "Diskon Pengiriman",
+      url: "/dashboard/paket/diskon-pengiriman",
+      icon: BadgePercent,
+      permission: "discounts.create",
     },
   ],
   navSecondary: [

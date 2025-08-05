@@ -15,11 +15,23 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ShippingOption } from "@/types/dataRegulerForm";
+import { DiscountCalculation } from "@/types/discount";
 import Image from "next/image";
-import { CirclePlus, CheckCircle, Package, CreditCard } from "lucide-react";
+import {
+  CirclePlus,
+  CheckCircle,
+  Package,
+  CreditCard,
+  Tag,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getLabelUrl, createOrderWithPendingPayment } from "@/lib/apiClient";
+import {
+  getLabelUrl,
+  createOrderWithPendingPayment,
+  getAvailableDiscounts,
+} from "@/lib/apiClient";
 import { toast } from "sonner";
+import { DiscountBadge } from "@/components/ui/discount-badge";
 
 import { CurrencyInput } from "@/components/ui/currency-input";
 
@@ -96,6 +108,12 @@ export default function CalculationResults({
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [labelUrl, setLabelUrl] = useState<string>("");
   const [isLoadingLabel, setIsLoadingLabel] = useState(false);
+
+  // Discount states
+  const [discountInfo, setDiscountInfo] = useState<DiscountCalculation | null>(
+    null
+  );
+  const [isLoadingDiscount, setIsLoadingDiscount] = useState(false);
 
   // Debug: Log when props change - FIXED: Use useEffect instead of useState
   useEffect(() => {}, [isSearching, result, formData]);
@@ -183,14 +201,55 @@ export default function CalculationResults({
   const handleShippingSelect = (optionId: string) => {
     setSelectedOption(optionId);
     setShowPaymentSection(true);
+
+    // Calculate discount when shipping option is selected
+    calculateDiscount(optionId);
+  };
+
+  // Function to calculate discount for selected shipping option
+  const calculateDiscount = async (optionId: string) => {
+    const option = shippingOptions.find((opt) => opt.id === optionId);
+    if (!option) return;
+
+    try {
+      setIsLoadingDiscount(true);
+
+      // Extract cost from price string
+      const shippingCost = parseInt(option.price.replace(/[^\d]/g, ""));
+
+      // Get discount for JNT Express (since this is for JNT results)
+      // Don't send service_type to match discounts with null service_type (applies to all services)
+      const discountParams = {
+        vendor: "JNTEXPRESS",
+        order_value: shippingCost,
+      };
+
+      const discountResponse = await getAvailableDiscounts(discountParams);
+
+      if (
+        discountResponse.status === "success" &&
+        discountResponse.data.best_discount
+      ) {
+        setDiscountInfo(discountResponse.data.best_discount);
+      } else {
+        setDiscountInfo(null);
+      }
+    } catch (error) {
+      console.error("Error fetching discount:", error);
+      setDiscountInfo(null);
+    } finally {
+      setIsLoadingDiscount(false);
+    }
   };
 
   const calculateTotal = () => {
     if (!selectedShippingOption) return 0;
 
-    const shippingCost = parseInt(
-      selectedShippingOption.price.replace(/[^\d]/g, "")
-    );
+    // Use discounted price if available, otherwise use original price
+    const shippingCost = discountInfo?.has_discount
+      ? discountInfo.discounted_price
+      : parseInt(selectedShippingOption.price.replace(/[^\d]/g, ""));
+
     const itemValue = parseInt(formData?.itemValue || "0");
     const isCOD = formData?.paymentMethod === "cod";
 
@@ -454,15 +513,60 @@ export default function CalculationResults({
                 <div>
                   <h3 className="font-medium text-gray-900">{option.name}</h3>
                   <div className="flex items-center space-x-2">
-                    <span className="text-lg font-bold text-gray-900">
-                      {option.price}
-                    </span>
-                    {option.originalPrice && (
-                      <span className="text-sm text-gray-500 line-through">
-                        {option.originalPrice}
+                    {/* Show discounted price if available and this option is selected */}
+                    {selectedOption === option.id &&
+                    discountInfo?.has_discount ? (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg font-bold text-green-600">
+                          Rp{" "}
+                          {discountInfo.discounted_price.toLocaleString(
+                            "id-ID"
+                          )}
+                        </span>
+                        <span className="text-sm text-gray-500 line-through">
+                          Rp{" "}
+                          {discountInfo.original_price.toLocaleString("id-ID")}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-lg font-bold text-gray-900">
+                        {option.price}
                       </span>
                     )}
+                    {option.originalPrice &&
+                      !(
+                        selectedOption === option.id &&
+                        discountInfo?.has_discount
+                      ) && (
+                        <span className="text-sm text-gray-500 line-through">
+                          {option.originalPrice}
+                        </span>
+                      )}
                   </div>
+
+                  {/* Show discount badge if available and this option is selected */}
+                  {selectedOption === option.id &&
+                    discountInfo?.has_discount && (
+                      <div className="mt-1">
+                        <DiscountBadge
+                          discountType={discountInfo.discount_type}
+                          discountValue={discountInfo.discount_value}
+                          discountAmount={discountInfo.discount_amount}
+                          showAmount={true}
+                          className="text-xs"
+                        />
+                      </div>
+                    )}
+
+                  {/* Show loading discount indicator */}
+                  {selectedOption === option.id && isLoadingDiscount && (
+                    <div className="mt-1 flex items-center space-x-1">
+                      <Tag className="h-3 w-3 animate-pulse text-gray-400" />
+                      <span className="text-xs text-gray-500">
+                        Mengecek diskon...
+                      </span>
+                    </div>
+                  )}
                   {option.tags && option.tags.length > 0 && (
                     <div className="flex space-x-1 mt-1">
                       {option.tags.map((tag, index) => (
@@ -575,10 +679,37 @@ export default function CalculationResults({
                 </div>
                 <div className="flex justify-between">
                   <span>Pengiriman</span>
-                  <span className="font-medium">
-                    {selectedShippingOption.price}
-                  </span>
+                  <div className="text-right">
+                    {discountInfo?.has_discount ? (
+                      <div className="space-y-1">
+                        <div className="font-medium text-green-600">
+                          Rp{" "}
+                          {discountInfo.discounted_price.toLocaleString(
+                            "id-ID"
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-500 line-through">
+                          Rp{" "}
+                          {discountInfo.original_price.toLocaleString("id-ID")}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="font-medium">
+                        {selectedShippingOption.price}
+                      </span>
+                    )}
+                  </div>
                 </div>
+
+                {/* Show discount savings */}
+                {discountInfo?.has_discount && (
+                  <div className="flex justify-between text-green-600">
+                    <span className="text-sm">Hemat Diskon</span>
+                    <span className="font-medium text-sm">
+                      -Rp {discountInfo.discount_amount.toLocaleString("id-ID")}
+                    </span>
+                  </div>
+                )}
                 {isInsured && (
                   <div className="flex justify-between">
                     <span>Asuransi</span>

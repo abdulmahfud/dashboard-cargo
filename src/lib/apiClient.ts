@@ -54,6 +54,7 @@ import type {
   BankAccount,
 } from "@/types/bankAccount";
 import type { JntTrackingApiResponse } from "@/types/tracking";
+import type { ExpeditionDiscount } from "@/types/discount";
 
 // Ambil URL dari .env
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -785,6 +786,153 @@ export const createOrderWithPendingPayment = async (data: {
   errors?: Record<string, unknown>;
 }> => {
   const res = await apiClient.post("/admin/orders/create-pending", data);
+  return res.data;
+};
+
+// ✅ Get available discounts for expedition
+export const getAvailableDiscounts = async (params: {
+  vendor: string;
+  service_type?: string;
+  order_value?: number;
+}): Promise<{
+  status: string;
+  data: {
+    available_discounts: Array<{
+      id: number;
+      description: string;
+      discount_type: "percentage" | "fixed_amount";
+      discount_value: number;
+      minimum_order_value: number | null;
+      maximum_discount_amount: number | null;
+      valid_until: string | null;
+    }>;
+    best_discount?: {
+      has_discount: boolean;
+      discount_amount: number;
+      discounted_price: number;
+      original_price: number;
+      discount_id: number | null;
+      discount_description: string | null;
+      discount_type: "percentage" | "fixed_amount";
+      discount_value: number;
+    };
+    order_value?: number;
+  };
+}> => {
+  const res = await apiClient.get("/admin/expedition-discounts/available", {
+    params,
+  });
+  return res.data;
+};
+
+// ✅ Expedition Discount CRUD operations
+export const getExpeditionDiscounts = async (params?: {
+  page?: number;
+  per_page?: number;
+  search?: string;
+}): Promise<{
+  status: string;
+  success?: boolean;
+  data: {
+    data: ExpeditionDiscount[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+}> => {
+  const res = await apiClient.get("/admin/expedition-discounts", { params });
+  return res.data;
+};
+
+export const createExpeditionDiscount = async (data: {
+  vendor: string;
+  service_type?: string | null;
+  discount_type: "percentage" | "fixed_amount";
+  discount_value: number;
+  minimum_order_value?: number | null;
+  maximum_discount_amount?: number | null;
+  user_type?: string | null;
+  is_active: boolean;
+  valid_from?: string | null;
+  valid_until?: string | null;
+  description: string;
+  usage_limit?: number | null;
+  priority: number;
+}): Promise<{
+  status: string;
+  success?: boolean;
+  message: string;
+  data: ExpeditionDiscount;
+}> => {
+  const res = await apiClient.post("/admin/expedition-discounts", data);
+  return res.data;
+};
+
+export const updateExpeditionDiscount = async (
+  id: number,
+  data: {
+    vendor: string;
+    service_type?: string | null;
+    discount_type: "percentage" | "fixed_amount";
+    discount_value: number;
+    minimum_order_value?: number | null;
+    maximum_discount_amount?: number | null;
+    user_type?: string | null;
+    is_active: boolean;
+    valid_from?: string | null;
+    valid_until?: string | null;
+    description: string;
+    usage_limit?: number | null;
+    priority: number;
+  }
+): Promise<{
+  status: string;
+  success?: boolean;
+  message: string;
+  data: ExpeditionDiscount;
+}> => {
+  const res = await apiClient.put(`/admin/expedition-discounts/${id}`, data);
+  return res.data;
+};
+
+export const deleteExpeditionDiscount = async (
+  id: number
+): Promise<{
+  status: string;
+  success?: boolean;
+  message: string;
+}> => {
+  const res = await apiClient.delete(`/admin/expedition-discounts/${id}`);
+  return res.data;
+};
+
+export const toggleExpeditionDiscountStatus = async (
+  id: number
+): Promise<{
+  status: string;
+  success?: boolean;
+  message: string;
+  data: ExpeditionDiscount;
+}> => {
+  const res = await apiClient.patch(
+    `/admin/expedition-discounts/${id}/toggle-status`
+  );
+  return res.data;
+};
+
+export const getExpeditionDiscountStatistics = async (): Promise<{
+  success: boolean;
+  data: {
+    total_discounts: number;
+    active_discounts: number;
+    inactive_discounts: number;
+    total_usage: number;
+    vendors: Record<string, number>;
+    discount_types: Record<string, number>;
+  };
+}> => {
+  const res = await apiClient.get("/admin/expedition-discounts/statistics");
   return res.data;
 };
 
