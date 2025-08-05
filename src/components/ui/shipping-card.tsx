@@ -17,7 +17,9 @@ interface ShippingCardProps {
   option: ShippingOption;
   isSelected?: boolean;
   onClick?: () => void;
-  discountInfo?: DiscountCalculation;
+  discountInfo?: DiscountCalculation | null;
+  discount?: DiscountCalculation | null;
+  isLoadingDiscount?: boolean;
 }
 
 export function ShippingCard({
@@ -25,7 +27,11 @@ export function ShippingCard({
   isSelected,
   onClick,
   discountInfo,
+  discount,
+  isLoadingDiscount,
 }: ShippingCardProps) {
+  // Use either discountInfo or discount (for backward compatibility)
+  const activeDiscount = discountInfo || discount;
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -54,13 +60,18 @@ export function ShippingCard({
         <div>
           <div className="font-medium text-sm">{option.name}</div>
           <div className="flex items-center space-x-2 mt-1">
-            {discountInfo?.has_discount ? (
+            {isLoadingDiscount ? (
+              <div className="flex items-center space-x-2">
+                <div className="animate-pulse bg-gray-200 h-4 w-16 rounded"></div>
+                <span className="text-xs text-gray-500">Mengecek diskon...</span>
+              </div>
+            ) : activeDiscount?.has_discount ? (
               <div className="flex items-center space-x-2">
                 <span className="text-purple-700 font-medium text-sm">
-                  {formatCurrency(discountInfo.discounted_price)}
+                  {formatCurrency(activeDiscount.discounted_price)}
                 </span>
                 <span className="text-gray-400 text-xs line-through">
-                  {formatCurrency(discountInfo.original_price)}
+                  {formatCurrency(activeDiscount.original_price)}
                 </span>
               </div>
             ) : (
@@ -68,7 +79,7 @@ export function ShippingCard({
                 {option.price}
               </span>
             )}
-            {option.originalPrice && !discountInfo?.has_discount && (
+            {option.originalPrice && !activeDiscount?.has_discount && (
               <span className="text-gray-400 text-xs line-through">
                 {option.originalPrice}
               </span>
@@ -76,12 +87,12 @@ export function ShippingCard({
           </div>
 
           {/* Show discount badge if available */}
-          {discountInfo?.has_discount && (
+          {activeDiscount?.has_discount && (
             <div className="mt-1">
               <DiscountBadge
-                discountType={discountInfo.discount_type}
-                discountValue={discountInfo.discount_value}
-                discountAmount={discountInfo.discount_amount}
+                discountType={activeDiscount.discount_type}
+                discountValue={activeDiscount.discount_value}
+                discountAmount={activeDiscount.discount_amount}
                 showAmount={false}
                 className="text-xs"
               />

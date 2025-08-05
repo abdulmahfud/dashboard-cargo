@@ -107,7 +107,6 @@ export default function CalculationResults({
           try {
             const discountResponse = await getAvailableDiscounts({
               vendor: "JNTEXPRESS", // Default to JNT for instant package
-              service_type: "REGULER",
               order_value: shippingCost,
             });
 

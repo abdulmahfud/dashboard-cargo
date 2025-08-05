@@ -1,9 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { ShippingCard } from "./../ui/shipping-card";
 
-import { Card, CardContent} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 import { ShippingOption } from "@/lib/shipping-data";
+import { DiscountCalculation } from "@/types/discount";
+import { getAvailableDiscounts } from "@/lib/apiClient";
 
 interface ShippingResultsProps {
   isSearching: boolean;
@@ -26,6 +28,14 @@ export default function ShippingResults({
   result,
 }: ShippingResultsProps) {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
+
+  // Discount states
+  const [discountInfo, setDiscountInfo] = useState<
+    Record<string, DiscountCalculation | null>
+  >({});
+  const [isLoadingDiscounts, setIsLoadingDiscounts] = useState<
+    Record<string, boolean>
+  >({});
 
   // Build shippingOptions from API result if present
   const shippingOptions: ShippingOption[] = useMemo(() => {
@@ -62,6 +72,56 @@ export default function ShippingResults({
     }
     return [];
   }, [result]);
+
+  // Function to fetch discount for a specific option
+  const fetchDiscountForOption = async (option: ShippingOption) => {
+    try {
+      setIsLoadingDiscounts((prev) => ({ ...prev, [option.id]: true }));
+
+      // Extract cost from price string
+      const shippingCost = parseInt(option.price.replace(/[^\d]/g, ""));
+
+      // Get discount for JNT Express (since this is for JNT results)
+      const discountResponse = await getAvailableDiscounts({
+        vendor: "JNTEXPRESS",
+        order_value: shippingCost,
+      });
+
+      if (
+        discountResponse.status === "success" &&
+        discountResponse.data.best_discount
+      ) {
+        setDiscountInfo((prev) => ({
+          ...prev,
+          [option.id]: discountResponse.data
+            .best_discount as DiscountCalculation,
+        }));
+      } else {
+        setDiscountInfo((prev) => ({
+          ...prev,
+          [option.id]: null,
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching discount for option:", option.id, error);
+      setDiscountInfo((prev) => ({
+        ...prev,
+        [option.id]: null,
+      }));
+    } finally {
+      setIsLoadingDiscounts((prev) => ({ ...prev, [option.id]: false }));
+    }
+  };
+
+  // Auto-fetch discounts when shipping options change
+  useEffect(() => {
+    if (shippingOptions.length > 0) {
+      // Fetch discounts for all options
+      shippingOptions.forEach((option) => {
+        fetchDiscountForOption(option);
+      });
+    }
+  }, [shippingOptions]);
 
   function isApiErrorResult(obj: unknown): obj is ApiErrorResult {
     return (
@@ -144,7 +204,6 @@ export default function ShippingResults({
       {/* Featured Option Card */}
       {shippingOptions[0] && (
         <Card className="border-blue-100 bg-gradient-to-r from-blue-50 to-blue-100 overflow-hidden">
-          
           <CardContent className="relative pt-3">
             <div className="absolute top-0 right-0 w-24 h-24 opacity-10">
               <div className="w-full h-full bg-blue-600 rounded-full blur-2xl"></div>
@@ -153,6 +212,10 @@ export default function ShippingResults({
               option={shippingOptions[0]}
               isSelected={selectedOption === shippingOptions[0].id}
               onClick={() => setSelectedOption(shippingOptions[0].id)}
+              discount={discountInfo[shippingOptions[0].id]}
+              isLoadingDiscount={
+                isLoadingDiscounts[shippingOptions[0].id] || false
+              }
             />
           </CardContent>
         </Card>
