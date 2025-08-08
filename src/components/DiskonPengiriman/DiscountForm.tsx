@@ -26,6 +26,7 @@ interface DiscountFormProps {
 
 const VENDORS = [
   { value: "JNTEXPRESS", label: "JNT Express" },
+  { value: "PAXEL", label: "Paxel" },
   { value: "SAP", label: "SAP Express" },
   { value: "LION", label: "Lion Parcel" },
   { value: "SICEPAT", label: "SiCepat" },
