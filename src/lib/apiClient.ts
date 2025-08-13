@@ -195,6 +195,57 @@ export const getJntExpressShipmentCost = async ({
   return res.data;
 };
 
+// ✅ Get Paxel shipment cost
+export const getPaxelShipmentCost = async ({
+  weight,
+  origin,
+  destination,
+  dimension,
+  service_type,
+}: {
+  weight: string | number;
+  origin: {
+    address: string;
+    province: string;
+    city: string;
+    district: string;
+    village?: string;
+    zip_code?: string;
+    longitude?: number;
+    latitude?: number;
+  };
+  destination: {
+    address: string;
+    province: string;
+    city: string;
+    district: string;
+    village?: string;
+    zip_code?: string;
+    longitude?: number;
+    latitude?: number;
+  };
+  dimension: string;
+  service_type?: string;
+}) => {
+  const requestPayload = {
+    weight: Number(weight),
+    origin,
+    destination,
+    dimension,
+    service_type: service_type || "REGULER",
+  };
+
+  console.log("🚀 Paxel API request payload:", requestPayload);
+
+  const res = await apiClient.post(
+    "/admin/expedition/paxel/shipment_cost",
+    requestPayload
+  );
+
+  console.log("🚀 Paxel API response:", res.data);
+  return res.data;
+};
+
 // ✅ Receiver CRUD operations
 export const getReceiversData = async (
   search?: string,

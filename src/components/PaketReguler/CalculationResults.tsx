@@ -1,7 +1,3 @@
-// No UI imports needed for API result only
-
-// No unused imports needed for API result only
-
 import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,7 +22,6 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
-  getLabelUrl,
   createOrderWithPendingPayment,
   getAvailableDiscounts,
 } from "@/lib/apiClient";
@@ -86,6 +81,35 @@ type JntApiResult = {
   };
 };
 
+type PaxelApiResult = {
+  status: string;
+  data?: {
+    status_code: number;
+    message: string;
+    data: {
+      fixed_price: number;
+      time_detail?: Array<{
+        service: string;
+        time_pickup_start: string;
+        time_pickup_end: string;
+        time_delivery_start: string;
+        time_delivery_end: string;
+      }>;
+    };
+  };
+  shipping_costs_with_discount?: Array<unknown>;
+};
+
+type CombinedApiResult = {
+  status: string;
+  data: {
+    jnt: JntApiResult | null;
+    paxel: PaxelApiResult | null;
+  };
+};
+
+type ApiResult = JntApiResult | PaxelApiResult | CombinedApiResult;
+
 export default function CalculationResults({
   isSearching,
   result,
@@ -106,8 +130,6 @@ export default function CalculationResults({
   } | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [labelUrl, setLabelUrl] = useState<string>("");
-  const [isLoadingLabel, setIsLoadingLabel] = useState(false);
 
   // Discount states
   const [discountInfo, setDiscountInfo] = useState<DiscountCalculation | null>(
@@ -120,12 +142,127 @@ export default function CalculationResults({
 
   // Build shippingOptions from API result if present
   const shippingOptions: ShippingOption[] = useMemo(() => {
-    const apiResult = result as JntApiResult;
+    const apiResult = result as ApiResult;
 
+    // Handle combined results from both APIs
     if (
       apiResult &&
       apiResult.status === "success" &&
       apiResult.data &&
+      "jnt" in apiResult.data &&
+      "paxel" in apiResult.data
+    ) {
+      const combinedData = apiResult.data as CombinedApiResult["data"];
+      const options: ShippingOption[] = [];
+
+      // Process JNT results
+      if (combinedData.jnt && combinedData.jnt.status === "success") {
+        const jntData = combinedData.jnt;
+        if (jntData.data && typeof jntData.data.content === "string") {
+          try {
+            const contentArr = JSON.parse(jntData.data.content) as Array<{
+              cost: string;
+              name: string;
+              productType: string;
+            }>;
+
+            if (Array.isArray(contentArr) && contentArr.length > 0) {
+              contentArr.forEach((item, index) => {
+                options.push({
+                  id: `jnt-${item.productType.toLowerCase()}`,
+                  name: `J&T ${item.name}`,
+                  logo: "/images/jnt.png",
+                  price: `Rp${Number(item.cost).toLocaleString("id-ID")}`,
+                  duration: "3-6 Hari",
+                  available: true,
+                  recommended: index === 0,
+                  tags: [
+                    { label: "Potensi retur Rendah", type: "success" as const },
+                  ],
+                });
+              });
+            }
+          } catch (error) {
+            console.error("❌ Error parsing JNT options:", error);
+          }
+        }
+      }
+
+      // Process Paxel results
+      if (combinedData.paxel && combinedData.paxel.status === "success") {
+        const paxelData = combinedData.paxel.data?.data;
+        if (paxelData?.fixed_price) {
+          const fixedPrice = paxelData.fixed_price;
+
+          console.log("🔍 Paxel data received:", paxelData);
+
+          // Add same-day service if available
+          if (
+            paxelData.time_detail?.some(
+              (time: { service: string }) => time.service === "same_day"
+            )
+          ) {
+            options.push({
+              id: "paxel-same-day",
+              name: "Paxel Same Day",
+              logo: "/images/paxel.png",
+              price: `Rp${fixedPrice.toLocaleString("id-ID")}`,
+              duration: "Same Day",
+              available: true,
+              recommended: true,
+              tags: [{ label: "Same Day Delivery", type: "success" as const }],
+            });
+          }
+
+          // Add next-day service if available
+          if (
+            paxelData.time_detail?.some(
+              (time: { service: string }) => time.service === "next_day"
+            )
+          ) {
+            options.push({
+              id: "paxel-next-day",
+              name: "Paxel Next Day",
+              logo: "/images/paxel.png",
+              price: `Rp${fixedPrice.toLocaleString("id-ID")}`,
+              duration: "1-3 Hari",
+              available: true,
+              recommended: false,
+              tags: [{ label: "Pengiriman Cepat", type: "success" as const }],
+            });
+          }
+
+          // If no specific services found, create a general option
+          if (
+            !paxelData.time_detail?.some(
+              (time: { service: string }) =>
+                time.service === "same_day" || time.service === "next_day"
+            )
+          ) {
+            options.push({
+              id: "paxel-regular",
+              name: "Paxel Regular",
+              logo: "/images/paxel.png",
+              price: `Rp${fixedPrice.toLocaleString("id-ID")}`,
+              duration: "1-2 Hari",
+              available: true,
+              recommended: true,
+              tags: [{ label: "Fast Delivery", type: "success" as const }],
+            });
+          }
+        }
+      }
+
+      console.log("🚀 Combined options created:", options);
+      return options;
+    }
+
+    // Fallback: Handle single API response (for backward compatibility)
+    if (
+      apiResult &&
+      apiResult.status === "success" &&
+      apiResult.data &&
+      "content" in apiResult.data &&
       typeof apiResult.data.content === "string"
     ) {
       try {
@@ -136,15 +273,14 @@ export default function CalculationResults({
         }>;
 
         if (Array.isArray(contentArr) && contentArr.length > 0) {
-          // Map semua opsi dari API JNT Express
           const options = contentArr.map((item, index) => ({
             id: `jnt-${item.productType.toLowerCase()}`,
             name: `J&T ${item.name}`,
             logo: "/images/jnt.png",
             price: `Rp${Number(item.cost).toLocaleString("id-ID")}`,
-            duration: "3-6 Hari",
+            duration: "1-3 Hari",
             available: true,
-            recommended: index === 0, // Opsi pertama sebagai rekomendasi
+            recommended: index === 0,
             tags: [{ label: "Potensi retur Rendah", type: "success" as const }],
           }));
           return options;
@@ -157,6 +293,7 @@ export default function CalculationResults({
         return [];
       }
     }
+
     return [];
   }, [result]);
 
@@ -217,10 +354,16 @@ export default function CalculationResults({
       // Extract cost from price string
       const shippingCost = parseInt(option.price.replace(/[^\d]/g, ""));
 
-      // Get discount for JNT Express (since this is for JNT results)
+      // Determine vendor based on option ID
+      let vendor = "JNTEXPRESS";
+      if (optionId.startsWith("paxel")) {
+        vendor = "PAXEL";
+      }
+
+      // Get discount for the selected vendor
       // Don't send service_type to match discounts with null service_type (applies to all services)
       const discountParams = {
-        vendor: "JNTEXPRESS",
+        vendor: vendor,
         order_value: shippingCost,
       };
 
@@ -321,8 +464,8 @@ export default function CalculationResults({
 
     // Build order data that will be used after payment
     const shippingData: Record<string, unknown> = {
-      vendor: "jntexpress",
-      service_code: "1", // JNT Express service code
+      vendor: selectedOption?.startsWith("paxel") ? "paxel" : "jntexpress", // Determine vendor from selected option
+      service_code: "1", // Default service code
       expresstype: "1",
       servicetype: formData.formData.deliveryType === "pickup" ? "1" : "6",
       detail: {
@@ -349,6 +492,14 @@ export default function CalculationResults({
         ],
       },
     };
+
+    // Add vendor-specific data
+    if (selectedOption?.startsWith("paxel")) {
+      shippingData.vendor = "paxel";
+      shippingData.service_code = selectedOption?.includes("same-day")
+        ? "SAMEDAY"
+        : "REGULER";
+    }
 
     // Add sender/receiver data
     if (formData.receiverId) {
@@ -444,38 +595,6 @@ export default function CalculationResults({
     });
 
     setShowSuccessDialog(true);
-  };
-
-  const handleGetLabelUrl = async () => {
-    if (!orderResult?.awb_no) {
-      toast.error("AWB number not found");
-      return;
-    }
-
-    try {
-      setIsLoadingLabel(true);
-      const response = await getLabelUrl(orderResult.awb_no!);
-
-      if (response.status === "success" && response.data) {
-        setLabelUrl(response.data.label_url);
-        toast.success("Label URL retrieved successfully!");
-      } else {
-        toast.error(response.message || "Failed to get label URL");
-      }
-    } catch (error) {
-      console.error("Error getting label URL:", error);
-      toast.error("Failed to get label URL");
-    } finally {
-      setIsLoadingLabel(false);
-    }
-  };
-
-  const handlePrintLabel = () => {
-    if (labelUrl) {
-      window.open(labelUrl, "_blank");
-    } else {
-      toast.error("Please get label URL first");
-    }
   };
 
   const handleCreateNewOrder = () => {
@@ -865,7 +984,7 @@ export default function CalculationResults({
           <div className="grid grid-cols-2 gap-3 mt-6">
             <Button
               onClick={() => router.push("/dashboard/paket/pembayaran-paket")}
-              className="h-11 px-6 py-4 font-semibold bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600 text-sm flex items-center gap-2 rounded-full shadow-md transition duration-300 ease-in-out"
+              className="h-11 px-6 py-4 font-semibold bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600 text-sm flex items-center gap-2 rounded shadow-md transition duration-300 ease-in-out"
             >
               <CreditCard className="h-4 w-4" />
               Lakukan Pembayaran
@@ -874,62 +993,12 @@ export default function CalculationResults({
             <Button
               onClick={handleCreateNewOrder}
               variant="outline"
-              className="h-11 px-6 py-4 font-semibold text-sm flex items-center gap-2 rounded-full shadow-md transition duration-300 ease-in-out"
+              className="h-11 px-6 py-4 font-semibold text-sm flex items-center gap-2 rounded shadow-md transition duration-300 ease-in-out"
             >
               <Package className="h-4 w-4" />
               Kirim Paket Lagi
             </Button>
           </div>
-
-          {/* Label URL Section - Only for JNT Express and when AWB is available */}
-          {orderResult?.awb_no && (
-            <div className="mt-6 space-y-3">
-              <div className="text-center">
-                <h4 className="text-sm font-medium text-gray-700 mb-2">
-                  Print Label JNT Express
-                </h4>
-                <p className="text-xs text-gray-500 mb-3">
-                  Klik tombol di bawah untuk mendapatkan URL label dari JNT
-                  Express
-                </p>
-              </div>
-
-              <Button
-                onClick={handleGetLabelUrl}
-                disabled={isLoadingLabel}
-                className="w-full"
-                variant="outline"
-              >
-                {isLoadingLabel ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
-                    Mengambil Label URL...
-                  </>
-                ) : (
-                  <>📄 Get Label URL</>
-                )}
-              </Button>
-
-              {labelUrl && (
-                <div className="space-y-2">
-                  <div className="text-xs text-gray-600 font-medium">
-                    Label URL dari JNT Express:
-                  </div>
-                  <div className="text-xs text-gray-800 break-all bg-gray-50 p-2 rounded border">
-                    {labelUrl}
-                  </div>
-                  <Button
-                    onClick={handlePrintLabel}
-                    className="w-full"
-                    variant="outline"
-                    size="sm"
-                  >
-                    🖨️ Print Label
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
 
           {/* Show message when payment successful but order still processing */}
           {orderResult?.success && !orderResult?.awb_no && (

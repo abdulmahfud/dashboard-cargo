@@ -44,6 +44,7 @@ import {
   getRegencies,
   getDistricts,
   getJntExpressShipmentCost,
+  getPaxelShipmentCost,
 } from "@/lib/apiClient";
 import type {
   Shipper,
@@ -491,12 +492,106 @@ export default function RegularPackageForm({
     }
 
     try {
-      const result = await getJntExpressShipmentCost({
+      // Validate required data for Paxel
+      const paxelPayload = {
         weight,
-        sendSiteCode,
-        destAreaCode,
-      });
-      onResult?.(result);
+        origin: {
+          address: selectedBusiness?.address || "",
+          province: selectedBusiness?.province || "",
+          city: selectedBusiness?.regency || "",
+          district: selectedBusiness?.district || "",
+        },
+        destination: {
+          address: formData.receiverAddress,
+          province: formData.province,
+          city: formData.regency,
+          district: formData.district,
+        },
+        dimension: `${formData.length}x${formData.width}x${formData.height}`,
+        service_type: "SAMEDAY",
+      };
+
+      // For saved recipients, we need to get the actual location names
+      if (receiverId) {
+        const selectedRecipient = businessRecipients.find(
+          (r) => String(r.id) === receiverId
+        );
+        console.log("🔍 Selected recipient:", selectedRecipient);
+        if (selectedRecipient) {
+          paxelPayload.destination.province = selectedRecipient.province || "";
+          paxelPayload.destination.city = selectedRecipient.regency || "";
+          paxelPayload.destination.district = selectedRecipient.district || "";
+          console.log(
+            "🔍 Updated Paxel destination:",
+            paxelPayload.destination
+          );
+        }
+      }
+
+      // Validate Paxel payload
+      const paxelValidation = {
+        weight: !!paxelPayload.weight,
+        origin_address: !!paxelPayload.origin.address,
+        origin_province: !!paxelPayload.origin.province,
+        origin_city: !!paxelPayload.origin.city,
+        origin_district: !!paxelPayload.origin.district,
+        dest_address: !!paxelPayload.destination.address,
+        dest_province: !!paxelPayload.destination.province,
+        dest_city: !!paxelPayload.destination.city,
+        dest_district: !!paxelPayload.destination.district,
+        dimension: !!paxelPayload.dimension && paxelPayload.dimension !== "x",
+      };
+
+      console.log("🔍 Paxel payload:", paxelPayload);
+      console.log("🔍 Paxel validation:", paxelValidation);
+
+      // Check if any required field is missing
+      const missingFields = Object.entries(paxelValidation)
+        .filter(([, value]) => !value)
+        .map(([key]) => key);
+
+      if (missingFields.length > 0) {
+        console.error("❌ Missing required fields for Paxel:", missingFields);
+        onResult?.({
+          error: true,
+          message: `Data tidak lengkap untuk Paxel: ${missingFields.join(", ")}`,
+        });
+        if (setIsSearching) setIsSearching(false);
+        return;
+      }
+
+      // Call both APIs in parallel
+      const [jntResult, paxelResult] = await Promise.allSettled([
+        getJntExpressShipmentCost({
+          weight,
+          sendSiteCode,
+          destAreaCode,
+        }),
+        getPaxelShipmentCost(paxelPayload),
+      ]);
+
+      // Debug logging
+      console.log("🔍 JNT Result:", jntResult);
+      console.log("🔍 Paxel Result:", paxelResult);
+
+      // Handle individual API errors
+      if (jntResult.status === "rejected") {
+        console.error("❌ JNT API failed:", jntResult.reason);
+      }
+      if (paxelResult.status === "rejected") {
+        console.error("❌ Paxel API failed:", paxelResult.reason);
+      }
+
+      // Combine results from both APIs
+      const combinedResult = {
+        status: "success",
+        data: {
+          jnt: jntResult.status === "fulfilled" ? jntResult.value : null,
+          paxel: paxelResult.status === "fulfilled" ? paxelResult.value : null,
+        },
+      };
+
+      onResult?.(combinedResult);
     } catch (err) {
       console.error("❌ RegularPackageForm - API call failed:", err);
       const errorResult = {
@@ -523,6 +618,7 @@ export default function RegularPackageForm({
         {/* Section Detail Pengiriman */}
         <Card className="p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Detail Pengiriman</h2>
+
           <div className="mb-6">
             <Label>Opsi Penjemputan</Label>
             <RadioGroup
@@ -1001,10 +1097,11 @@ export default function RegularPackageForm({
                             receiverName: recipient.name,
                             receiverPhone: recipient.phone || "",
                             receiverAddress: recipient.address || "",
-                            // Clear location IDs since we're using saved data
-                            province: "",
-                            regency: "",
-                            district: "",
+                            // For saved recipients, we need to get the actual location data
+                            // Since Receiver stores names, we'll use them directly
+                            province: recipient.province || "",
+                            regency: recipient.regency || "",
+                            district: recipient.district || "",
                           }));
 
                           // Set the search fields to show the location names (auto-complete effect)

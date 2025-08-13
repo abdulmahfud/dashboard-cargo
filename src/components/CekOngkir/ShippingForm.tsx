@@ -16,6 +16,7 @@ import {
   getRegencies,
   getDistricts,
   getJntExpressShipmentCost,
+  getPaxelShipmentCost,
 } from "@/lib/apiClient";
 import type { Province, Regency, District } from "@/types/dataRegulerForm";
 
@@ -66,6 +67,14 @@ export default function ShippingForm({
   const [selectedOriginRegencyName, setSelectedOriginRegencyName] =
     useState("");
   const [selectedDestDistrictName, setSelectedDestDistrictName] = useState("");
+
+  // Add state to store selected location names
+  const [selectedOriginProvinceName, setSelectedOriginProvinceName] =
+    useState("");
+  const [selectedOriginDistrictName, setSelectedOriginDistrictName] =
+    useState("");
+  const [selectedDestProvinceName, setSelectedDestProvinceName] = useState("");
+  const [selectedDestRegencyName, setSelectedDestRegencyName] = useState("");
 
   const [formData, setFormData] = useState({
     originProvince: "",
@@ -207,12 +216,61 @@ export default function ShippingForm({
     }
 
     try {
-      const result = await getJntExpressShipmentCost({
+      // Call both APIs in parallel
+      const [jntResult, paxelResult] = await Promise.allSettled([
+        getJntExpressShipmentCost({
+          weight: formData.weight,
+          sendSiteCode: selectedOriginRegencyName,
+          destAreaCode: selectedDestDistrictName,
+        }),
+        getPaxelShipmentCost({
+          weight: formData.weight,
+          origin: {
+            address: "Alamat Pengirim", // Placeholder, will be filled by backend
+            province: selectedOriginProvinceName,
+            city: selectedOriginRegencyName,
+            district: selectedOriginDistrictName,
+          },
+          destination: {
+            address: "Alamat Penerima", // Placeholder
+            province: selectedDestProvinceName,
+            city: selectedDestRegencyName,
+            district: selectedDestDistrictName,
+          },
+          dimension: `${formData.length || 0}x${formData.width || 0}x${formData.height || 0}`,
+          service_type: "SAMEDAY",
+        }),
+      ]);
+
+      // Debug logging
+      console.log("🔍 Paxel payload:", {
         weight: formData.weight,
-        sendSiteCode: selectedOriginRegencyName,
-        destAreaCode: selectedDestDistrictName,
+        origin: {
+          address: "Alamat Pengirim",
+          province: selectedOriginProvinceName,
+          city: selectedOriginRegencyName,
+          district: selectedOriginDistrictName,
+        },
+        destination: {
+          address: "Alamat Penerima",
+          province: selectedDestProvinceName,
+          city: selectedDestRegencyName,
+          district: selectedDestDistrictName,
+        },
+        dimension: `${formData.length || 0}x${formData.width || 0}x${formData.height || 0}`,
+        service_type: "SAMEDAY",
       });
-      onResult?.(result);
+
+      // Combine results from both APIs
+      const combinedResult = {
+        status: "success",
+        data: {
+          jnt: jntResult.status === "fulfilled" ? jntResult.value : null,
+          paxel: paxelResult.status === "fulfilled" ? paxelResult.value : null,
+        },
+      };
+
+      onResult?.(combinedResult);
     } catch (err) {
       console.error("API Error:", err);
       const errorResult = {
@@ -277,6 +335,8 @@ export default function ShippingForm({
                           setOriginRegencySearch("");
                           setOriginDistrictSearch("");
                           setSelectedOriginRegencyName("");
+                          setSelectedOriginProvinceName(prov.name);
+                          setSelectedOriginDistrictName("");
                         }}
                       >
                         {prov.name}
@@ -328,6 +388,7 @@ export default function ShippingForm({
                             setOriginRegencySearch(reg.name);
                             setOriginDistrictSearch("");
                             setSelectedOriginRegencyName(reg.name);
+                            setSelectedDestRegencyName(reg.name);
                           }}
                         >
                           {reg.name}
@@ -375,6 +436,7 @@ export default function ShippingForm({
                           onClick={() => {
                             handleChange("originDistrict", String(dist.id));
                             setOriginDistrictSearch(dist.name);
+                            setSelectedOriginDistrictName(dist.name);
                           }}
                         >
                           {dist.name}
@@ -429,6 +491,7 @@ export default function ShippingForm({
                           setDestProvinceSearch(prov.name);
                           setDestRegencySearch("");
                           setDestDistrictSearch("");
+                          setSelectedDestProvinceName(prov.name);
                         }}
                       >
                         {prov.name}
@@ -479,6 +542,7 @@ export default function ShippingForm({
                             handleChange("destRegency", String(reg.id));
                             setDestRegencySearch(reg.name);
                             setDestDistrictSearch("");
+                            setSelectedDestRegencyName(reg.name);
                           }}
                         >
                           {reg.name}

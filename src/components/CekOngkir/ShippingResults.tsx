@@ -23,6 +23,58 @@ type JntApiResult = {
   };
 };
 
+type PaxelApiResult = {
+  status: string;
+  message: string;
+  data: {
+    status_code: number;
+    message: string;
+    data: {
+      response_code: number;
+      service_name: string;
+      city_origin: string;
+      city_destination: string;
+      small_price: number;
+      medium_price: number;
+      large_price: number;
+      custom_price: number;
+      time_detail: Array<{
+        time_pickup_start: string;
+        time_pickup_end: string;
+        time_delivery_start: string;
+        time_delivery_end: string;
+        service: string;
+        available_day: {
+          day_details: Array<{
+            name: string;
+            nearest_date: string;
+          }>;
+          unavailable_day_details: Array<{
+            name: string;
+            nearest_date: string;
+          }>;
+          unavailable_days: string[];
+        };
+      }>;
+      fixed_price: number;
+      fixed_price_type: string;
+      fixed_short_size: string;
+      fixed_size: string;
+    };
+  };
+  shipping_costs_with_discount: Array<unknown>;
+};
+
+type CombinedApiResult = {
+  status: string;
+  data: {
+    jnt: JntApiResult | null;
+    paxel: PaxelApiResult | null;
+  };
+};
+
+type ApiResult = JntApiResult | PaxelApiResult | CombinedApiResult;
+
 export default function ShippingResults({
   isSearching,
   result,
@@ -39,12 +91,85 @@ export default function ShippingResults({
 
   // Build shippingOptions from API result if present
   const shippingOptions: ShippingOption[] = useMemo(() => {
-    const apiResult = result as JntApiResult;
+    const apiResult = result as ApiResult;
 
+    console.log("🔍 ShippingResults - API result received:", apiResult);
+
+    // Handle combined results from both APIs
     if (
       apiResult &&
       apiResult.status === "success" &&
       apiResult.data &&
+      "jnt" in apiResult.data &&
+      "paxel" in apiResult.data
+    ) {
+      const combinedData = apiResult.data as CombinedApiResult["data"];
+      console.log("🔍 ShippingResults - Combined data:", combinedData);
+      const options: ShippingOption[] = [];
+
+      // Process JNT results
+      if (combinedData.jnt && combinedData.jnt.status === "success") {
+        const jntData = combinedData.jnt;
+        if (jntData.data && typeof jntData.data.content === "string") {
+          try {
+            const contentArr = JSON.parse(jntData.data.content) as Array<{
+              cost: string;
+              name: string;
+              productType: string;
+            }>;
+
+            if (Array.isArray(contentArr) && contentArr.length > 0) {
+              contentArr.forEach((item, index) => {
+                options.push({
+                  id: `jnt-${item.productType.toLowerCase()}`,
+                  name: `J&T ${item.name}`,
+                  logo: "/images/jnt.png",
+                  price: `Rp${Number(item.cost).toLocaleString("id-ID")}`,
+                  duration: "1-3 Hari",
+                  available: true,
+                  recommended: index === 0,
+                  tags: [{ label: "Potensi retur Rendah", type: "info" }],
+                });
+              });
+            }
+          } catch (error) {
+            console.error("❌ Error parsing JNT options:", error);
+          }
+        }
+      }
+
+      // Process Paxel results
+      if (combinedData.paxel && combinedData.paxel.status === "success") {
+        const paxelData = combinedData.paxel.data?.data;
+        if (paxelData) {
+          console.log("🔍 Paxel data received:", paxelData);
+
+          // Only show fixed_price option for Paxel
+          if (paxelData.fixed_price && paxelData.fixed_price > 0) {
+            options.push({
+              id: "paxel-regular",
+              name: "Paxel Express",
+              logo: "/images/paxel.png",
+              price: `Rp${paxelData.fixed_price.toLocaleString("id-ID")}`,
+              duration: "1-3 Hari",
+              available: true,
+              recommended: false,
+              tags: [{ label: "Fast Delivery", type: "info" }],
+            });
+          }
+        }
+      }
+
+      console.log("🚀 ShippingResults - Final options created:", options);
+      return options;
+    }
+
+    // Fallback: Handle single API response (for backward compatibility)
+    if (
+      apiResult &&
+      apiResult.status === "success" &&
+      apiResult.data &&
+      "content" in apiResult.data &&
       typeof apiResult.data.content === "string"
     ) {
       try {
@@ -81,9 +206,15 @@ export default function ShippingResults({
       // Extract cost from price string
       const shippingCost = parseInt(option.price.replace(/[^\d]/g, ""));
 
-      // Get discount for JNT Express (since this is for JNT results)
+      // Determine vendor based on option ID
+      let vendor = "JNTEXPRESS";
+      if (option.id.startsWith("paxel")) {
+        vendor = "PAXEL";
+      }
+
+      // Get discount for the selected vendor
       const discountResponse = await getAvailableDiscounts({
-        vendor: "JNTEXPRESS",
+        vendor: vendor,
         order_value: shippingCost,
       });
 
@@ -201,25 +332,32 @@ export default function ShippingResults({
 
   return (
     <div className="animate-slide-up">
-      {/* Featured Option Card */}
-      {shippingOptions[0] && (
-        <Card className="border-blue-100 bg-gradient-to-r from-blue-50 to-blue-100 overflow-hidden">
+      {/* Display all shipping options */}
+      {shippingOptions.map((option, index) => (
+        <Card
+          key={option.id}
+          className={`mb-4 ${
+            index === 0
+              ? "border-blue-100 bg-gradient-to-r from-blue-50 to-blue-100"
+              : "border-gray-100 bg-white"
+          } overflow-hidden`}
+        >
           <CardContent className="relative pt-3">
-            <div className="absolute top-0 right-0 w-24 h-24 opacity-10">
-              <div className="w-full h-full bg-blue-600 rounded-full blur-2xl"></div>
-            </div>
+            {index === 0 && (
+              <div className="absolute top-0 right-0 w-24 h-24 opacity-10">
+                <div className="w-full h-full bg-blue-600 rounded-full blur-2xl"></div>
+              </div>
+            )}
             <ShippingCard
-              option={shippingOptions[0]}
-              isSelected={selectedOption === shippingOptions[0].id}
-              onClick={() => setSelectedOption(shippingOptions[0].id)}
-              discount={discountInfo[shippingOptions[0].id]}
-              isLoadingDiscount={
-                isLoadingDiscounts[shippingOptions[0].id] || false
-              }
+              option={option}
+              isSelected={selectedOption === option.id}
+              onClick={() => setSelectedOption(option.id)}
+              discount={discountInfo[option.id]}
+              isLoadingDiscount={isLoadingDiscounts[option.id] || false}
             />
           </CardContent>
         </Card>
-      )}
+      ))}
     </div>
   );
 }
