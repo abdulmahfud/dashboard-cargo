@@ -50,17 +50,30 @@ export default function CancelOrderDialog({
   const handleCancel = async () => {
     try {
       setIsLoading(true);
+      const vendorLower = order.vendor.toLowerCase();
+      let url = "";
+      let requestData: Record<string, any> = {};
 
-      // JNT Express cancel API
-      const requestData = {
-        orderid: order.awb_no, // Use AWB number as orderid for JNT Express
-        remark: remark.trim() || "Canceled by E-Commerce",
-      };
+      if (vendorLower === "jntexpress") {
+        // JNT Express expects orderid (reference_no) but our backend accepts AWB then converts
+        url = "/admin/expedition/jntexpress/cancel";
+        requestData = {
+          orderid: order.awb_no,
+          remark: remark.trim() || "Canceled by E-Commerce",
+        };
+      } else if (vendorLower === "paxel") {
+        // Paxel: allow airwaybill_code or order_id; prefer AWB if available
+        url = "/admin/expedition/paxel/cancel";
+        requestData = {
+          airwaybill_code: order.awb_no,
+          cancellation_reason: remark.trim() || "Canceled by E-Commerce",
+          order_id: order.id,
+        };
+      } else {
+        throw new Error("Vendor tidak didukung untuk cancel");
+      }
 
-      const response = await apiClient.post(
-        "/admin/expedition/jntexpress/cancel",
-        requestData
-      );
+      const response = await apiClient.post(url, requestData);
 
       if (response.data.success) {
         toast.success("Pesanan berhasil dibatalkan");
@@ -89,10 +102,10 @@ export default function CancelOrderDialog({
         <DialogHeader>
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-red-600" />
-            <DialogTitle>Cancel JNT Express Order</DialogTitle>
+            <DialogTitle>Cancel {order.vendor} Order</DialogTitle>
           </div>
           <DialogDescription>
-            Batalkan pesanan JNT Express berikut?
+            Batalkan pesanan {order.vendor} berikut?
           </DialogDescription>
         </DialogHeader>
 

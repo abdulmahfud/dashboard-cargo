@@ -109,12 +109,6 @@ export default function CancelOrderTable() {
   }, []);
 
   const handleCancelClick = (order: CancelOrderData) => {
-    // Only allow cancellation for JNT Express orders for now
-    if (order.vendor.toLowerCase() !== "jntexpress") {
-      toast.error("Pembatalan saat ini hanya tersedia untuk JNT Express");
-      return;
-    }
-
     setSelectedOrder(order);
     setShowCancelDialog(true);
   };
@@ -211,13 +205,16 @@ export default function CancelOrderTable() {
       id: "actions",
       header: "ACTION",
       cell: ({ row }) => {
-        const isJntExpress = row.original.vendor.toLowerCase() === "jntexpress";
+        const vendorLower = row.original.vendor.toLowerCase();
+        const isCancelableVendor = ["jntexpress", "paxel"].includes(
+          vendorLower
+        );
         return (
           <Button
             variant="destructive"
             size="sm"
             onClick={() => handleCancelClick(row.original)}
-            disabled={!isJntExpress}
+            disabled={!isCancelableVendor}
             className="gap-2"
           >
             <Trash2 className="h-4 w-4" />
