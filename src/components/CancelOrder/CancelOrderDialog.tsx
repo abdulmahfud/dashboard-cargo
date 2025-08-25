@@ -52,7 +52,7 @@ export default function CancelOrderDialog({
       setIsLoading(true);
       const vendorLower = order.vendor.toLowerCase();
       let url = "";
-      let requestData: Record<string, any> = {};
+      let requestData: Record<string, string | number | boolean> = {};
 
       if (vendorLower === "jntexpress") {
         // JNT Express expects orderid (reference_no) but our backend accepts AWB then converts
