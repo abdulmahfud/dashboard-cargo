@@ -137,8 +137,18 @@ export default function CalculationResults({
   );
   const [isLoadingDiscount, setIsLoadingDiscount] = useState(false);
 
-  // Debug: Log when props change - FIXED: Use useEffect instead of useState
-  useEffect(() => {}, [isSearching, result, formData]);
+  // Reset selection state when form data or result changes
+  useEffect(() => {
+    // Reset all selection states when new data comes in
+    setSelectedOption(null);
+    setShowPaymentSection(false);
+    setDiscountInfo(null);
+    setIsInsured(false);
+    setCustomCODValue("");
+    setOrderResult(null);
+    setShowSuccessDialog(false);
+    setTermsAccepted(false);
+  }, [result]); // Only depend on result changes, not isSearching or formData
 
   // Build shippingOptions from API result if present
   const shippingOptions: ShippingOption[] = useMemo(() => {
@@ -318,15 +328,80 @@ export default function CalculationResults({
     );
   }
 
-  // Debug: tampilkan data mentah jika tidak ada shippingOptions
+  // Handle error responses and invalid data
   if (!isSearching && !shippingOptions.length && result) {
+    // Check if result is an error response
+    if (typeof result === "object" && result !== null) {
+      // Handle API error responses
+      if ("error" in result || "message" in result) {
+        const errorMessage = String(
+          (result as Record<string, unknown>).message ||
+            (result as Record<string, unknown>).error ||
+            "Terjadi kesalahan pada server"
+        );
+        return (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center space-x-2 text-red-600 mb-2">
+              <span className="text-lg">⚠️</span>
+              <span className="font-medium">Gagal memuat opsi pengiriman</span>
+            </div>
+            <p className="text-red-700 text-sm">{errorMessage}</p>
+            <p className="text-red-600 text-xs mt-2">
+              Silakan coba lagi atau hubungi support jika masalah berlanjut.
+            </p>
+          </div>
+        );
+      }
+
+      // Handle empty or invalid response structure
+      if (Object.keys(result).length === 0) {
+        return (
+          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center space-x-2 text-yellow-600 mb-2">
+              <span className="text-lg">ℹ️</span>
+              <span className="font-medium">
+                Tidak ada opsi pengiriman tersedia
+              </span>
+            </div>
+            <p className="text-yellow-700 text-sm">
+              Untuk rute pengiriman ini belum tersedia layanan ekspedisi.
+            </p>
+            <p className="text-yellow-600 text-xs mt-2">
+              Coba ubah alamat pengirim atau tujuan pengiriman.
+            </p>
+          </div>
+        );
+      }
+    }
+
+    // Fallback: Show raw data for debugging (only in development)
+    if (process.env.NODE_ENV === "development") {
+      return (
+        <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+          <div className="flex items-center space-x-2 text-gray-600 mb-2">
+            <span className="text-lg">🔍</span>
+            <span className="font-medium">Debug: Response Data</span>
+          </div>
+          <p className="text-gray-700 text-sm mb-2">
+            Tidak ada opsi pengiriman ditemukan dari response berikut:
+          </p>
+          <pre className="text-xs bg-gray-100 p-2 rounded overflow-x-auto max-h-40">
+            {JSON.stringify(result, null, 2)}
+          </pre>
+        </div>
+      );
+    }
+
+    // Production fallback
     return (
-      <div className="p-4 text-gray-500">
-        Tidak ada opsi pengiriman ditemukan.
-        <br />
-        <pre className="text-xs bg-gray-100 p-2 mt-2 rounded overflow-x-auto">
-          {JSON.stringify(result, null, 2)}
-        </pre>
+      <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+        <div className="flex items-center space-x-2 text-gray-600 mb-2">
+          <span className="text-lg">ℹ️</span>
+          <span className="font-medium">Tidak ada opsi pengiriman</span>
+        </div>
+        <p className="text-gray-700 text-sm">
+          Untuk rute pengiriman ini belum tersedia layanan ekspedisi.
+        </p>
       </div>
     );
   }
@@ -336,6 +411,15 @@ export default function CalculationResults({
   }
 
   const handleShippingSelect = (optionId: string) => {
+    // If clicking the same option, do nothing
+    if (selectedOption === optionId) {
+      return;
+    }
+
+    // Reset discount info first
+    setDiscountInfo(null);
+
+    // Set new selection
     setSelectedOption(optionId);
     setShowPaymentSection(true);
 
@@ -609,13 +693,11 @@ export default function CalculationResults({
       {/* Shipping Options List */}
       {shippingOptions.map((option) => (
         <Card
-          key={option.id}
+          key={`${option.id}-${selectedOption === option.id ? "selected" : "unselected"}`}
           className={`cursor-pointer transition-all duration-200 ${
             selectedOption === option.id
               ? "border-blue-500 bg-blue-50"
-              : option.recommended
-                ? "border-blue-200 bg-blue-50"
-                : "border-gray-200 hover:border-gray-300"
+              : "border-gray-200 hover:border-gray-300"
           }`}
           onClick={() => handleShippingSelect(option.id)}
         >
