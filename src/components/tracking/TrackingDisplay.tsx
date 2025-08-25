@@ -1,0 +1,38 @@
+"use client";
+
+import type { StandardizedTrackingResponse } from "@/types/tracking";
+import { OrderInfoCard } from "./OrderInfoCard";
+import { PackageInfoCard } from "./PackageInfoCard";
+import { CostDetailsCard } from "./CostDetailsCard";
+import { AddressesCard } from "./AddressesCard";
+import { TrackingHistoryCard } from "./TrackingHistoryCard";
+import { JntTrackingContent } from "./vendors/JntTrackingContent";
+import { PaxelTrackingContent } from "./vendors/PaxelTrackingContent";
+
+interface TrackingDisplayProps {
+  result: StandardizedTrackingResponse;
+}
+
+export const TrackingDisplay: React.FC<TrackingDisplayProps> = ({ result }) => {
+  const renderVendorSpecificContent = () => {
+    switch (result.vendor.toLowerCase()) {
+      case 'jntexpress':
+        return <JntTrackingContent data={result.tracking_data} />;
+      case 'paxel':
+        return <PaxelTrackingContent data={result.tracking_data} />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <OrderInfoCard orderInfo={result.order_info} />
+      <PackageInfoCard data={result.tracking_data.package_info} />
+      <CostDetailsCard data={result.tracking_data.cost_details} />
+      <AddressesCard data={result.tracking_data.addresses} />
+      <TrackingHistoryCard data={result.tracking_data.tracking_history} />
+      {renderVendorSpecificContent()}
+    </div>
+  );
+};

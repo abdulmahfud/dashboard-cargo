@@ -53,7 +53,7 @@ import type {
   BankAccountCreateResponse,
   BankAccount,
 } from "@/types/bankAccount";
-import type { JntTrackingApiResponse } from "@/types/tracking";
+import type { StandardizedTrackingResponse } from "@/types/tracking";
 import type { ExpeditionDiscount } from "@/types/discount";
 
 // Ambil URL dari .env
@@ -726,10 +726,20 @@ export const getLabelUrl = async (
   return res.data;
 };
 
-// ✅ JNT Express tracking function
+// ✅ Universal tracking function using reference_no (supports all vendors)
+export const trackOrderByReference = async (
+  reference_no: string
+): Promise<StandardizedTrackingResponse> => {
+  const res = await apiClient.get("/admin/tracking", {
+    params: { reference_no },
+  });
+  return res.data;
+};
+
+// ✅ JNT Express tracking function (legacy - still used for direct AWB tracking)
 export const trackJntExpress = async (
   awb_no: string
-): Promise<JntTrackingApiResponse> => {
+): Promise<StandardizedTrackingResponse> => {
   const res = await apiClient.post("/admin/expedition/jntexpress/trackingjnt", {
     awb_no,
   });
