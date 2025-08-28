@@ -10,7 +10,7 @@
 
 @layer base {
   :root {
-    --font-poppins: 'Poppins', sans-serif;
+    --font-poppins: "Poppins", sans-serif;
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
@@ -81,8 +81,6 @@
   }
 }
 
-
-
 @layer base {
   * {
     @apply border-border;
@@ -110,4 +108,78 @@ h2 {
 h3 {
   font-size: 1.5rem; /* 24px */
   font-weight: bold;
+}
+
+/* Shipping Card Styles */
+.shipping-card {
+  @apply p-4 rounded-lg border border-gray-200 bg-white cursor-pointer transition-all duration-200;
+}
+
+.shipping-card:hover {
+  @apply border-gray-300 shadow-sm;
+}
+
+.shipping-card-active {
+  @apply border-blue-500 bg-blue-50;
+}
+
+/* Shipping Form Styles */
+.text-shipping-label {
+  @apply text-sm font-medium text-gray-700;
+}
+
+.text-shipping-note {
+  @apply text-sm text-gray-600;
+}
+
+.border-shipping-noteBorder {
+  @apply border-yellow-400;
+}
+
+.bg-shipping-note {
+  @apply bg-yellow-50;
+}
+
+/* Animation Classes */
+.animate-slide-down {
+  animation: slideDown 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }

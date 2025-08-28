@@ -17,6 +17,7 @@ import {
   getDistricts,
   getJntExpressShipmentCost,
   getPaxelShipmentCost,
+  getLionShipmentCost,
 } from "@/lib/apiClient";
 import type { Province, Regency, District } from "@/types/dataRegulerForm";
 
@@ -217,7 +218,7 @@ export default function ShippingForm({
 
     try {
       // Call both APIs in parallel
-      const [jntResult, paxelResult] = await Promise.allSettled([
+      const [jntResult, paxelResult, lionResult] = await Promise.allSettled([
         getJntExpressShipmentCost({
           weight: formData.weight,
           sendSiteCode: selectedOriginRegencyName,
@@ -239,6 +240,15 @@ export default function ShippingForm({
           },
           dimension: `${formData.length || 0}x${formData.width || 0}x${formData.height || 0}`,
           service_type: "SAMEDAY",
+        }),
+        getLionShipmentCost({
+          weight: formData.weight,
+          origin: `${selectedOriginDistrictName}, ${selectedOriginRegencyName}`,
+          destination: `${selectedDestDistrictName}, ${selectedDestRegencyName}`,
+          commodity: "gen",
+          length: formData.length || 10,
+          width: formData.width || 10,
+          height: formData.height || 10,
         }),
       ]);
 
@@ -267,6 +277,7 @@ export default function ShippingForm({
         data: {
           jnt: jntResult.status === "fulfilled" ? jntResult.value : null,
           paxel: paxelResult.status === "fulfilled" ? paxelResult.value : null,
+          lion: lionResult.status === "fulfilled" ? lionResult.value : null,
         },
       };
 

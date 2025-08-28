@@ -65,11 +65,23 @@ type PaxelApiResult = {
   shipping_costs_with_discount: Array<unknown>;
 };
 
+type LionApiResult = {
+  status: string;
+  data?: {
+    shipping_cost?: number;
+    estimated_days?: number;
+    service_type?: string;
+    product?: string;
+    message?: string;
+  };
+};
+
 type CombinedApiResult = {
   status: string;
   data: {
     jnt: JntApiResult | null;
     paxel: PaxelApiResult | null;
+    lion: LionApiResult | null;
   };
 };
 
@@ -160,6 +172,29 @@ export default function ShippingResults({
         }
       }
 
+      // Process Lion results
+      if (combinedData.lion && combinedData.lion.status === "success") {
+        const lionData = combinedData.lion.data;
+        if (lionData?.shipping_cost && lionData.shipping_cost > 0) {
+          const shippingCost = lionData.shipping_cost;
+          const estimatedDays = lionData.estimated_days || 5;
+          const productName = lionData.product || "REGPACK";
+
+          console.log("🔍 Lion data received:", lionData);
+
+          options.push({
+            id: "lion-regular",
+            name: `Lion Parcel ${productName}`,
+            logo: "/images/lion.png",
+            price: `Rp${shippingCost.toLocaleString("id-ID")}`,
+            duration: `${estimatedDays}-${estimatedDays + 2} Hari`,
+            available: true,
+            recommended: false,
+            tags: [{ label: "Reliable Service", type: "info" }],
+          });
+        }
+      }
+
       console.log("🚀 ShippingResults - Final options created:", options);
       return options;
     }
@@ -210,6 +245,8 @@ export default function ShippingResults({
       let vendor = "JNTEXPRESS";
       if (option.id.startsWith("paxel")) {
         vendor = "PAXEL";
+      } else if (option.id.startsWith("lion")) {
+        vendor = "LION";
       }
 
       // Get discount for the selected vendor
@@ -333,21 +370,12 @@ export default function ShippingResults({
   return (
     <div className="animate-slide-up">
       {/* Display all shipping options */}
-      {shippingOptions.map((option, index) => (
+      {shippingOptions.map((option) => (
         <Card
           key={option.id}
-          className={`mb-4 ${
-            index === 0
-              ? "border-blue-100 bg-gradient-to-r from-blue-50 to-blue-100"
-              : "border-gray-100 bg-white"
-          } overflow-hidden`}
+          className="mb-4 border-gray-100 bg-white overflow-hidden hover:shadow-md transition-shadow"
         >
           <CardContent className="relative pt-3">
-            {index === 0 && (
-              <div className="absolute top-0 right-0 w-24 h-24 opacity-10">
-                <div className="w-full h-full bg-blue-600 rounded-full blur-2xl"></div>
-              </div>
-            )}
             <ShippingCard
               option={option}
               isSelected={selectedOption === option.id}

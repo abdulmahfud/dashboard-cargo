@@ -100,11 +100,23 @@ type PaxelApiResult = {
   shipping_costs_with_discount?: Array<unknown>;
 };
 
+type LionApiResult = {
+  status: string;
+  data?: {
+    shipping_cost?: number;
+    estimated_days?: number;
+    service_type?: string;
+    product?: string;
+    message?: string;
+  };
+};
+
 type CombinedApiResult = {
   status: string;
   data: {
     jnt: JntApiResult | null;
     paxel: PaxelApiResult | null;
+    lion: LionApiResult | null;
   };
 };
 
@@ -154,13 +166,14 @@ export default function CalculationResults({
   const shippingOptions: ShippingOption[] = useMemo(() => {
     const apiResult = result as ApiResult;
 
-    // Handle combined results from both APIs
+    // Handle combined results from all APIs
     if (
       apiResult &&
       apiResult.status === "success" &&
       apiResult.data &&
       "jnt" in apiResult.data &&
-      "paxel" in apiResult.data
+      "paxel" in apiResult.data &&
+      "lion" in apiResult.data
     ) {
       const combinedData = apiResult.data as CombinedApiResult["data"];
       const options: ShippingOption[] = [];
@@ -260,6 +273,32 @@ export default function CalculationResults({
               tags: [{ label: "Fast Delivery", type: "success" as const }],
             });
           }
+        }
+      }
+
+      // Process Lion results
+      if (combinedData.lion && combinedData.lion.status === "success") {
+        const lionData = combinedData.lion.data;
+        if (lionData?.shipping_cost && lionData.shipping_cost > 0) {
+          const shippingCost = lionData.shipping_cost;
+          const estimatedDays = lionData.estimated_days || 5;
+          const productName = lionData.product || "REGPACK";
+
+          console.log("🔍 Lion data received:", lionData);
+
+          options.push({
+            id: "lion-regular",
+            name: `Lion Parcel ${productName}`,
+            logo: "/images/lion.png",
+            price: `Rp${shippingCost.toLocaleString("id-ID")}`,
+            duration: `${estimatedDays}-${estimatedDays + 2} Hari`,
+            available: true,
+            recommended: false,
+            tags: [
+              { label: "Pengiriman Terjangkau", type: "success" as const },
+              { label: productName, type: "info" as const },
+            ],
+          });
         }
       }
 
@@ -442,6 +481,8 @@ export default function CalculationResults({
       let vendor = "JNTEXPRESS";
       if (optionId.startsWith("paxel")) {
         vendor = "PAXEL";
+      } else if (optionId.startsWith("lion")) {
+        vendor = "LION";
       }
 
       // Get discount for the selected vendor
@@ -548,7 +589,11 @@ export default function CalculationResults({
 
     // Build order data that will be used after payment
     const shippingData: Record<string, unknown> = {
-      vendor: selectedOption?.startsWith("paxel") ? "paxel" : "jntexpress", // Determine vendor from selected option
+      vendor: selectedOption?.startsWith("paxel")
+        ? "paxel"
+        : selectedOption?.startsWith("lion")
+          ? "lion"
+          : "jntexpress", // Determine vendor from selected option
       service_code: "1", // Default service code
       expresstype: "1",
       servicetype: formData.formData.deliveryType === "pickup" ? "1" : "6",
@@ -583,6 +628,9 @@ export default function CalculationResults({
       shippingData.service_code = selectedOption?.includes("same-day")
         ? "SAMEDAY"
         : "REGULER";
+    } else if (selectedOption?.startsWith("lion")) {
+      shippingData.vendor = "lion";
+      shippingData.service_code = "REGULER";
     }
 
     // Add sender/receiver data

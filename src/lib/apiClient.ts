@@ -246,6 +246,78 @@ export const getPaxelShipmentCost = async ({
   return res.data;
 };
 
+// ✅ Get Lion Parcel shipment cost
+export const getLionShipmentCost = async ({
+  weight,
+  origin,
+  destination,
+  commodity,
+  length,
+  width,
+  height,
+}: {
+  weight: string | number;
+  origin: string;
+  destination: string;
+  commodity?: string;
+  length?: string | number;
+  width?: string | number;
+  height?: string | number;
+}) => {
+  // Build query parameters for GET request
+  // Note: Lion Parcel expects format "district, city" (not "city, province")
+
+  // Clean and format the origin and destination strings
+  // Lion Parcel expects format: "KEBON+JERUK, JAKARTA+BARAT" (with + for spaces, comma for separator)
+  const cleanOrigin = origin
+    .trim()
+    .replace(/\s*,\s*/g, ", ") // Normalize comma spacing
+    .replace(/\s+/g, "+") // Replace spaces with + for Lion Parcel format
+    .replace(/,\+/g, ", "); // Fix: comma should not be followed by +
+
+  const cleanDestination = destination
+    .trim()
+    .replace(/\s*,\s*/g, ", ") // Normalize comma spacing
+    .replace(/\s+/g, "+") // Replace spaces with + for Lion Parcel format
+    .replace(/,\+/g, ", "); // Fix: comma should not be followed by +
+
+  // Debug logging
+  console.log("🔍 Lion Parcel format conversion:", {
+    originalOrigin: origin,
+    cleanedOrigin: cleanOrigin,
+    originalDestination: destination,
+    cleanedDestination: cleanDestination,
+  });
+
+  // Convert weight from grams to kg for Lion Parcel API
+  const weightInKg = Number(weight) / 1000;
+
+  // Build query string manually with Lion Parcel format
+  const queryParts = [
+    `weight=${weightInKg.toFixed(2)}`, // Convert to kg with 2 decimal places
+    `origin=${cleanOrigin}`, // No encodeURIComponent needed, Lion Parcel format
+    `destination=${cleanDestination}`, // No encodeURIComponent needed, Lion Parcel format
+    `commodity=${commodity || "gen"}`,
+    ...(length ? [`length=${String(length)}`] : []),
+    ...(width ? [`width=${String(width)}`] : []),
+    ...(height ? [`height=${String(height)}`] : []),
+  ];
+
+  const queryString = queryParts.join("&");
+
+  console.log(
+    "🚀 Lion API request URL:",
+    `/admin/expedition/lion/shipment_cost?${queryString}`
+  );
+
+  const res = await apiClient.get(
+    `/admin/expedition/lion/shipment_cost?${queryString}`
+  );
+
+  console.log("🚀 Lion API response:", res.data);
+  return res.data;
+};
+
 // ✅ Receiver CRUD operations
 export const getReceiversData = async (
   search?: string,

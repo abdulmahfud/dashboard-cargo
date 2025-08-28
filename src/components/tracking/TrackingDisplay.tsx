@@ -8,6 +8,7 @@ import { AddressesCard } from "./AddressesCard";
 import { TrackingHistoryCard } from "./TrackingHistoryCard";
 import { JntTrackingContent } from "./vendors/JntTrackingContent";
 import { PaxelTrackingContent } from "./vendors/PaxelTrackingContent";
+import { LionTrackingContent } from "./vendors/LionTrackingContent";
 
 interface TrackingDisplayProps {
   result: StandardizedTrackingResponse;
@@ -16,10 +17,12 @@ interface TrackingDisplayProps {
 export const TrackingDisplay: React.FC<TrackingDisplayProps> = ({ result }) => {
   const renderVendorSpecificContent = () => {
     switch (result.vendor.toLowerCase()) {
-      case 'jntexpress':
+      case "jntexpress":
         return <JntTrackingContent data={result.tracking_data} />;
-      case 'paxel':
+      case "paxel":
         return <PaxelTrackingContent data={result.tracking_data} />;
+      case "lion":
+        return <LionTrackingContent result={result} />;
       default:
         return null;
     }

@@ -45,6 +45,7 @@ import {
   getDistricts,
   getJntExpressShipmentCost,
   getPaxelShipmentCost,
+  getLionShipmentCost,
 } from "@/lib/apiClient";
 import type {
   Shipper,
@@ -560,19 +561,64 @@ export default function RegularPackageForm({
         return;
       }
 
-      // Call both APIs in parallel
-      const [jntResult, paxelResult] = await Promise.allSettled([
+      // Prepare Lion Parcel payload
+      // Lion Parcel expects format: "district, city" (not "city, province")
+
+      // Clean and format location strings to avoid encoding issues
+      // Lion Parcel expects format: "district, city" with proper spacing
+      const cleanOrigin =
+        `${selectedBusiness?.district || ""}, ${selectedBusiness?.regency || ""}`.trim();
+      const cleanDestination =
+        `${formData.district}, ${formData.regency}`.trim();
+
+      // Log the payload for debugging
+      console.log("🚀 Lion Parcel payload:", {
+        weight,
+        origin: cleanOrigin,
+        destination: cleanDestination,
+        commodity: "gen",
+        length: formData.length,
+        width: formData.width,
+        height: formData.height,
+      });
+
+      const lionPayload = {
+        weight,
+        origin: cleanOrigin,
+        destination: cleanDestination,
+        commodity: "gen",
+        length: formData.length,
+        width: formData.width,
+        height: formData.height,
+      };
+
+      // For saved recipients, we need to get the actual location names for Lion
+      if (receiverId) {
+        const selectedRecipient = businessRecipients.find(
+          (r) => String(r.id) === receiverId
+        );
+        if (selectedRecipient) {
+          const cleanRecipientDestination =
+            `${selectedRecipient.district || ""}, ${selectedRecipient.regency || ""}`.trim();
+          lionPayload.destination = cleanRecipientDestination;
+        }
+      }
+
+      // Call all three APIs in parallel
+      const [jntResult, paxelResult, lionResult] = await Promise.allSettled([
         getJntExpressShipmentCost({
           weight,
           sendSiteCode,
           destAreaCode,
         }),
         getPaxelShipmentCost(paxelPayload),
+        getLionShipmentCost(lionPayload),
       ]);
 
       // Debug logging
       console.log("🔍 JNT Result:", jntResult);
       console.log("🔍 Paxel Result:", paxelResult);
+      console.log("🔍 Lion Result:", lionResult);
 
       // Handle individual API errors
       if (jntResult.status === "rejected") {
@@ -581,13 +627,17 @@ export default function RegularPackageForm({
       if (paxelResult.status === "rejected") {
         console.error("❌ Paxel API failed:", paxelResult.reason);
       }
+      if (lionResult.status === "rejected") {
+        console.error("❌ Lion API failed:", lionResult.reason);
+      }
 
-      // Combine results from both APIs
+      // Combine results from all APIs
       const combinedResult = {
         status: "success",
         data: {
           jnt: jntResult.status === "fulfilled" ? jntResult.value : null,
           paxel: paxelResult.status === "fulfilled" ? paxelResult.value : null,
+          lion: lionResult.status === "fulfilled" ? lionResult.value : null,
         },
       };
 
