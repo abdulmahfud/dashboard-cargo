@@ -9,7 +9,6 @@ import {
   Package,
   MapPin,
   User,
-  Calendar,
   Clock,
   Truck,
   CheckCircle2,
@@ -26,7 +25,7 @@ interface LionTrackingContentProps {
 export function LionTrackingContent({ result }: LionTrackingContentProps) {
   const [showRawData, setShowRawData] = useState(false);
 
-  if (!result.tracking_info) {
+  if (!result.tracking_data) {
     return (
       <Card>
         <CardHeader>
@@ -47,8 +46,8 @@ export function LionTrackingContent({ result }: LionTrackingContentProps) {
     );
   }
 
-  const trackingInfo = result.tracking_info;
-  const history = trackingInfo.tracking_history || [];
+  const trackingData = result.tracking_data;
+  const history = trackingData.tracking_history || [];
 
   // Status color mapping
   const getStatusColor = (status: string) => {
@@ -129,14 +128,22 @@ export function LionTrackingContent({ result }: LionTrackingContentProps) {
                 Status Saat Ini:
               </span>
               <Badge
-                className={`${getStatusColor(trackingInfo.current_status)} border`}
+                className={`${getStatusColor(trackingData.latest_status || "belum_proses")} border`}
               >
-                {getStatusIcon(trackingInfo.current_status)}
-                <span className="ml-1">{trackingInfo.status_description}</span>
+                {getStatusIcon(trackingData.latest_status || "belum_proses")}
+                <span className="ml-1">
+                  {trackingData.latest_status === "sampai_tujuan"
+                    ? "Paket Sampai Tujuan"
+                    : trackingData.latest_status === "proses_pengiriman"
+                      ? "Sedang Dikirim"
+                      : trackingData.latest_status === "belum_proses"
+                        ? "Belum Diproses"
+                        : "Status Tidak Diketahui"}
+                </span>
               </Badge>
             </div>
             <Badge variant="outline" className="text-xs">
-              {trackingInfo.current_status_code}
+              {trackingData.latest_status || "UNKNOWN"}
             </Badge>
           </div>
 
@@ -145,49 +152,48 @@ export function LionTrackingContent({ result }: LionTrackingContentProps) {
             <div className="flex items-center gap-2">
               <Package className="h-4 w-4 text-gray-500" />
               <span className="text-sm">
-                <span className="font-medium">AWB:</span> {trackingInfo.awb_no}
+                <span className="font-medium">AWB:</span>{" "}
+                {trackingData.awb_no || "N/A"}
               </span>
             </div>
-            {trackingInfo.reference_no && (
+            {result.order_info.reference_no && (
               <div className="flex items-center gap-2">
                 <Info className="h-4 w-4 text-gray-500" />
                 <span className="text-sm">
                   <span className="font-medium">Reference:</span>{" "}
-                  {trackingInfo.reference_no}
+                  {result.order_info.reference_no}
                 </span>
               </div>
             )}
           </div>
 
           {/* Shipment Details */}
-          {trackingInfo.shipment_details && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
-              <div className="text-center">
-                <div className="text-lg font-semibold">
-                  {trackingInfo.shipment_details.chargeable_weight} kg
-                </div>
-                <div className="text-xs text-gray-600">Berat</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+            <div className="text-center">
+              <div className="text-lg font-semibold">
+                {trackingData.package_info.weight || 0} kg
               </div>
-              <div className="text-center">
-                <div className="text-lg font-semibold">
-                  {trackingInfo.shipment_details.pieces}
-                </div>
-                <div className="text-xs text-gray-600">Jumlah</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-semibold">
-                  {trackingInfo.shipment_details.product_type}
-                </div>
-                <div className="text-xs text-gray-600">Layanan</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-semibold">
-                  {trackingInfo.shipment_details.shipment_id}
-                </div>
-                <div className="text-xs text-gray-600">Shipment ID</div>
-              </div>
+              <div className="text-xs text-gray-600">Berat</div>
             </div>
-          )}
+            <div className="text-center">
+              <div className="text-lg font-semibold">
+                {trackingData.package_info.quantity || 0}
+              </div>
+              <div className="text-xs text-gray-600">Jumlah</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-semibold">
+                {trackingData.package_info.service_code || "N/A"}
+              </div>
+              <div className="text-xs text-gray-600">Layanan</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-semibold">
+                {trackingData.invoice_number || "N/A"}
+              </div>
+              <div className="text-xs text-gray-600">Invoice</div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -203,12 +209,13 @@ export function LionTrackingContent({ result }: LionTrackingContentProps) {
           <CardContent>
             <div className="space-y-2">
               <div className="font-medium">
-                {trackingInfo.sender?.name || "N/A"}
+                {trackingData.addresses.sender.name || "N/A"}
               </div>
               <div className="text-sm text-gray-600 flex items-start gap-2">
                 <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <span>
-                  {trackingInfo.sender?.address || "Alamat tidak tersedia"}
+                  {trackingData.addresses.sender.address ||
+                    "Alamat tidak tersedia"}
                 </span>
               </div>
             </div>
@@ -225,12 +232,13 @@ export function LionTrackingContent({ result }: LionTrackingContentProps) {
           <CardContent>
             <div className="space-y-2">
               <div className="font-medium">
-                {trackingInfo.receiver?.name || "N/A"}
+                {trackingData.addresses.receiver.name || "N/A"}
               </div>
               <div className="text-sm text-gray-600 flex items-start gap-2">
                 <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <span>
-                  {trackingInfo.receiver?.address || "Alamat tidak tersedia"}
+                  {trackingData.addresses.receiver.address ||
+                    "Alamat tidak tersedia"}
                 </span>
               </div>
             </div>
@@ -250,7 +258,7 @@ export function LionTrackingContent({ result }: LionTrackingContentProps) {
           {history.length > 0 ? (
             <div className="space-y-4">
               {history.map((entry, index) => (
-                <div key={entry.id} className="relative">
+                <div key={`${entry.datetime}-${index}`} className="relative">
                   {/* Timeline line */}
                   {index < history.length - 1 && (
                     <div className="absolute left-6 top-8 w-0.5 h-8 bg-gray-200" />
@@ -259,43 +267,36 @@ export function LionTrackingContent({ result }: LionTrackingContentProps) {
                   <div className="flex items-start gap-4">
                     {/* Status icon */}
                     <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center ${getStatusColor(entry.status)} border-2 border-white shadow-sm`}
+                      className={`w-12 h-12 rounded-full flex items-center justify-center ${getStatusColor(entry.status || "belum_proses")} border-2 border-white shadow-sm`}
                     >
-                      {getStatusIcon(entry.status)}
+                      {getStatusIcon(entry.status || "belum_proses")}
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge
-                          className={`${getStatusColor(entry.status)} border text-xs`}
+                          className={`${getStatusColor(entry.status || "belum_proses")} border text-xs`}
                         >
-                          {entry.status_code}
+                          {entry.status_code || "UNKNOWN"}
                         </Badge>
                         <span className="text-sm text-gray-500">
-                          {formatTimestamp(entry.timestamp)}
+                          {formatTimestamp(entry.datetime)}
                         </span>
                       </div>
 
                       <div className="font-medium text-gray-900 mb-1">
-                        {entry.description}
+                        {entry.note || "Status update"}
                       </div>
 
-                      {entry.remarks && (
-                        <div className="text-sm text-gray-600 mb-2">
-                          {entry.remarks}
-                        </div>
-                      )}
-
                       <div className="flex items-center gap-4 text-xs text-gray-500">
-                        {entry.location && (
+                        {entry.city && (
                           <span className="flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
-                            {entry.location}
+                            {entry.city}
                           </span>
                         )}
-                        {entry.city && <span>{entry.city}</span>}
-                        {entry.updated_by && <span>by {entry.updated_by}</span>}
+                        {entry.store_name && <span>by {entry.store_name}</span>}
                       </div>
                     </div>
                   </div>
@@ -322,12 +323,14 @@ export function LionTrackingContent({ result }: LionTrackingContentProps) {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Vendor:</span>
-              <Badge variant="outline">{trackingInfo.vendor_name}</Badge>
+              <Badge variant="outline">{result.vendor}</Badge>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Last Update:</span>
               <span className="text-sm text-gray-600">
-                {formatTimestamp(trackingInfo.last_update)}
+                {formatTimestamp(
+                  trackingData.latest_status ? new Date().toISOString() : null
+                )}
               </span>
             </div>
 
