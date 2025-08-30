@@ -76,12 +76,23 @@ type LionApiResult = {
   };
 };
 
+type SapApiResult = {
+  status: string;
+  data?: {
+    shipping_cost?: number;
+    estimated_days?: number;
+    service_type?: string;
+    message?: string;
+  };
+};
+
 type CombinedApiResult = {
   status: string;
   data: {
     jnt: JntApiResult | null;
     paxel: PaxelApiResult | null;
     lion: LionApiResult | null;
+    sap: SapApiResult | null;
   };
 };
 
@@ -195,6 +206,29 @@ export default function ShippingResults({
         }
       }
 
+      // Process SAP results
+      if (combinedData.sap && combinedData.sap.status === "success") {
+        const sapData = combinedData.sap.data;
+        if (sapData?.shipping_cost && sapData.shipping_cost > 0) {
+          const shippingCost = sapData.shipping_cost;
+          const estimatedDays = sapData.estimated_days || 3;
+          const serviceType = sapData.service_type || "REGULER";
+
+          console.log("🔍 SAP data received:", sapData);
+
+          options.push({
+            id: "sap-regular",
+            name: `SAP ${serviceType}`,
+            logo: "/images/sap-new.png",
+            price: `Rp${shippingCost.toLocaleString("id-ID")}`,
+            duration: `${estimatedDays}-${estimatedDays + 2} Hari`,
+            available: true,
+            recommended: false,
+            tags: [{ label: "Pengiriman Cepat", type: "info" }],
+          });
+        }
+      }
+
       console.log("🚀 ShippingResults - Final options created:", options);
       return options;
     }
@@ -247,6 +281,8 @@ export default function ShippingResults({
         vendor = "PAXEL";
       } else if (option.id.startsWith("lion")) {
         vendor = "LION";
+      } else if (option.id.startsWith("sap")) {
+        vendor = "SAP";
       }
 
       // Get discount for the selected vendor

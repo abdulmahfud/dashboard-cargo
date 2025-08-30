@@ -111,12 +111,23 @@ type LionApiResult = {
   };
 };
 
+type SapApiResult = {
+  status: string;
+  data?: {
+    shipping_cost?: number;
+    estimated_days?: number;
+    service_type?: string;
+    message?: string;
+  };
+};
+
 type CombinedApiResult = {
   status: string;
   data: {
     jnt: JntApiResult | null;
     paxel: PaxelApiResult | null;
     lion: LionApiResult | null;
+    sap: SapApiResult | null;
   };
 };
 
@@ -297,6 +308,32 @@ export default function CalculationResults({
             tags: [
               { label: "Pengiriman Terjangkau", type: "success" as const },
               { label: productName, type: "info" as const },
+            ],
+          });
+        }
+      }
+
+      // Process SAP results
+      if (combinedData.sap && combinedData.sap.status === "success") {
+        const sapData = combinedData.sap.data;
+        if (sapData?.shipping_cost && sapData.shipping_cost > 0) {
+          const shippingCost = sapData.shipping_cost;
+          const estimatedDays = sapData.estimated_days || 3;
+          const serviceType = sapData.service_type || "REGULER";
+
+          console.log("🔍 SAP data received:", sapData);
+
+          options.push({
+            id: "sap-regular",
+            name: `SAP ${serviceType}`,
+            logo: "/images/sap-new.png",
+            price: `Rp${shippingCost.toLocaleString("id-ID")}`,
+            duration: `${estimatedDays}-${estimatedDays + 2} Hari`,
+            available: true,
+            recommended: false,
+            tags: [
+              { label: "Pengiriman Cepat", type: "success" as const },
+              { label: serviceType, type: "info" as const },
             ],
           });
         }
@@ -483,6 +520,8 @@ export default function CalculationResults({
         vendor = "PAXEL";
       } else if (optionId.startsWith("lion")) {
         vendor = "LION";
+      } else if (optionId.startsWith("sap")) {
+        vendor = "SAP";
       }
 
       // Get discount for the selected vendor
@@ -593,7 +632,9 @@ export default function CalculationResults({
         ? "paxel"
         : selectedOption?.startsWith("lion")
           ? "lion"
-          : "jntexpress", // Determine vendor from selected option
+          : selectedOption?.startsWith("sap")
+            ? "sap"
+            : "jntexpress", // Determine vendor from selected option
       service_code: "1", // Default service code
       expresstype: "1",
       servicetype: formData.formData.deliveryType === "pickup" ? "1" : "6",
@@ -630,6 +671,9 @@ export default function CalculationResults({
         : "REGULER";
     } else if (selectedOption?.startsWith("lion")) {
       shippingData.vendor = "lion";
+      shippingData.service_code = "REGULER";
+    } else if (selectedOption?.startsWith("sap")) {
+      shippingData.vendor = "sap";
       shippingData.service_code = "REGULER";
     }
 

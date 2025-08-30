@@ -318,6 +318,60 @@ export const getLionShipmentCost = async ({
   return res.data;
 };
 
+// ✅ Get SAP shipment cost
+export const getSapShipmentCost = async ({
+  weight,
+  origin,
+  destination,
+  customer_code,
+  packing_type_code,
+  volumetric,
+  item_value,
+  origin_district_code,
+  insurance_type_code,
+  shipment_type_code,
+  shipment_content_code,
+}: {
+  weight: string | number;
+  origin: string;
+  destination: string;
+  customer_code: string;
+  packing_type_code: string;
+  volumetric: string;
+  item_value: string | number;
+  origin_district_code?: string;
+  insurance_type_code?: string;
+  shipment_type_code?: string;
+  shipment_content_code?: string;
+}) => {
+  // Convert weight from grams to kg for SAP API
+  const weightInKg = Number(weight) / 1000;
+
+  const requestPayload = {
+    origin,
+    destination,
+    weight: weightInKg.toFixed(2),
+    customer_code,
+    packing_type_code,
+    volumetric,
+    item_value,
+    ...(origin_district_code && { origin_district_code }),
+    ...(insurance_type_code && { insurance_type_code }),
+    ...(shipment_type_code && { shipment_type_code }),
+    ...(shipment_content_code && { shipment_content_code }),
+  };
+
+  console.log("🚀 SAP API request payload:", requestPayload);
+
+  const res = await apiClient.post(
+    "/admin/expedition/sap/shipment_cost",
+    requestPayload
+  );
+
+  console.log("🚀 SAP API response:", res.data);
+  return res.data;
+};
+
 // ✅ Receiver CRUD operations
 export const getReceiversData = async (
   search?: string,

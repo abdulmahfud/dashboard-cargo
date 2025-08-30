@@ -46,6 +46,7 @@ import {
   getJntExpressShipmentCost,
   getPaxelShipmentCost,
   getLionShipmentCost,
+  getSapShipmentCost,
 } from "@/lib/apiClient";
 import type {
   Shipper,
@@ -604,21 +605,47 @@ export default function RegularPackageForm({
         }
       }
 
-      // Call all three APIs in parallel
-      const [jntResult, paxelResult, lionResult] = await Promise.allSettled([
-        getJntExpressShipmentCost({
-          weight,
-          sendSiteCode,
-          destAreaCode,
-        }),
-        getPaxelShipmentCost(paxelPayload),
-        getLionShipmentCost(lionPayload),
-      ]);
+      // Prepare SAP payload
+      const sapPayload = {
+        weight,
+        origin: selectedBusiness?.regency || "",
+        destination: formData.regency,
+        customer_code: "DEFAULT",
+        packing_type_code: "ACH02",
+        volumetric: `${formData.length}x${formData.width}x${formData.height}`,
+        item_value: formData.itemValue || "100000",
+      };
+
+      // For saved recipients, we need to get the actual location names for SAP
+      if (receiverId) {
+        const selectedRecipient = businessRecipients.find(
+          (r) => String(r.id) === receiverId
+        );
+        if (selectedRecipient) {
+          sapPayload.destination = selectedRecipient.regency || "";
+        }
+      }
+
+      console.log("🚀 SAP payload:", sapPayload);
+
+      // Call all four APIs in parallel
+      const [jntResult, paxelResult, lionResult, sapResult] =
+        await Promise.allSettled([
+          getJntExpressShipmentCost({
+            weight,
+            sendSiteCode,
+            destAreaCode,
+          }),
+          getPaxelShipmentCost(paxelPayload),
+          getLionShipmentCost(lionPayload),
+          getSapShipmentCost(sapPayload),
+        ]);
 
       // Debug logging
       console.log("🔍 JNT Result:", jntResult);
       console.log("🔍 Paxel Result:", paxelResult);
       console.log("🔍 Lion Result:", lionResult);
+      console.log("🔍 SAP Result:", sapResult);
 
       // Handle individual API errors
       if (jntResult.status === "rejected") {
@@ -630,6 +657,9 @@ export default function RegularPackageForm({
       if (lionResult.status === "rejected") {
         console.error("❌ Lion API failed:", lionResult.reason);
       }
+      if (sapResult.status === "rejected") {
+        console.error("❌ SAP API failed:", sapResult.reason);
+      }
 
       // Combine results from all APIs
       const combinedResult = {
@@ -638,6 +668,7 @@ export default function RegularPackageForm({
           jnt: jntResult.status === "fulfilled" ? jntResult.value : null,
           paxel: paxelResult.status === "fulfilled" ? paxelResult.value : null,
           lion: lionResult.status === "fulfilled" ? lionResult.value : null,
+          sap: sapResult.status === "fulfilled" ? sapResult.value : null,
         },
       };
 

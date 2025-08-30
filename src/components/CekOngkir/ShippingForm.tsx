@@ -11,15 +11,13 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import React, { useState, useEffect } from "react";
+import { getProvinces, getRegencies, getDistricts } from "@/lib/apiClient";
+import type { Province, Regency, District } from "@/types/dataRegulerForm";
 import {
-  getProvinces,
-  getRegencies,
-  getDistricts,
   getJntExpressShipmentCost,
   getPaxelShipmentCost,
   getLionShipmentCost,
 } from "@/lib/apiClient";
-import type { Province, Regency, District } from "@/types/dataRegulerForm";
 
 interface ShippingFormProps {
   onResult?: (result: Record<string, unknown>) => void;
@@ -271,7 +269,7 @@ export default function ShippingForm({
         service_type: "SAMEDAY",
       });
 
-      // Combine results from both APIs
+      // Combine results from all APIs with better error handling
       const combinedResult = {
         status: "success",
         data: {
@@ -280,6 +278,22 @@ export default function ShippingForm({
           lion: lionResult.status === "fulfilled" ? lionResult.value : null,
         },
       };
+
+      // Log individual results for debugging
+      console.log("🔍 API Results:", {
+        jnt:
+          jntResult.status === "fulfilled"
+            ? "Success"
+            : `Failed: ${jntResult.reason}`,
+        paxel:
+          paxelResult.status === "fulfilled"
+            ? "Success"
+            : `Failed: ${paxelResult.reason}`,
+        lion:
+          lionResult.status === "fulfilled"
+            ? "Success"
+            : `Failed: ${lionResult.reason}`,
+      });
 
       onResult?.(combinedResult);
     } catch (err) {
