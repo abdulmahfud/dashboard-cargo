@@ -69,6 +69,20 @@ export default function CancelOrderDialog({
           cancellation_reason: remark.trim() || "Canceled by E-Commerce",
           order_id: order.id,
         };
+      } else if (vendorLower === "idexpress") {
+        // ID Express cancellation
+        url = "/admin/expedition/idexpress/cancel";
+        requestData = {
+          orderid: order.awb_no || order.reference_no,
+          remark: remark.trim() || "Canceled by E-Commerce",
+        };
+      } else if (vendorLower === "gosend") {
+        // GoSend cancellation
+        url = "/admin/expedition/gosend/cancel";
+        requestData = {
+          orderid: order.awb_no || order.reference_no,
+          remark: remark.trim() || "Canceled by E-Commerce",
+        };
       } else {
         throw new Error("Vendor tidak didukung untuk cancel");
       }

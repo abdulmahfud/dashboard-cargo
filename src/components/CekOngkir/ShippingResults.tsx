@@ -86,6 +86,28 @@ type SapApiResult = {
   };
 };
 
+type IdExpressApiResult = {
+  status: string;
+  data?: {
+    shipping_cost?: number;
+    estimated_days?: number;
+    service_type?: string;
+    message?: string;
+  };
+};
+
+type GoSendApiResult = {
+  status: string;
+  data?: {
+    shipping_cost?: number;
+    estimated_days?: number;
+    service_type?: string;
+    message?: string;
+    distance?: number;
+    duration?: number;
+  };
+};
+
 type CombinedApiResult = {
   status: string;
   data: {
@@ -93,6 +115,8 @@ type CombinedApiResult = {
     paxel: PaxelApiResult | null;
     lion: LionApiResult | null;
     sap: SapApiResult | null;
+    idexpress: IdExpressApiResult | null;
+    gosend: GoSendApiResult | null;
   };
 };
 
@@ -229,6 +253,58 @@ export default function ShippingResults({
         }
       }
 
+      // Process ID Express results
+      if (combinedData.idexpress && combinedData.idexpress.status === "success") {
+        const idExpressData = combinedData.idexpress.data;
+        if (idExpressData?.shipping_cost && idExpressData.shipping_cost > 0) {
+          const shippingCost = idExpressData.shipping_cost;
+          const estimatedDays = idExpressData.estimated_days || 2;
+          const serviceType = idExpressData.service_type || "Regular";
+
+          console.log("🔍 ID Express data received:", idExpressData);
+
+          options.push({
+            id: "idexpress-regular",
+            name: `ID Express ${serviceType}`,
+            logo: "/images/idx.png",
+            price: `Rp${shippingCost.toLocaleString("id-ID")}`,
+            duration: `${estimatedDays}-${estimatedDays + 1} Hari`,
+            available: true,
+            recommended: false,
+            tags: [{ label: "Express Delivery", type: "info" }],
+          });
+        }
+      }
+
+      // Process GoSend results
+      if (combinedData.gosend && combinedData.gosend.status === "success") {
+        const gosendData = combinedData.gosend.data;
+        if (gosendData?.shipping_cost && gosendData.shipping_cost > 0) {
+          const shippingCost = gosendData.shipping_cost;
+          const estimatedDays = gosendData.estimated_days || 1; // GoSend is usually same-day
+          const serviceType = gosendData.service_type || "Instant";
+          const distance = gosendData.distance ? `${gosendData.distance}km` : "";
+          const duration = gosendData.duration ? `${gosendData.duration} min` : "";
+
+          console.log("🔍 GoSend data received:", gosendData);
+
+          options.push({
+            id: "gosend-instant",
+            name: `GoSend ${serviceType}`,
+            logo: "/images/gosend.png", // You'll need to add this logo
+            price: `Rp${shippingCost.toLocaleString("id-ID")}`,
+            duration: estimatedDays === 1 ? "Hari ini" : `${estimatedDays} Hari`,
+            available: true,
+            recommended: serviceType === "Instant",
+            tags: [
+              { label: "Same Day", type: "info" },
+              ...(distance ? [{ label: distance, type: "info" as const }] : []),
+              ...(duration ? [{ label: duration, type: "info" as const }] : []),
+            ],
+          });
+        }
+      }
+
       console.log("🚀 ShippingResults - Final options created:", options);
       return options;
     }
@@ -283,6 +359,10 @@ export default function ShippingResults({
         vendor = "LION";
       } else if (option.id.startsWith("sap")) {
         vendor = "SAP";
+      } else if (option.id.startsWith("idexpress")) {
+        vendor = "IDEXPRESS";
+      } else if (option.id.startsWith("gosend")) {
+        vendor = "GOSEND";
       }
 
       // Get discount for the selected vendor

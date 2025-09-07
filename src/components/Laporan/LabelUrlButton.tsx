@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { getLabelUrl } from "@/lib/apiClient";
+import { getLabelUrl, getIdExpressLabelUrl } from "@/lib/apiClient";
 import { toast } from "sonner";
 import { FileText, Loader2 } from "lucide-react";
 
@@ -26,21 +26,27 @@ export function LabelUrlButton({
       return;
     }
 
-    // Only show for JNT Express orders
-    if (vendor !== "JNTEXPRESS") {
-      toast.error("Label URL only available for JNT Express orders");
+    // Support for JNT Express and ID Express
+    if (vendor !== "JNTEXPRESS" && vendor !== "IDEXPRESS") {
+      toast.error("Label URL only available for JNT Express and ID Express orders");
       return;
     }
 
     try {
       setIsLoading(true);
-      const response = await getLabelUrl(awbNo);
+      let response;
 
-      if (response.status === "success" && response.data) {
+      if (vendor === "JNTEXPRESS") {
+        response = await getLabelUrl(awbNo);
+      } else if (vendor === "IDEXPRESS") {
+        response = await getIdExpressLabelUrl(awbNo);
+      }
+
+      if (response && response.status === "success" && response.data) {
         setLabelUrl(response.data.label_url);
         toast.success("Label URL retrieved successfully!");
       } else {
-        toast.error(response.message || "Failed to get label URL");
+        toast.error(response?.message || "Failed to get label URL");
       }
     } catch (error) {
       console.error("Error getting label URL:", error);
@@ -58,8 +64,8 @@ export function LabelUrlButton({
     }
   };
 
-  // Only show for JNT Express
-  if (vendor !== "JNTEXPRESS") {
+  // Show for JNT Express and ID Express
+  if (vendor !== "JNTEXPRESS" && vendor !== "IDEXPRESS") {
     return null;
   }
 

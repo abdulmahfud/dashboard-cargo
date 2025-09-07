@@ -96,7 +96,7 @@ export interface OrderResponse {
   vendor_response?: VendorResponse;
 }
 
-export type ExpeditionVendor = "jntexpress" | "lion" | "sap";
+export type ExpeditionVendor = "jntexpress" | "lion" | "sap" | "idexpress";
 
 export interface OrderSubmissionData {
   vendor: ExpeditionVendor;
@@ -139,4 +139,3 @@ export interface OrderSubmissionData {
   isInsured: boolean;
   customCODValue?: string;
 }
- 

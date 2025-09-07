@@ -15,7 +15,7 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
-  refreshUser: async () => {},
+  refreshUser: async () => { },
   isVerified: false,
   hasPermission: () => false,
 });

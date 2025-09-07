@@ -85,4 +85,8 @@ export const VENDOR_MAPPING: Record<string, string> = {
   NINJA: "Ninja Xpress",
   ANTERAJA: "AnterAja - Same Day",
   SAP: "SAP Express",
+  IDEXPRESS: "ID Express",
+  GOSEND: "GoSend",
+  PAXEL: "Paxel",
+  LION: "Lion Parcel",
 };

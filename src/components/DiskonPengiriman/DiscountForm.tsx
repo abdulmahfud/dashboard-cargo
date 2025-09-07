@@ -29,6 +29,7 @@ const VENDORS = [
   { value: "PAXEL", label: "Paxel" },
   { value: "SAP", label: "SAP Express" },
   { value: "LION", label: "Lion Parcel" },
+  { value: "IDEXPRESS", label: "ID Express" },
   { value: "SICEPAT", label: "SiCepat" },
   { value: "TIKI", label: "TIKI" },
   { value: "POS", label: "Pos Indonesia" },

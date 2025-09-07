@@ -9,6 +9,8 @@ import { TrackingHistoryCard } from "./TrackingHistoryCard";
 import { JntTrackingContent } from "./vendors/JntTrackingContent";
 import { PaxelTrackingContent } from "./vendors/PaxelTrackingContent";
 import { LionTrackingContent } from "./vendors/LionTrackingContent";
+import { IdExpressTrackingContent } from "./vendors/IdExpressTrackingContent";
+import { GoSendTrackingContent } from "./vendors/GoSendTrackingContent";
 
 interface TrackingDisplayProps {
   result: StandardizedTrackingResponse;
@@ -23,6 +25,10 @@ export const TrackingDisplay: React.FC<TrackingDisplayProps> = ({ result }) => {
         return <PaxelTrackingContent data={result.tracking_data} />;
       case "lion":
         return <LionTrackingContent result={result} />;
+      case "idexpress":
+        return <IdExpressTrackingContent result={result} />;
+      case "gosend":
+        return <GoSendTrackingContent result={result} />;
       default:
         return null;
     }

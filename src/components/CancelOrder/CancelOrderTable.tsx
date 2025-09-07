@@ -206,7 +206,7 @@ export default function CancelOrderTable() {
       header: "ACTION",
       cell: ({ row }) => {
         const vendorLower = row.original.vendor.toLowerCase();
-        const isCancelableVendor = ["jntexpress", "paxel"].includes(
+        const isCancelableVendor = ["jntexpress", "paxel", "idexpress", "gosend"].includes(
           vendorLower
         );
         return (
@@ -274,9 +274,9 @@ export default function CancelOrderTable() {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   ))}
                 </TableRow>

@@ -412,8 +412,8 @@ export default function CalculationResults({
       if ("error" in result || "message" in result) {
         const errorMessage = String(
           (result as Record<string, unknown>).message ||
-            (result as Record<string, unknown>).error ||
-            "Terjadi kesalahan pada server"
+          (result as Record<string, unknown>).error ||
+          "Terjadi kesalahan pada server"
         );
         return (
           <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -522,6 +522,10 @@ export default function CalculationResults({
         vendor = "LION";
       } else if (optionId.startsWith("sap")) {
         vendor = "SAP";
+      } else if (optionId.startsWith("idexpress")) {
+        vendor = "IDEXPRESS";
+      } else if (optionId.startsWith("gosend")) {
+        vendor = "GOSEND";
       }
 
       // Get discount for the selected vendor
@@ -649,8 +653,8 @@ export default function CalculationResults({
         use_insurance: isInsured,
         insurance: isInsured
           ? Math.round(
-              parseInt(formData.formData.itemValue || "0") * 0.002
-            ).toString()
+            parseInt(formData.formData.itemValue || "0") * 0.002
+          ).toString()
           : "0",
         cod: codValue, // Use calculated COD value
         items: [
@@ -675,6 +679,14 @@ export default function CalculationResults({
     } else if (selectedOption?.startsWith("sap")) {
       shippingData.vendor = "sap";
       shippingData.service_code = "REGULER";
+    } else if (selectedOption?.startsWith("idexpress")) {
+      shippingData.vendor = "idexpress";
+      shippingData.service_code = "REGULER";
+    } else if (selectedOption?.startsWith("gosend")) {
+      shippingData.vendor = "gosend";
+      shippingData.service_code = selectedOption?.includes("instant")
+        ? "INSTANT"
+        : "SAMEDAY";
     }
 
     // Add sender/receiver data
@@ -786,11 +798,10 @@ export default function CalculationResults({
       {shippingOptions.map((option) => (
         <Card
           key={`${option.id}-${selectedOption === option.id ? "selected" : "unselected"}`}
-          className={`cursor-pointer transition-all duration-200 ${
-            selectedOption === option.id
+          className={`cursor-pointer transition-all duration-200 ${selectedOption === option.id
               ? "border-blue-500 bg-blue-50"
               : "border-gray-200 hover:border-gray-300"
-          }`}
+            }`}
           onClick={() => handleShippingSelect(option.id)}
         >
           <CardContent className="p-4">
@@ -808,7 +819,7 @@ export default function CalculationResults({
                   <div className="flex items-center space-x-2">
                     {/* Show discounted price if available and this option is selected */}
                     {selectedOption === option.id &&
-                    discountInfo?.has_discount ? (
+                      discountInfo?.has_discount ? (
                       <div className="flex items-center space-x-2">
                         <span className="text-lg font-bold text-green-600">
                           Rp{" "}
@@ -865,11 +876,10 @@ export default function CalculationResults({
                       {option.tags.map((tag, index) => (
                         <span
                           key={index}
-                          className={`text-xs px-2 py-1 rounded ${
-                            tag.type === "success"
+                          className={`text-xs px-2 py-1 rounded ${tag.type === "success"
                               ? "bg-green-100 text-green-700"
                               : "bg-blue-100 text-blue-700"
-                          }`}
+                            }`}
                         >
                           {tag.label}
                         </span>

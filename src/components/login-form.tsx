@@ -10,7 +10,7 @@ import { ApiService } from "@/lib/ApiService";
 import { setCookie } from "cookies-next";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
-import Link from "next/link"
+import Link from "next/link";
 
 // Check if the environment is production or development
 const isDev = process.env.NODE_ENV === "development";
@@ -47,7 +47,9 @@ export function LoginForm({
         formData.email,
         formData.password
       );
+
       const token = response.data?.token;
+
       if (!token) {
         throw new Error("Token tidak ditemukan di respons");
       }
@@ -60,9 +62,10 @@ export function LoginForm({
         ...(isDev ? {} : { domain: ".bhisakirim.com" }),
       });
 
+      console.log("Token disimpan di cookie");
+
       // Redirect to dashboard or callback URL
       const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
-      // router.push(callbackUrl);
       window.location.href = callbackUrl;
 
       toast.success("Login berhasil!");
