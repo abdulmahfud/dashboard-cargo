@@ -96,16 +96,6 @@ export default function ShippingForm({
     // Payment
     paymentMethod: "non-cod",
     useInsurance: false,
-    // Sender information
-    senderName: "",
-    senderPhone: "",
-    senderEmail: "",
-    senderAddress: "",
-    // Receiver information
-    receiverName: "",
-    receiverPhone: "",
-    receiverEmail: "",
-    receiverAddress: "",
   });
 
   // Origin Province search and fetch
@@ -303,17 +293,11 @@ export default function ShippingForm({
     e.preventDefault();
     if (setIsSearching) setIsSearching(true);
 
-    // Enhanced validation for production
+    // Enhanced validation for production - removed sender/receiver data validation
     const missingFields = [];
     if (!formData.weight) missingFields.push("Berat");
     if (!selectedOriginRegencyName) missingFields.push("Kota Asal");
     if (!selectedDestDistrictName) missingFields.push("Kecamatan Tujuan");
-    if (!formData.senderName) missingFields.push("Nama Pengirim");
-    if (!formData.senderPhone) missingFields.push("No. HP Pengirim");
-    if (!formData.senderEmail) missingFields.push("Email Pengirim");
-    if (!formData.receiverName) missingFields.push("Nama Penerima");
-    if (!formData.receiverPhone) missingFields.push("No. HP Penerima");
-    if (!formData.receiverEmail) missingFields.push("Email Penerima");
 
     if (missingFields.length > 0) {
       onResult?.({
@@ -333,12 +317,12 @@ export default function ShippingForm({
         getPostalCodeForDistrict(selectedDestDistrictName, selectedDestRegencyName, selectedDestProvinceName),
       ]);
 
-      // Create REAL expedition address objects with actual user data
+      // Create expedition address objects with default data since we removed user input fields
       const senderAddress: ExpeditionAddress = {
-        name: formData.senderName.trim(),
-        phone: formData.senderPhone.trim(),
-        email: formData.senderEmail.trim(),
-        address: formData.senderAddress.trim() || `${selectedOriginDistrictName}, ${selectedOriginRegencyName}`,
+        name: "Default Sender",
+        phone: "+6281234567890",
+        email: "sender@example.com",
+        address: `${selectedOriginDistrictName}, ${selectedOriginRegencyName}`,
         province: selectedOriginProvinceName,
         city: selectedOriginRegencyName,
         district: selectedOriginDistrictName,
@@ -348,10 +332,10 @@ export default function ShippingForm({
       };
 
       const receiverAddress: ExpeditionAddress = {
-        name: formData.receiverName.trim(),
-        phone: formData.receiverPhone.trim(),
-        email: formData.receiverEmail.trim(),
-        address: formData.receiverAddress.trim() || `${selectedDestDistrictName}, ${selectedDestRegencyName}`,
+        name: "Default Receiver",
+        phone: "+6289876543210",
+        email: "receiver@example.com",
+        address: `${selectedDestDistrictName}, ${selectedDestRegencyName}`,
         province: selectedDestProvinceName,
         city: selectedDestRegencyName,
         district: selectedDestDistrictName,
@@ -951,141 +935,7 @@ export default function ShippingForm({
             </div>
           </div>
 
-          {/* Sender Information Section */}
-          <div className="space-y-3">
-            <Label className="text-shipping-label text-lg font-semibold">
-              Data Pengirim<span className="text-red-500">*</span>
-            </Label>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="senderName" className="text-sm">
-                  Nama Pengirim<span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="senderName"
-                  type="text"
-                  placeholder="Masukkan nama pengirim"
-                  value={formData.senderName}
-                  onChange={(e) => handleChange("senderName", e.target.value)}
-                  className="bg-white"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="senderPhone" className="text-sm">
-                  No. HP Pengirim<span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="senderPhone"
-                  type="tel"
-                  placeholder="Contoh: +6281234567890"
-                  value={formData.senderPhone}
-                  onChange={(e) => handleChange("senderPhone", e.target.value)}
-                  className="bg-white"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="senderEmail" className="text-sm">
-                  Email Pengirim<span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="senderEmail"
-                  type="email"
-                  placeholder="contoh@email.com"
-                  value={formData.senderEmail}
-                  onChange={(e) => handleChange("senderEmail", e.target.value)}
-                  className="bg-white"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="senderAddress" className="text-sm">
-                  Alamat Lengkap Pengirim
-                </Label>
-                <Input
-                  id="senderAddress"
-                  type="text"
-                  placeholder="Jl. Nama Jalan No. X (opsional)"
-                  value={formData.senderAddress}
-                  onChange={(e) => handleChange("senderAddress", e.target.value)}
-                  className="bg-white"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Receiver Information Section */}
-          <div className="space-y-3">
-            <Label className="text-shipping-label text-lg font-semibold">
-              Data Penerima<span className="text-red-500">*</span>
-            </Label>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="receiverName" className="text-sm">
-                  Nama Penerima<span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="receiverName"
-                  type="text"
-                  placeholder="Masukkan nama penerima"
-                  value={formData.receiverName}
-                  onChange={(e) => handleChange("receiverName", e.target.value)}
-                  className="bg-white"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="receiverPhone" className="text-sm">
-                  No. HP Penerima<span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="receiverPhone"
-                  type="tel"
-                  placeholder="Contoh: +6281987654321"
-                  value={formData.receiverPhone}
-                  onChange={(e) => handleChange("receiverPhone", e.target.value)}
-                  className="bg-white"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="receiverEmail" className="text-sm">
-                  Email Penerima<span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="receiverEmail"
-                  type="email"
-                  placeholder="contoh@email.com"
-                  value={formData.receiverEmail}
-                  onChange={(e) => handleChange("receiverEmail", e.target.value)}
-                  className="bg-white"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="receiverAddress" className="text-sm">
-                  Alamat Lengkap Penerima
-                </Label>
-                <Input
-                  id="receiverAddress"
-                  type="text"
-                  placeholder="Jl. Nama Jalan No. X (opsional)"
-                  value={formData.receiverAddress}
-                  onChange={(e) => handleChange("receiverAddress", e.target.value)}
-                  className="bg-white"
-                />
-              </div>
-            </div>
-          </div>
+          {/* Sender and Receiver Information Sections Removed */}
 
           <div className="space-y-2">
             <Label className="text-shipping-label">Metode Pembayaran</Label>

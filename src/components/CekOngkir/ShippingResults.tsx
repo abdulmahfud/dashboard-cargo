@@ -1,11 +1,8 @@
-import { useMemo, useState, useEffect } from "react";
-import { ShippingCard } from "./../ui/shipping-card";
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Card, CardContent } from "@/components/ui/card";
-
-import { ShippingOption } from "@/lib/shipping-data";
-import { DiscountCalculation } from "@/types/discount";
-import { getAvailableDiscounts } from "@/lib/apiClient";
+import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
+import { ReactElement, JSXElementConstructor, ReactNode, ReactPortal, AwaitedReactNode, Key } from "react";
 
 interface ShippingResultsProps {
   isSearching: boolean;
@@ -14,399 +11,252 @@ interface ShippingResultsProps {
 
 type ApiErrorResult = { error: true; message?: string };
 
-type JntApiResult = {
-  status: string;
-  data?: {
-    content?: string;
-    is_success?: string;
-    message?: string;
-  };
-};
-
-type PaxelApiResult = {
-  status: string;
-  message: string;
-  data: {
-    status_code: number;
-    message: string;
-    data: {
-      response_code: number;
-      service_name: string;
-      city_origin: string;
-      city_destination: string;
-      small_price: number;
-      medium_price: number;
-      large_price: number;
-      custom_price: number;
-      time_detail: Array<{
-        time_pickup_start: string;
-        time_pickup_end: string;
-        time_delivery_start: string;
-        time_delivery_end: string;
-        service: string;
-        available_day: {
-          day_details: Array<{
-            name: string;
-            nearest_date: string;
-          }>;
-          unavailable_day_details: Array<{
-            name: string;
-            nearest_date: string;
-          }>;
-          unavailable_days: string[];
-        };
-      }>;
-      fixed_price: number;
-      fixed_price_type: string;
-      fixed_short_size: string;
-      fixed_size: string;
-    };
-  };
-  shipping_costs_with_discount: Array<unknown>;
-};
-
-type LionApiResult = {
-  status: string;
-  data?: {
-    shipping_cost?: number;
-    estimated_days?: number;
-    service_type?: string;
-    product?: string;
-    message?: string;
-  };
-};
-
-type SapApiResult = {
-  status: string;
-  data?: {
-    shipping_cost?: number;
-    estimated_days?: number;
-    service_type?: string;
-    message?: string;
-  };
-};
-
-type IdExpressApiResult = {
-  status: string;
-  data?: {
-    shipping_cost?: number;
-    estimated_days?: number;
-    service_type?: string;
-    message?: string;
-  };
-};
-
-type GoSendApiResult = {
-  status: string;
-  data?: {
-    shipping_cost?: number;
-    estimated_days?: number;
-    service_type?: string;
-    message?: string;
-    distance?: number;
-    duration?: number;
-  };
-};
-
-type CombinedApiResult = {
+// New types based on the actual API response structure
+type ExpeditionApiResponse = {
   status: string;
   data: {
-    jnt: JntApiResult | null;
-    paxel: PaxelApiResult | null;
-    lion: LionApiResult | null;
-    sap: SapApiResult | null;
-    idexpress: IdExpressApiResult | null;
-    gosend: GoSendApiResult | null;
+    jnt: any;
+    paxel: any;
+    lion: any;
+    gosend: any;
+    jntcargo: any;
+    idexpress: any;
+    posindonesia: any;
   };
+  vendor_status: {
+    jnt: string;
+    paxel: string;
+    lion: string;
+    gosend: string;
+    jntcargo: string;
+    idexpress: string;
+    posindonesia: string;
+  };
+  errors: Record<string, any>;
 };
 
-type ApiResult = JntApiResult | PaxelApiResult | CombinedApiResult;
+// Expedition configuration with logos and names
+const EXPEDITION_CONFIG = [
+  {
+    key: 'jnt',
+    name: 'J&T Express',
+    logo: '/images/jnt-express-logo.png',
+    fallbackLogo: '/images/jnt.png'
+  },
+  {
+    key: 'paxel',
+    name: 'Paxel',
+    logo: '/images/paxel-logo.png',
+    fallbackLogo: '/images/paxel.png'
+  },
+  {
+    key: 'lion',
+    name: 'Lion Parcel',
+    logo: '/images/lion-parcel-logo.png',
+    fallbackLogo: '/images/lion.png'
+  },
+  {
+    key: 'gosend',
+    name: 'GoSend',
+    logo: '/images/gosend-logo.png',
+    fallbackLogo: '/images/gosend.png'
+  },
+  {
+    key: 'jntcargo',
+    name: 'J&T Cargo',
+    logo: '/images/jnt-cargo-logo.png',
+    fallbackLogo: '/images/jnt-cargo.png'
+  },
+  {
+    key: 'idexpress',
+    name: 'ID Express',
+    logo: '/images/id-express-logo.png',
+    fallbackLogo: '/images/idexpress.png'
+  },
+  {
+    key: 'posindonesia',
+    name: 'Pos Indonesia',
+    logo: '/images/pos-indonesia-logo.png',
+    fallbackLogo: '/images/pos.png'
+  }
+];
+
+interface ExpeditionCardProps {
+  expedition: typeof EXPEDITION_CONFIG[0];
+  data: any;
+  vendorStatus: string;
+  error?: any;
+}
+
+function ExpeditionCard({ expedition, data, vendorStatus, error }: ExpeditionCardProps) {
+  const getWarningMessage = () => {
+    if (vendorStatus === 'rejected' && error) {
+      // Handle different types of errors
+      if (error.code === 'ERR_NETWORK') {
+        return 'Layanan sedang tidak tersedia. Silakan coba lagi nanti.';
+      }
+      if (error.status === 400) {
+        return 'Parameter pengiriman tidak valid untuk ekspedisi ini.';
+      }
+      if (error.status === 405) {
+        return 'Metode tidak didukung untuk ekspedisi ini.';
+      }
+      if (error.status === 500) {
+        return 'Terjadi kesalahan pada server ekspedisi.';
+      }
+      return 'Layanan tidak tersedia untuk rute ini.';
+    }
+
+    if (data && vendorStatus === 'fulfilled') {
+      // Handle GoSend distance errors
+      if (expedition.key === 'gosend' && data.data) {
+        const instant = data.data.Instant;
+        const sameDay = data.data.SameDay;
+
+        if (instant?.errors?.length > 0 || sameDay?.errors?.length > 0) {
+          const error = instant?.errors?.[0] || sameDay?.errors?.[0];
+          if (error?.message?.includes('exceeded')) {
+            return `Jarak terlalu jauh (${data.costs?.[0]?.distance || 'N/A'} km). ${error.message}`;
+          }
+          return error?.message || 'Layanan tidak dapat melayani rute ini.';
+        }
+      }
+
+      // Handle J&T Cargo service unavailable
+      if (expedition.key === 'jntcargo' && data.services) {
+        const unavailableServices = data.services.filter((s: any) => !s.available);
+        if (unavailableServices.length > 0) {
+          return 'Layanan sementara tidak tersedia untuk rute ini.';
+        }
+      }
+
+      // Handle ID Express
+      if (expedition.key === 'idexpress' && !data.success) {
+        return data.message || 'Gagal mendapatkan tarif pengiriman.';
+      }
+    }
+
+    return null;
+  };
+
+  const getServiceInfo = () => {
+    if (vendorStatus !== 'fulfilled' || !data) {
+      return null;
+    }
+
+    // Handle GoSend
+    if (expedition.key === 'gosend' && data.costs) {
+      const availableServices = data.costs.filter((service: any) => service.serviceable);
+      if (availableServices.length > 0) {
+        return availableServices.map((service: any) => ({
+          name: service.service_type,
+          price: service.price > 0 ? `Rp${service.price.toLocaleString('id-ID')}` : 'Gratis',
+          duration: service.service_type === 'Instant' ? '1-2 jam' : 'Hari yang sama'
+        }));
+      }
+    }
+
+    // Handle J&T Cargo
+    if (expedition.key === 'jntcargo' && data.services) {
+      const availableServices = data.services.filter((s: any) => s.available);
+      if (availableServices.length > 0) {
+        return availableServices.map((service: any) => ({
+          name: service.service_name,
+          price: service.price ? `Rp${service.price.toLocaleString('id-ID')}` : 'Hubungi CS',
+          duration: service.estimated_delivery || '2-3 hari'
+        }));
+      }
+    }
+
+    // Handle other expeditions with basic success response
+    if (data.success || data.status === 'success') {
+      return [{
+        name: 'Regular',
+        price: 'Tersedia',
+        duration: '1-3 hari'
+      }];
+    }
+
+    return null;
+  };
+
+  const warningMessage = getWarningMessage();
+  const serviceInfo = getServiceInfo();
+  const isAvailable = serviceInfo && serviceInfo.length > 0;
+
+  return (
+    <Card className={`mb-4 border transition-all ${isAvailable ? 'border-green-200 bg-green-50' : 'border-orange-200 bg-orange-50'}`}>
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="relative w-16 h-12">
+              <Image
+                src={expedition.logo}
+                alt={expedition.name}
+                fill
+                className="object-contain"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = expedition.fallbackLogo;
+                }}
+              />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-800">{expedition.name}</h3>
+              <div className="flex items-center space-x-2 mt-1">
+                <Badge
+                  variant={isAvailable ? "default" : "destructive"}
+                  className="text-xs"
+                >
+                  {isAvailable ? "Tersedia" : "Tidak Tersedia"}
+                </Badge>
+                {vendorStatus === 'fulfilled' && (
+                  <Badge variant="outline" className="text-xs">
+                    Terhubung
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="text-right">
+            {isAvailable && serviceInfo ? (
+              <div className="space-y-1">
+                {serviceInfo.map((service: { price: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; name: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; duration: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; }, idx: Key | null | undefined) => (
+                  <div key={idx} className="text-sm">
+                    <div className="font-semibold text-green-600">{service.price}</div>
+                    <div className="text-xs text-gray-600">{service.name} • {service.duration}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-orange-600">
+                <div className="font-semibold">Tidak Tersedia</div>
+                <div className="text-xs">Lihat pesan di bawah</div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {warningMessage && (
+          <div className="mt-3 p-3 bg-orange-100 border border-orange-200 rounded-md">
+            <div className="flex items-start space-x-2">
+              <svg className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <p className="text-sm text-orange-700">{warningMessage}</p>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function ShippingResults({
   isSearching,
   result,
 }: ShippingResultsProps) {
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
-
-  // Discount states
-  const [discountInfo, setDiscountInfo] = useState<
-    Record<string, DiscountCalculation | null>
-  >({});
-  const [isLoadingDiscounts, setIsLoadingDiscounts] = useState<
-    Record<string, boolean>
-  >({});
-
-  // Build shippingOptions from API result if present
-  const shippingOptions: ShippingOption[] = useMemo(() => {
-    const apiResult = result as ApiResult;
-
-    console.log("🔍 ShippingResults - API result received:", apiResult);
-
-    // Handle combined results from both APIs
-    if (
-      apiResult &&
-      apiResult.status === "success" &&
-      apiResult.data &&
-      "jnt" in apiResult.data &&
-      "paxel" in apiResult.data
-    ) {
-      const combinedData = apiResult.data as CombinedApiResult["data"];
-      console.log("🔍 ShippingResults - Combined data:", combinedData);
-      const options: ShippingOption[] = [];
-
-      // Process JNT results
-      if (combinedData.jnt && combinedData.jnt.status === "success") {
-        const jntData = combinedData.jnt;
-        if (jntData.data && typeof jntData.data.content === "string") {
-          try {
-            const contentArr = JSON.parse(jntData.data.content) as Array<{
-              cost: string;
-              name: string;
-              productType: string;
-            }>;
-
-            if (Array.isArray(contentArr) && contentArr.length > 0) {
-              contentArr.forEach((item, index) => {
-                options.push({
-                  id: `jnt-${item.productType.toLowerCase()}`,
-                  name: `J&T ${item.name}`,
-                  logo: "/images/jnt.png",
-                  price: `Rp${Number(item.cost).toLocaleString("id-ID")}`,
-                  duration: "1-3 Hari",
-                  available: true,
-                  recommended: index === 0,
-                  tags: [{ label: "Potensi retur Rendah", type: "info" }],
-                });
-              });
-            }
-          } catch (error) {
-            console.error("❌ Error parsing JNT options:", error);
-          }
-        }
-      }
-
-      // Process Paxel results
-      if (combinedData.paxel && combinedData.paxel.status === "success") {
-        const paxelData = combinedData.paxel.data?.data;
-        if (paxelData) {
-          console.log("🔍 Paxel data received:", paxelData);
-
-          // Only show fixed_price option for Paxel
-          if (paxelData.fixed_price && paxelData.fixed_price > 0) {
-            options.push({
-              id: "paxel-regular",
-              name: "Paxel Express",
-              logo: "/images/paxel.png",
-              price: `Rp${paxelData.fixed_price.toLocaleString("id-ID")}`,
-              duration: "1-3 Hari",
-              available: true,
-              recommended: false,
-              tags: [{ label: "Fast Delivery", type: "info" }],
-            });
-          }
-        }
-      }
-
-      // Process Lion results
-      if (combinedData.lion && combinedData.lion.status === "success") {
-        const lionData = combinedData.lion.data;
-        if (lionData?.shipping_cost && lionData.shipping_cost > 0) {
-          const shippingCost = lionData.shipping_cost;
-          const estimatedDays = lionData.estimated_days || 5;
-          const productName = lionData.product || "REGPACK";
-
-          console.log("🔍 Lion data received:", lionData);
-
-          options.push({
-            id: "lion-regular",
-            name: `Lion Parcel ${productName}`,
-            logo: "/images/lion.png",
-            price: `Rp${shippingCost.toLocaleString("id-ID")}`,
-            duration: `${estimatedDays}-${estimatedDays + 2} Hari`,
-            available: true,
-            recommended: false,
-            tags: [{ label: "Reliable Service", type: "info" }],
-          });
-        }
-      }
-
-      // Process SAP results
-      if (combinedData.sap && combinedData.sap.status === "success") {
-        const sapData = combinedData.sap.data;
-        if (sapData?.shipping_cost && sapData.shipping_cost > 0) {
-          const shippingCost = sapData.shipping_cost;
-          const estimatedDays = sapData.estimated_days || 3;
-          const serviceType = sapData.service_type || "REGULER";
-
-          console.log("🔍 SAP data received:", sapData);
-
-          options.push({
-            id: "sap-regular",
-            name: `SAP ${serviceType}`,
-            logo: "/images/sap-new.png",
-            price: `Rp${shippingCost.toLocaleString("id-ID")}`,
-            duration: `${estimatedDays}-${estimatedDays + 2} Hari`,
-            available: true,
-            recommended: false,
-            tags: [{ label: "Pengiriman Cepat", type: "info" }],
-          });
-        }
-      }
-
-      // Process ID Express results
-      if (combinedData.idexpress && combinedData.idexpress.status === "success") {
-        const idExpressData = combinedData.idexpress.data;
-        if (idExpressData?.shipping_cost && idExpressData.shipping_cost > 0) {
-          const shippingCost = idExpressData.shipping_cost;
-          const estimatedDays = idExpressData.estimated_days || 2;
-          const serviceType = idExpressData.service_type || "Regular";
-
-          console.log("🔍 ID Express data received:", idExpressData);
-
-          options.push({
-            id: "idexpress-regular",
-            name: `ID Express ${serviceType}`,
-            logo: "/images/idx.png",
-            price: `Rp${shippingCost.toLocaleString("id-ID")}`,
-            duration: `${estimatedDays}-${estimatedDays + 1} Hari`,
-            available: true,
-            recommended: false,
-            tags: [{ label: "Express Delivery", type: "info" }],
-          });
-        }
-      }
-
-      // Process GoSend results
-      if (combinedData.gosend && combinedData.gosend.status === "success") {
-        const gosendData = combinedData.gosend.data;
-        if (gosendData?.shipping_cost && gosendData.shipping_cost > 0) {
-          const shippingCost = gosendData.shipping_cost;
-          const estimatedDays = gosendData.estimated_days || 1; // GoSend is usually same-day
-          const serviceType = gosendData.service_type || "Instant";
-          const distance = gosendData.distance ? `${gosendData.distance}km` : "";
-          const duration = gosendData.duration ? `${gosendData.duration} min` : "";
-
-          console.log("🔍 GoSend data received:", gosendData);
-
-          options.push({
-            id: "gosend-instant",
-            name: `GoSend ${serviceType}`,
-            logo: "/images/gosend.png", // You'll need to add this logo
-            price: `Rp${shippingCost.toLocaleString("id-ID")}`,
-            duration: estimatedDays === 1 ? "Hari ini" : `${estimatedDays} Hari`,
-            available: true,
-            recommended: serviceType === "Instant",
-            tags: [
-              { label: "Same Day", type: "info" },
-              ...(distance ? [{ label: distance, type: "info" as const }] : []),
-              ...(duration ? [{ label: duration, type: "info" as const }] : []),
-            ],
-          });
-        }
-      }
-
-      console.log("🚀 ShippingResults - Final options created:", options);
-      return options;
-    }
-
-    // Fallback: Handle single API response (for backward compatibility)
-    if (
-      apiResult &&
-      apiResult.status === "success" &&
-      apiResult.data &&
-      "content" in apiResult.data &&
-      typeof apiResult.data.content === "string"
-    ) {
-      try {
-        const contentArr = JSON.parse(apiResult.data.content) as Array<{
-          cost: string;
-          name: string;
-          productType: string;
-        }>;
-        if (Array.isArray(contentArr) && contentArr.length > 0) {
-          // Map semua opsi dari API JNT Express
-          return contentArr.map((item, index) => ({
-            id: `jnt-${item.productType.toLowerCase()}`,
-            name: `J&T ${item.name}`,
-            logo: "/images/jnt.png",
-            price: `Rp${Number(item.cost).toLocaleString("id-ID")}`,
-            duration: "3-6 Hari",
-            available: true,
-            recommended: index === 0, // Opsi pertama sebagai rekomendasi
-            tags: [{ label: "Potensi retur Rendah", type: "info" }],
-          }));
-        }
-      } catch {
-        return [];
-      }
-    }
-    return [];
-  }, [result]);
-
-  // Function to fetch discount for a specific option
-  const fetchDiscountForOption = async (option: ShippingOption) => {
-    try {
-      setIsLoadingDiscounts((prev) => ({ ...prev, [option.id]: true }));
-
-      // Extract cost from price string
-      const shippingCost = parseInt(option.price.replace(/[^\d]/g, ""));
-
-      // Determine vendor based on option ID
-      let vendor = "JNTEXPRESS";
-      if (option.id.startsWith("paxel")) {
-        vendor = "PAXEL";
-      } else if (option.id.startsWith("lion")) {
-        vendor = "LION";
-      } else if (option.id.startsWith("sap")) {
-        vendor = "SAP";
-      } else if (option.id.startsWith("idexpress")) {
-        vendor = "IDEXPRESS";
-      } else if (option.id.startsWith("gosend")) {
-        vendor = "GOSEND";
-      }
-
-      // Get discount for the selected vendor
-      const discountResponse = await getAvailableDiscounts({
-        vendor: vendor,
-        order_value: shippingCost,
-      });
-
-      if (
-        discountResponse.status === "success" &&
-        discountResponse.data.best_discount
-      ) {
-        setDiscountInfo((prev) => ({
-          ...prev,
-          [option.id]: discountResponse.data
-            .best_discount as DiscountCalculation,
-        }));
-      } else {
-        setDiscountInfo((prev) => ({
-          ...prev,
-          [option.id]: null,
-        }));
-      }
-    } catch (error) {
-      console.error("Error fetching discount for option:", option.id, error);
-      setDiscountInfo((prev) => ({
-        ...prev,
-        [option.id]: null,
-      }));
-    } finally {
-      setIsLoadingDiscounts((prev) => ({ ...prev, [option.id]: false }));
-    }
-  };
-
-  // Auto-fetch discounts when shipping options change
-  useEffect(() => {
-    if (shippingOptions.length > 0) {
-      // Fetch discounts for all options
-      shippingOptions.forEach((option) => {
-        fetchDiscountForOption(option);
-      });
-    }
-  }, [shippingOptions]);
-
   function isApiErrorResult(obj: unknown): obj is ApiErrorResult {
     return (
       !!obj &&
@@ -437,71 +287,42 @@ export default function ShippingResults({
     );
   }
 
-  // Debug: tampilkan data mentah jika tidak ada shippingOptions
-  if (!shippingOptions.length && result) {
-    return (
-      <div className="p-4 text-center">
-        <div className="text-yellow-600 mb-2">
-          <svg
-            className="w-12 h-12 mx-auto mb-2"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path
-              fillRule="evenodd"
-              d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <h3 className="font-semibold">Tidak Ada Layanan Pengiriman</h3>
-        </div>
-        <p className="text-sm text-gray-600 mb-3">
-          Maaf, tidak ada layanan pengiriman yang tersedia untuk rute ini.
-        </p>
-        <div className="text-xs text-gray-500 space-y-1">
-          <p>Kemungkinan penyebab:</p>
-          <ul className="list-disc list-inside space-y-1">
-            <li>Lokasi asal atau tujuan belum tersedia di jaringan J&T</li>
-            <li>Berat paket melebihi batas maksimal</li>
-            <li>Rute pengiriman sedang tidak beroperasi</li>
-          </ul>
-        </div>
-        <details className="mt-3">
-          <summary className="text-xs text-gray-400 cursor-pointer">
-            Debug Info
-          </summary>
-          <pre className="text-xs bg-gray-100 p-2 mt-2 rounded overflow-x-auto text-left">
-            {JSON.stringify(result, null, 2)}
-          </pre>
-        </details>
-      </div>
-    );
-  }
-
   // Don't show anything if no results yet
-  if (!shippingOptions.length) {
+  if (!result) {
     return null;
   }
 
+  const apiResponse = result as ExpeditionApiResponse;
+
+  // Show all expeditions with their status
   return (
-    <div className="animate-slide-up">
-      {/* Display all shipping options */}
-      {shippingOptions.map((option) => (
-        <Card
-          key={option.id}
-          className="mb-4 border-gray-100 bg-white overflow-hidden hover:shadow-md transition-shadow"
-        >
-          <CardContent className="relative pt-3">
-            <ShippingCard
-              option={option}
-              isSelected={selectedOption === option.id}
-              onClick={() => setSelectedOption(option.id)}
-              discount={discountInfo[option.id]}
-              isLoadingDiscount={isLoadingDiscounts[option.id] || false}
-            />
-          </CardContent>
-        </Card>
+    <div className="animate-slide-up space-y-2">
+      <div className="mb-4">
+        <h3 className="font-semibold text-gray-800 mb-2">Layanan Ekspedisi Tersedia</h3>
+        <p className="text-sm text-gray-600">
+          Berikut adalah status semua layanan ekspedisi untuk rute yang Anda pilih:
+        </p>
+      </div>
+
+      {EXPEDITION_CONFIG.map((expedition) => (
+        <ExpeditionCard
+          key={expedition.key}
+          expedition={expedition}
+          data={apiResponse.data[expedition.key as keyof typeof apiResponse.data]}
+          vendorStatus={apiResponse.vendor_status[expedition.key as keyof typeof apiResponse.vendor_status]}
+          error={apiResponse.errors[expedition.key]}
+        />
       ))}
+
+      <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+        <h4 className="font-semibold text-blue-800 mb-2">💡 Tips untuk Mendapatkan Layanan Terbaik</h4>
+        <ul className="text-sm text-blue-700 space-y-1">
+          <li>• Pilih kota/kabupaten dan kecamatan yang paling dekat dengan alamat sebenarnya</li>
+          <li>• Untuk jarak jauh, pertimbangkan menggunakan layanan kargo yang lebih ekonomis</li>
+          <li>• Hubungi customer service ekspedisi untuk pengiriman khusus atau berat besar</li>
+          <li>• Beberapa layanan mungkin tidak tersedia pada hari libur atau cuaca buruk</li>
+        </ul>
+      </div>
     </div>
   );
 }

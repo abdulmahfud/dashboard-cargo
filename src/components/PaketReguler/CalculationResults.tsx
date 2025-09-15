@@ -121,6 +121,62 @@ type SapApiResult = {
   };
 };
 
+type GoSendApiResult = {
+  status: string;
+  data?: {
+    Instant?: {
+      service_type?: string;
+      price?: number;
+      distance?: number;
+      serviceable?: boolean;
+    };
+    SameDay?: {
+      service_type?: string;
+      price?: number;
+      distance?: number;
+      serviceable?: boolean;
+    };
+  };
+  costs?: Array<{
+    service_type: string;
+    price: number;
+    distance: number;
+    serviceable: boolean;
+  }>;
+};
+
+type JntCargoApiResult = {
+  status: string;
+  data?: {
+    vendor: string;
+    services?: Array<{
+      service_name: string;
+      service_code: string;
+      available: boolean;
+      error?: string;
+    }>;
+  };
+  costs?: Array<{
+    service_name: string;
+    available: boolean;
+    error?: string;
+  }>;
+};
+
+type IdExpressApiResult = {
+  status: string;
+  success?: boolean;
+  message?: string;
+  data?: Record<string, unknown>;
+};
+
+type PosIndonesiaApiResult = {
+  status: string;
+  success?: boolean;
+  message?: string;
+  data?: Record<string, unknown>;
+};
+
 type CombinedApiResult = {
   status: string;
   data: {
@@ -128,7 +184,22 @@ type CombinedApiResult = {
     paxel: PaxelApiResult | null;
     lion: LionApiResult | null;
     sap: SapApiResult | null;
+    gosend: GoSendApiResult | null;
+    jntcargo: JntCargoApiResult | null;
+    idexpress: IdExpressApiResult | null;
+    posindonesia: PosIndonesiaApiResult | null;
   };
+  vendor_status?: {
+    jnt: string;
+    paxel: string;
+    lion: string;
+    sap: string;
+    gosend: string;
+    jntcargo: string;
+    idexpress: string;
+    posindonesia: string;
+  };
+  errors?: Record<string, string>;
 };
 
 type ApiResult = JntApiResult | PaxelApiResult | CombinedApiResult;
@@ -182,9 +253,7 @@ export default function CalculationResults({
       apiResult &&
       apiResult.status === "success" &&
       apiResult.data &&
-      "jnt" in apiResult.data &&
-      "paxel" in apiResult.data &&
-      "lion" in apiResult.data
+      ("jnt" in apiResult.data || "paxel" in apiResult.data || "lion" in apiResult.data || "gosend" in apiResult.data)
     ) {
       const combinedData = apiResult.data as CombinedApiResult["data"];
       const options: ShippingOption[] = [];
@@ -337,6 +406,84 @@ export default function CalculationResults({
             ],
           });
         }
+      }
+
+      // Process GoSend results
+      if (combinedData.gosend && combinedData.gosend.status === "success") {
+        const gosendData = combinedData.gosend;
+        if (gosendData.costs && Array.isArray(gosendData.costs)) {
+          gosendData.costs.forEach((service: { service_type: string; price: number; serviceable: boolean }) => {
+            if (service.serviceable && service.price > 0) {
+              options.push({
+                id: `gosend-${service.service_type.toLowerCase()}`,
+                name: `GoSend ${service.service_type}`,
+                logo: "/images/gosend.png",
+                price: `Rp${service.price.toLocaleString("id-ID")}`,
+                duration: service.service_type === "Instant" ? "1-2 jam" : "Hari yang sama",
+                available: true,
+                recommended: service.service_type === "Instant",
+                tags: [
+                  { label: service.service_type === "Instant" ? "Super Cepat" : "Same Day", type: "success" as const },
+                ],
+              });
+            }
+          });
+        }
+      }
+
+      // Process J&T Cargo results
+      if (combinedData.jntcargo && combinedData.jntcargo.status === "success") {
+        const jntCargoData = combinedData.jntcargo;
+        if (jntCargoData.costs && Array.isArray(jntCargoData.costs)) {
+          jntCargoData.costs.forEach((service: { service_name: string; available: boolean; error?: string }) => {
+            if (service.available) {
+              options.push({
+                id: `jntcargo-${service.service_name.toLowerCase().replace(/\s+/g, '-')}`,
+                name: service.service_name,
+                logo: "/images/jnt-cargo.png",
+                price: "Hubungi CS",
+                duration: "2-3 hari",
+                available: true,
+                recommended: false,
+                tags: [
+                  { label: "Kargo", type: "info" as const },
+                ],
+              });
+            }
+          });
+        }
+      }
+
+      // Process ID Express results
+      if (combinedData.idexpress && combinedData.idexpress.success) {
+        options.push({
+          id: "idexpress-regular",
+          name: "ID Express Regular",
+          logo: "/images/idexpress.png",
+          price: "Hubungi CS",
+          duration: "1-3 hari",
+          available: true,
+          recommended: false,
+          tags: [
+            { label: "Express", type: "success" as const },
+          ],
+        });
+      }
+
+      // Process Pos Indonesia results
+      if (combinedData.posindonesia && combinedData.posindonesia.success) {
+        options.push({
+          id: "posindonesia-regular",
+          name: "Pos Indonesia Regular",
+          logo: "/images/pos.png",
+          price: "Hubungi CS",
+          duration: "2-5 hari",
+          available: true,
+          recommended: false,
+          tags: [
+            { label: "Pos Nasional", type: "info" as const },
+          ],
+        });
       }
 
       console.log("🚀 Combined options created:", options);
@@ -799,8 +946,8 @@ export default function CalculationResults({
         <Card
           key={`${option.id}-${selectedOption === option.id ? "selected" : "unselected"}`}
           className={`cursor-pointer transition-all duration-200 ${selectedOption === option.id
-              ? "border-blue-500 bg-blue-50"
-              : "border-gray-200 hover:border-gray-300"
+            ? "border-blue-500 bg-blue-50"
+            : "border-gray-200 hover:border-gray-300"
             }`}
           onClick={() => handleShippingSelect(option.id)}
         >
@@ -877,8 +1024,8 @@ export default function CalculationResults({
                         <span
                           key={index}
                           className={`text-xs px-2 py-1 rounded ${tag.type === "success"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-blue-100 text-blue-700"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-blue-100 text-blue-700"
                             }`}
                         >
                           {tag.label}

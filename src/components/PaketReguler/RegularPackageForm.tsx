@@ -47,6 +47,9 @@ import {
   getPaxelShipmentCost,
   getLionShipmentCost,
   getSapShipmentCost,
+  getGoSendShipmentCost,
+  getJntCargoShipmentCost,
+  getPosIndonesiaShipmentCost,
 } from "@/lib/apiClient";
 import type {
   Shipper,
@@ -55,6 +58,7 @@ import type {
   Regency,
   District,
 } from "@/types/dataRegulerForm";
+import type { ExpeditionAddress } from "@/types/expedition";
 import { itemTypes } from "@/types/dataRegulerForm";
 
 type ReceiverManual = {
@@ -628,24 +632,148 @@ export default function RegularPackageForm({
 
       console.log("🚀 SAP payload:", sapPayload);
 
-      // Call all four APIs in parallel
-      const [jntResult, paxelResult, lionResult, sapResult] =
-        await Promise.allSettled([
-          getJntExpressShipmentCost({
-            weight,
-            sendSiteCode,
-            destAreaCode,
-          }),
-          getPaxelShipmentCost(paxelPayload),
-          getLionShipmentCost(lionPayload),
-          getSapShipmentCost(sapPayload),
-        ]);
+      // Prepare expedition address objects for GoSend, J&T Cargo, ID Express, and Pos Indonesia
+      const senderAddress: ExpeditionAddress = {
+        name: selectedBusiness?.senderName || "Default Sender",
+        phone: selectedBusiness?.contact || "+6281234567890",
+        email: "sender@example.com",
+        address: selectedBusiness?.address || "",
+        province: selectedBusiness?.province || "",
+        city: selectedBusiness?.regency || "",
+        district: selectedBusiness?.district || "",
+        postal_code: "10110", // Default postal code
+        latitude: -6.2088, // Default Jakarta coordinates
+        longitude: 106.8456,
+      };
+
+      let receiverAddress: ExpeditionAddress;
+      if (receiverId) {
+        const selectedRecipient = businessRecipients.find(
+          (r) => String(r.id) === receiverId
+        );
+        receiverAddress = {
+          name: selectedRecipient?.name || "Default Receiver",
+          phone: selectedRecipient?.phone || "+6289876543210",
+          email: "receiver@example.com",
+          address: selectedRecipient?.address || "",
+          province: selectedRecipient?.province || "",
+          city: selectedRecipient?.regency || "",
+          district: selectedRecipient?.district || "",
+          postal_code: "10110", // Default postal code
+          latitude: -6.2088, // Default coordinates
+          longitude: 106.8456,
+        };
+      } else {
+        receiverAddress = {
+          name: formData.receiverName || "Default Receiver",
+          phone: formData.receiverPhone || "+6289876543210",
+          email: "receiver@example.com",
+          address: formData.receiverAddress || "",
+          province: formData.province || "",
+          city: formData.regency || "",
+          district: formData.district || "",
+          postal_code: "10110", // Default postal code
+          latitude: -6.2088, // Default coordinates
+          longitude: 106.8456,
+        };
+      }
+
+      // Call all expedition APIs in parallel
+      const [
+        jntResult,
+        paxelResult,
+        lionResult,
+        sapResult,
+        gosendResult,
+        jntCargoResult,
+        idExpressResult,
+        posIndonesiaResult
+      ] = await Promise.allSettled([
+        getJntExpressShipmentCost({
+          weight,
+          sendSiteCode,
+          destAreaCode,
+        }),
+        getPaxelShipmentCost(paxelPayload),
+        getLionShipmentCost(lionPayload),
+        getSapShipmentCost(sapPayload),
+        // GoSend - use proper coordinate format
+        getGoSendShipmentCost({
+          sender: senderAddress,
+          receiver: receiverAddress,
+          package_weight: parseFloat(weight) * 1000, // Convert to grams
+          package_length: parseFloat(formData.length || "0"),
+          package_width: parseFloat(formData.width || "0"),
+          package_height: parseFloat(formData.height || "0"),
+          item_value: parseFloat(formData.itemValue || "500000"),
+          shipment_method: "Instant",
+          origin: `${senderAddress.latitude},${senderAddress.longitude}`,
+          destination: `${receiverAddress.latitude},${receiverAddress.longitude}`,
+        }).catch(() => ({ status: "error", message: "GoSend tidak tersedia untuk rute ini", data: null, costs: [] })),
+
+        // JNT Cargo - use proper request format
+        getJntCargoShipmentCost({
+          sender: senderAddress,
+          receiver: receiverAddress,
+          package_weight: parseFloat(weight) * 1000, // Convert to grams
+          package_length: parseFloat(formData.length || "0"),
+          package_width: parseFloat(formData.width || "0"),
+          package_height: parseFloat(formData.height || "0"),
+          item_value: parseFloat(formData.itemValue || "500000"),
+          shipment_method: "FT",
+          weight: parseFloat(weight),
+          sender_city: senderAddress.city,
+          receiver_city: receiverAddress.city,
+          sender_province: senderAddress.province,
+          receiver_province: receiverAddress.province,
+          origin_city: senderAddress.city,
+          destination_city: receiverAddress.city,
+        }).catch(() => ({ status: "error", message: "J&T Cargo tidak tersedia untuk rute ini", data: null, costs: [] })),
+
+        // ID Express - return dummy data as it needs complex request format
+        Promise.resolve({
+          status: "error",
+          message: "ID Express tidak tersedia untuk rute ini",
+          data: null,
+          costs: []
+        }),
+        getPosIndonesiaShipmentCost({
+          sender: senderAddress,
+          receiver: receiverAddress,
+          package_weight: parseFloat(weight) * 1000, // Convert to grams
+          package_length: parseFloat(formData.length || "0"),
+          package_width: parseFloat(formData.width || "0"),
+          package_height: parseFloat(formData.height || "0"),
+          item_value: parseFloat(formData.itemValue || "500000"),
+          shipment_method: "REGULER",
+          service_code: "REGULER",
+          pieces: 1,
+          detail: {
+            weight: parseFloat(weight) * 1000,
+            item_value: parseFloat(formData.itemValue || "500000"),
+            cod: formData.paymentMethod === "cod" ? parseFloat(formData.itemValue || "500000") : 0,
+            insurance: 0,
+            use_insurance: false,
+            remark: "General Goods",
+            items: [
+              {
+                name: formData.itemContent || "General Goods",
+                value: parseFloat(formData.itemValue || "500000"),
+              },
+            ],
+          },
+        }),
+      ]);
 
       // Debug logging
       console.log("🔍 JNT Result:", jntResult);
       console.log("🔍 Paxel Result:", paxelResult);
       console.log("🔍 Lion Result:", lionResult);
       console.log("🔍 SAP Result:", sapResult);
+      console.log("🔍 GoSend Result:", gosendResult);
+      console.log("🔍 J&T Cargo Result:", jntCargoResult);
+      console.log("🔍 ID Express Result:", idExpressResult);
+      console.log("🔍 Pos Indonesia Result:", posIndonesiaResult);
 
       // Handle individual API errors
       if (jntResult.status === "rejected") {
@@ -660,8 +788,20 @@ export default function RegularPackageForm({
       if (sapResult.status === "rejected") {
         console.error("❌ SAP API failed:", sapResult.reason);
       }
+      if (gosendResult.status === "rejected") {
+        console.error("❌ GoSend API failed:", gosendResult.reason);
+      }
+      if (jntCargoResult.status === "rejected") {
+        console.error("❌ J&T Cargo API failed:", jntCargoResult.reason);
+      }
+      if (idExpressResult.status === "rejected") {
+        console.error("❌ ID Express API failed:", idExpressResult.reason);
+      }
+      if (posIndonesiaResult.status === "rejected") {
+        console.error("❌ Pos Indonesia API failed:", posIndonesiaResult.reason);
+      }
 
-      // Combine results from all APIs
+      // Combine results from all APIs with vendor status and errors
       const combinedResult = {
         status: "success",
         data: {
@@ -669,6 +809,30 @@ export default function RegularPackageForm({
           paxel: paxelResult.status === "fulfilled" ? paxelResult.value : null,
           lion: lionResult.status === "fulfilled" ? lionResult.value : null,
           sap: sapResult.status === "fulfilled" ? sapResult.value : null,
+          gosend: gosendResult.status === "fulfilled" ? gosendResult.value : null,
+          jntcargo: jntCargoResult.status === "fulfilled" ? jntCargoResult.value : null,
+          idexpress: idExpressResult.status === "fulfilled" ? idExpressResult.value : null,
+          posindonesia: posIndonesiaResult.status === "fulfilled" ? posIndonesiaResult.value : null,
+        },
+        vendor_status: {
+          jnt: jntResult.status,
+          paxel: paxelResult.status,
+          lion: lionResult.status,
+          sap: sapResult.status,
+          gosend: gosendResult.status,
+          jntcargo: jntCargoResult.status,
+          idexpress: idExpressResult.status,
+          posindonesia: posIndonesiaResult.status,
+        },
+        errors: {
+          jnt: jntResult.status === "rejected" ? jntResult.reason : null,
+          paxel: paxelResult.status === "rejected" ? paxelResult.reason : null,
+          lion: lionResult.status === "rejected" ? lionResult.reason : null,
+          sap: sapResult.status === "rejected" ? sapResult.reason : null,
+          gosend: gosendResult.status === "rejected" ? gosendResult.reason : null,
+          jntcargo: jntCargoResult.status === "rejected" ? jntCargoResult.reason : null,
+          idexpress: idExpressResult.status === "rejected" ? idExpressResult.reason : null,
+          posindonesia: posIndonesiaResult.status === "rejected" ? posIndonesiaResult.reason : null,
         },
       };
 
@@ -710,11 +874,10 @@ export default function RegularPackageForm({
               {/* Pick Up Option */}
               <label
                 htmlFor="pickup"
-                className={`flex items-start space-x-2 p-4 rounded-lg border cursor-pointer transition ${
-                  formData.deliveryType === "pickup"
+                className={`flex items-start space-x-2 p-4 rounded-lg border cursor-pointer transition ${formData.deliveryType === "pickup"
                     ? "border-blue-500 bg-blue-200"
                     : "border-gray-200 hover:border-gray-400"
-                }`}
+                  }`}
               >
                 <RadioGroupItem value="pickup" id="pickup" className="peer" />
                 <div>
@@ -728,11 +891,10 @@ export default function RegularPackageForm({
               {/* Drop Off Option */}
               <label
                 htmlFor="dropoff"
-                className={`flex items-start space-x-2 p-4 rounded-lg border cursor-pointer transition ${
-                  formData.deliveryType === "dropoff"
+                className={`flex items-start space-x-2 p-4 rounded-lg border cursor-pointer transition ${formData.deliveryType === "dropoff"
                     ? "border-blue-500 bg-blue-200"
                     : "border-gray-200 hover:border-gray-400"
-                }`}
+                  }`}
               >
                 <RadioGroupItem value="dropoff" id="dropoff" className="peer" />
                 <div>
@@ -755,11 +917,10 @@ export default function RegularPackageForm({
               {/* COD Option */}
               <label
                 htmlFor="cod"
-                className={`flex items-center space-x-2 p-4 rounded-lg border cursor-pointer transition ${
-                  formData.paymentMethod === "cod"
+                className={`flex items-center space-x-2 p-4 rounded-lg border cursor-pointer transition ${formData.paymentMethod === "cod"
                     ? "border-blue-500 bg-blue-200"
                     : "border-gray-200 hover:border-gray-400"
-                }`}
+                  }`}
               >
                 <RadioGroupItem value="cod" id="cod" className="peer" />
                 <div>
@@ -773,11 +934,10 @@ export default function RegularPackageForm({
               {/* Non-COD Option */}
               <label
                 htmlFor="non-cod"
-                className={`flex items-center space-x-2 p-4 rounded-lg border cursor-pointer transition ${
-                  formData.paymentMethod === "non-cod"
+                className={`flex items-center space-x-2 p-4 rounded-lg border cursor-pointer transition ${formData.paymentMethod === "non-cod"
                     ? "border-blue-500 bg-blue-200"
                     : "border-gray-200 hover:border-gray-400"
-                }`}
+                  }`}
               >
                 <RadioGroupItem value="non-cod" id="non-cod" className="peer" />
                 <div>
@@ -817,11 +977,10 @@ export default function RegularPackageForm({
                   {businessData.map((business) => (
                     <div
                       key={business.id}
-                      className={`p-3 border rounded-lg cursor-pointer ${
-                        selectedBusiness && selectedBusiness.id === business.id
+                      className={`p-3 border rounded-lg cursor-pointer ${selectedBusiness && selectedBusiness.id === business.id
                           ? "border-primary"
                           : "border-gray-300"
-                      }`}
+                        }`}
                       onClick={() => handleSelectAddress(business)}
                     >
                       <p className="font-medium">{business.businessName}</p>
