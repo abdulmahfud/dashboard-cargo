@@ -74,8 +74,8 @@ import type {
 } from "@/types/expedition";
 
 // Ambil URL dari .env
-// const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.bhisakirim.com/api";
-const API_URL = "http://localhost:8000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.bhisakirim.com/api";
+// const API_URL = "http://localhost:8000/api";
 
 
 const API_TIMEOUT = 30000;
