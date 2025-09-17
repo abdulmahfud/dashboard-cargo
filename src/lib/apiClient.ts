@@ -398,18 +398,18 @@ export const getSapShipmentCost = async ({
 // ✅ GoSend Cost Calculation
 export const getGoSendShipmentCost = async (
   request: Omit<GoSendCostRequest, 'origin' | 'destination'> & {
-    origin: string; // "latitude,longitude"
-    destination: string; // "latitude,longitude"
+    origin: string; 
+    destination: string; 
   }
 ): Promise<GoSendCostResponse> => {
-  console.log("🚀 GoSend cost calculation request:", request);
+  console.log("GoSend cost calculation request:", request);
 
   const res = await apiClient.post(
     "/admin/expedition/gosend/shipment_cost",
     request
   );
 
-  console.log("🚀 GoSend cost calculation response:", res.data);
+  console.log("GoSend cost calculation response:", res.data);
   return res.data;
 };
 
@@ -427,7 +427,7 @@ export const createGoSendOrder = async (
     request
   );
 
-  console.log("🚀 GoSend order creation response:", res.data);
+  console.log("GoSend order creation response:", res.data);
   return res.data;
 };
 

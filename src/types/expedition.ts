@@ -96,8 +96,15 @@ export interface JntCargoCostResponse {
     }>;
 }
 
-// ID Express specific types
-export interface IdExpressCostRequest extends BaseShipmentRequest {
+// ID Express specific types (simplified for cost calculation)
+export interface IdExpressCostRequest {
+    senderCityId: number;
+    recipientDistrictId: number;
+    weight: number;
+    expressType?: string; // Optional express type (default: "00")
+}
+
+export interface IdExpressOrderRequest extends BaseShipmentRequest {
     weight: number;
     sender_city: string;
     receiver_city: string;
@@ -107,9 +114,6 @@ export interface IdExpressCostRequest extends BaseShipmentRequest {
     recipientDistrictId: number;
     origin: string; // address string
     destination: string; // address string
-}
-
-export interface IdExpressOrderRequest extends IdExpressCostRequest {
     item_description: string;
     quantity: number;
     reference_no: string;

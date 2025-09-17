@@ -56,23 +56,10 @@ export interface UseExpeditionServiceReturn {
     }) => Promise<JntCargoCostResponse | null>;
 
     calculateIdExpressCost: (params: {
-        sender: ExpeditionAddress;
-        receiver: ExpeditionAddress;
-        package_weight: number;
-        package_length: number;
-        package_width: number;
-        package_height: number;
-        item_value: number;
-        shipment_method: string;
-        weight: number;
-        sender_city: string;
-        receiver_city: string;
-        sender_province: string;
-        receiver_province: string;
         senderCityId: number;
         recipientDistrictId: number;
-        origin: string;
-        destination: string;
+        weight: number;
+        expressType?: string;
     }) => Promise<IdExpressCostResponse | null>;
 
     // Order creation
@@ -156,25 +143,12 @@ export const useExpeditionService = (): UseExpeditionServiceReturn => {
         }, 'JNT Cargo Cost Calculation');
     }, [handleServiceCall]);
 
-    // ID Express cost calculation
+    // ID Express cost calculation - simplified to match backend expectations
     const calculateIdExpressCost = useCallback(async (params: {
-        sender: ExpeditionAddress;
-        receiver: ExpeditionAddress;
-        package_weight: number;
-        package_length: number;
-        package_width: number;
-        package_height: number;
-        item_value: number;
-        shipment_method: string;
-        weight: number;
-        sender_city: string;
-        receiver_city: string;
-        sender_province: string;
-        receiver_province: string;
         senderCityId: number;
         recipientDistrictId: number;
-        origin: string;
-        destination: string;
+        weight: number;
+        expressType?: string;
     }) => {
         return handleServiceCall(async () => {
             return getIdExpressShipmentCost(params);

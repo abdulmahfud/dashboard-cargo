@@ -424,25 +424,12 @@ export default function ShippingForm({
           destination_city: selectedDestRegencyName,
         }),
 
-        // NEW ID Express implementation according to API schemas  
+        // NEW ID Express implementation - use simple format with numeric IDs
         getIdExpressShipmentCost({
-          sender: senderAddress,
-          receiver: receiverAddress,
-          package_weight: parseFloat(formData.weight.toString()),
-          package_length: parseFloat((formData.length || 30).toString()),
-          package_width: parseFloat((formData.width || 25).toString()),
-          package_height: parseFloat((formData.height || 15).toString()),
-          item_value: 500000,
-          shipment_method: "Regular",
+          senderCityId: 154, // Jakarta Pusat - will be mapped dynamically later
+          recipientDistrictId: 1543, // Menteng - will be mapped dynamically later  
           weight: parseFloat(formData.weight.toString()),
-          sender_city: selectedOriginRegencyName,
-          receiver_city: selectedDestRegencyName,
-          sender_province: selectedOriginProvinceName,
-          receiver_province: selectedDestProvinceName,
-          senderCityId: 154, // Jakarta Pusat ID - should be dynamic
-          recipientDistrictId: 1543, // Menteng district ID - should be dynamic
-          origin: senderAddress.address,
-          destination: receiverAddress.address,
+          expressType: "00" // Standard express type
         }),
 
         // NEW POS Indonesia implementation according to API schemas

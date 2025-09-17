@@ -49,6 +49,7 @@ import {
   getSapShipmentCost,
   getGoSendShipmentCost,
   getJntCargoShipmentCost,
+  getIdExpressShipmentCost,
   getPosIndonesiaShipmentCost,
 } from "@/lib/apiClient";
 import type {
@@ -730,13 +731,18 @@ export default function RegularPackageForm({
           destination_city: receiverAddress.city,
         }).catch(() => ({ status: "error", message: "J&T Cargo tidak tersedia untuk rute ini", data: null, costs: [] })),
 
-        // ID Express - return dummy data as it needs complex request format
-        Promise.resolve({
+        // ID Express - use simple format with numeric IDs
+        getIdExpressShipmentCost({
+          senderCityId: 154, // Jakarta Pusat - will be mapped dynamically later
+          recipientDistrictId: 1543, // Menteng - will be mapped dynamically later  
+          weight: parseFloat(weight),
+          expressType: "00" // Standard express type
+        }).catch((error: unknown) => ({
           status: "error",
-          message: "ID Express tidak tersedia untuk rute ini",
+          message: "ID Express tidak tersedia untuk rute ini - " + (error && typeof error === 'object' && 'message' in error ? error.message : "API Error"),
           data: null,
           costs: []
-        }),
+        })),
         getPosIndonesiaShipmentCost({
           sender: senderAddress,
           receiver: receiverAddress,
@@ -875,8 +881,8 @@ export default function RegularPackageForm({
               <label
                 htmlFor="pickup"
                 className={`flex items-start space-x-2 p-4 rounded-lg border cursor-pointer transition ${formData.deliveryType === "pickup"
-                    ? "border-blue-500 bg-blue-200"
-                    : "border-gray-200 hover:border-gray-400"
+                  ? "border-blue-500 bg-blue-200"
+                  : "border-gray-200 hover:border-gray-400"
                   }`}
               >
                 <RadioGroupItem value="pickup" id="pickup" className="peer" />
@@ -892,8 +898,8 @@ export default function RegularPackageForm({
               <label
                 htmlFor="dropoff"
                 className={`flex items-start space-x-2 p-4 rounded-lg border cursor-pointer transition ${formData.deliveryType === "dropoff"
-                    ? "border-blue-500 bg-blue-200"
-                    : "border-gray-200 hover:border-gray-400"
+                  ? "border-blue-500 bg-blue-200"
+                  : "border-gray-200 hover:border-gray-400"
                   }`}
               >
                 <RadioGroupItem value="dropoff" id="dropoff" className="peer" />
@@ -918,8 +924,8 @@ export default function RegularPackageForm({
               <label
                 htmlFor="cod"
                 className={`flex items-center space-x-2 p-4 rounded-lg border cursor-pointer transition ${formData.paymentMethod === "cod"
-                    ? "border-blue-500 bg-blue-200"
-                    : "border-gray-200 hover:border-gray-400"
+                  ? "border-blue-500 bg-blue-200"
+                  : "border-gray-200 hover:border-gray-400"
                   }`}
               >
                 <RadioGroupItem value="cod" id="cod" className="peer" />
@@ -935,8 +941,8 @@ export default function RegularPackageForm({
               <label
                 htmlFor="non-cod"
                 className={`flex items-center space-x-2 p-4 rounded-lg border cursor-pointer transition ${formData.paymentMethod === "non-cod"
-                    ? "border-blue-500 bg-blue-200"
-                    : "border-gray-200 hover:border-gray-400"
+                  ? "border-blue-500 bg-blue-200"
+                  : "border-gray-200 hover:border-gray-400"
                   }`}
               >
                 <RadioGroupItem value="non-cod" id="non-cod" className="peer" />
@@ -978,8 +984,8 @@ export default function RegularPackageForm({
                     <div
                       key={business.id}
                       className={`p-3 border rounded-lg cursor-pointer ${selectedBusiness && selectedBusiness.id === business.id
-                          ? "border-primary"
-                          : "border-gray-300"
+                        ? "border-primary"
+                        : "border-gray-300"
                         }`}
                       onClick={() => handleSelectAddress(business)}
                     >
