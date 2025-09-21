@@ -254,14 +254,11 @@ export const getPaxelShipmentCost = async ({
     service_type: service_type || "REGULER",
   };
 
-  console.log("🚀 Paxel API request payload:", requestPayload);
-
   const res = await apiClient.post(
     "/admin/expedition/paxel/shipment_cost",
     requestPayload
   );
 
-  console.log("🚀 Paxel API response:", res.data);
   return res.data;
 };
 
@@ -300,14 +297,6 @@ export const getLionShipmentCost = async ({
     .replace(/\s+/g, "+") // Replace spaces with + for Lion Parcel format
     .replace(/,\+/g, ", "); // Fix: comma should not be followed by +
 
-  // Debug logging
-  console.log("🔍 Lion Parcel format conversion:", {
-    originalOrigin: origin,
-    cleanedOrigin: cleanOrigin,
-    originalDestination: destination,
-    cleanedDestination: cleanDestination,
-  });
-
   // Convert weight from grams to kg for Lion Parcel API
   const weightInKg = Number(weight) / 1000;
 
@@ -324,16 +313,10 @@ export const getLionShipmentCost = async ({
 
   const queryString = queryParts.join("&");
 
-  console.log(
-    "🚀 Lion API request URL:",
-    `/admin/expedition/lion/shipment_cost?${queryString}`
-  );
-
   const res = await apiClient.get(
     `/admin/expedition/lion/shipment_cost?${queryString}`
   );
 
-  console.log("🚀 Lion API response:", res.data);
   return res.data;
 };
 
@@ -380,14 +363,11 @@ export const getSapShipmentCost = async ({
     ...(shipment_content_code && { shipment_content_code }),
   };
 
-  console.log("🚀 SAP API request payload:", requestPayload);
-
   const res = await apiClient.post(
     "/admin/expedition/sap/shipment_cost",
     requestPayload
   );
 
-  console.log("🚀 SAP API response:", res.data);
   return res.data;
 };
 
@@ -398,18 +378,15 @@ export const getSapShipmentCost = async ({
 // ✅ GoSend Cost Calculation
 export const getGoSendShipmentCost = async (
   request: Omit<GoSendCostRequest, 'origin' | 'destination'> & {
-    origin: string; 
-    destination: string; 
+    origin: string;
+    destination: string;
   }
 ): Promise<GoSendCostResponse> => {
-  console.log("GoSend cost calculation request:", request);
-
   const res = await apiClient.post(
     "/admin/expedition/gosend/shipment_cost",
     request
   );
 
-  console.log("GoSend cost calculation response:", res.data);
   return res.data;
 };
 
@@ -420,14 +397,11 @@ export const createGoSendOrder = async (
     destination: string; // "latitude,longitude"
   }
 ): Promise<ExpeditionOrderResponse> => {
-  console.log("🚀 GoSend order creation request:", request);
-
   const res = await apiClient.post(
     "/admin/expedition/gosend/order",
     request
   );
 
-  console.log("GoSend order creation response:", res.data);
   return res.data;
 };
 
@@ -437,13 +411,10 @@ export const trackGoSendOrder = async (params: {
   storeOrderId?: string;
   order_id?: number;
 }): Promise<ExpeditionTrackingResponse> => {
-  console.log("🚀 GoSend tracking request:", params);
-
   const res = await apiClient.get("/admin/expedition/gosend/tracking", {
     params
   });
 
-  console.log("🚀 GoSend tracking response:", res.data);
   return res.data;
 };
 
@@ -452,11 +423,8 @@ export const cancelGoSendOrder = async (data: {
   orderid: string;
   remark: string;
 }) => {
-  console.log("🚀 GoSend cancellation request:", data);
-
   const res = await apiClient.post("/admin/expedition/gosend/cancel", data);
 
-  console.log("🚀 GoSend cancellation response:", res.data);
   return res.data;
 };
 
@@ -464,14 +432,11 @@ export const cancelGoSendOrder = async (data: {
 export const getJntCargoShipmentCost = async (
   request: JntCargoCostRequest
 ): Promise<JntCargoCostResponse> => {
-  console.log("🚀 JNT Cargo cost calculation request:", request);
-
   const res = await apiClient.post(
     "/admin/expedition/jntcargo/shipment_cost",
     request
   );
 
-  console.log("🚀 JNT Cargo cost calculation response:", res.data);
   return res.data;
 };
 
@@ -479,14 +444,11 @@ export const getJntCargoShipmentCost = async (
 export const createJntCargoOrder = async (
   request: JntCargoOrderRequest
 ): Promise<ExpeditionOrderResponse> => {
-  console.log("🚀 JNT Cargo order creation request:", request);
-
   const res = await apiClient.post(
     "/admin/expedition/jntcargo/order",
     request
   );
 
-  console.log("🚀 JNT Cargo order creation response:", res.data);
   return res.data;
 };
 
@@ -497,14 +459,11 @@ export const trackJntCargoOrder = async (params: {
   reference_no: string;
   order_id: number;
 }): Promise<ExpeditionTrackingResponse> => {
-  console.log("🚀 JNT Cargo tracking request:", params);
-
   const res = await apiClient.post(
     "/admin/expedition/jntcargo/trackingjnt",
     params
   );
 
-  console.log("🚀 JNT Cargo tracking response:", res.data);
   return res.data;
 };
 
@@ -512,18 +471,14 @@ export const trackJntCargoOrder = async (params: {
 export const getIdExpressShipmentCost = async (
   request: IdExpressCostRequest
 ): Promise<IdExpressCostResponse> => {
-  console.log("🚀 ID Express cost calculation request:", request);
-
   try {
     const res = await apiClient.post(
       "/admin/expedition/idexpress/shipment_cost",
       request
     );
 
-    console.log("🚀 ID Express cost calculation response:", res.data);
     return res.data;
-  } catch (error) {
-    console.error("🚨 ID Express cost calculation error:", error);
+  } catch {
     // Return error response format as documented
     return {
       success: false,
@@ -537,14 +492,11 @@ export const getIdExpressShipmentCost = async (
 export const createIdExpressOrder = async (
   request: IdExpressOrderRequest
 ): Promise<ExpeditionOrderResponse> => {
-  console.log("🚀 ID Express order creation request:", request);
-
   const res = await apiClient.post(
     "/admin/expedition/idexpress/order",
     request
   );
 
-  console.log("🚀 ID Express order creation response:", res.data);
   return res.data;
 };
 
@@ -554,13 +506,10 @@ export const trackIdExpressOrder = async (params: {
   storeOrderId?: string;
   order_id?: number;
 }): Promise<ExpeditionTrackingResponse> => {
-  console.log("🚀 ID Express tracking request:", params);
-
   const res = await apiClient.get("/admin/expedition/idexpress/tracking", {
     params
   });
 
-  console.log("🚀 ID Express tracking response:", res.data);
   return res.data;
 };
 
@@ -571,18 +520,14 @@ export const trackIdExpressOrder = async (params: {
 export const getPosIndonesiaShipmentCost = async (
   request: PosIndonesiaCostRequest
 ): Promise<PosIndonesiaCostResponse> => {
-  console.log("🚀 POS Indonesia cost calculation request:", request);
-
   try {
     const res = await apiClient.post(
       "/admin/expedition/posindonesia/shipment_cost",
       request
     );
 
-    console.log("🚀 POS Indonesia cost calculation response:", res.data);
     return res.data;
   } catch (error) {
-    console.error("🚨 POS Indonesia cost calculation error:", error);
     throw error;
   }
 };
@@ -591,14 +536,11 @@ export const getPosIndonesiaShipmentCost = async (
 export const createPosIndonesiaOrder = async (
   request: PosIndonesiaOrderRequest
 ): Promise<ExpeditionOrderResponse> => {
-  console.log("🚀 POS Indonesia order creation request:", request);
-
   const res = await apiClient.post(
     "/admin/expedition/posindonesia/order",
     request
   );
 
-  console.log("🚀 POS Indonesia order creation response:", res.data);
   return res.data;
 };
 
@@ -609,13 +551,10 @@ export const trackPosIndonesiaOrder = async (params: {
   order_id?: number;
   awb_no?: string;
 }): Promise<ExpeditionTrackingResponse> => {
-  console.log("🚀 POS Indonesia tracking request:", params);
-
   const res = await apiClient.get("/admin/expedition/posindonesia/tracking", {
     params
   });
 
-  console.log("🚀 POS Indonesia tracking response:", res.data);
   return res.data;
 };
 
@@ -624,26 +563,20 @@ export const cancelPosIndonesiaOrder = async (data: {
   awb_no: string;
   remark: string;
 }) => {
-  console.log("🚀 POS Indonesia cancellation request:", data);
-
   const res = await apiClient.post(
     "/admin/expedition/posindonesia/cancel",
     data
   );
 
-  console.log("🚀 POS Indonesia cancellation response:", res.data);
   return res.data;
 };
 
 // ✅ POS Indonesia Label URL Retrieval
 export const getPosIndonesiaLabelUrl = async (awbNo: string) => {
-  console.log("🚀 POS Indonesia label request for AWB:", awbNo);
-
   const res = await apiClient.get(
     `/admin/expedition/posindonesia/label/${awbNo}`
   );
 
-  console.log("🚀 POS Indonesia label response:", res.data);
   return res.data;
 };
 
@@ -975,7 +908,6 @@ export const getCurrentUser = async (): Promise<UserDetailResponse> => {
     const res = await apiClient.get("/admin/me");
     return res.data;
   } catch (error) {
-    console.error("Failed to fetch current user:", error);
     throw error;
   }
 };

@@ -104,6 +104,8 @@ interface Business {
   regency: string | null;
   district: string | null;
   address: string;
+  latitude?: string | null;
+  longitude?: string | null;
 }
 
 interface RegularPackageFormProps {
@@ -481,14 +483,6 @@ export default function RegularPackageForm({
       if (!destAreaCode) missingFields.push("kecamatan tujuan");
 
       const errorMessage = `Data tidak lengkap: ${missingFields.join(", ")} wajib diisi`;
-      console.error("❌ RegularPackageForm - Missing required fields:", {
-        weight,
-        sendSiteCode,
-        destAreaCode,
-        selectedBusiness,
-        selectedDistrictName,
-        missingFields,
-      });
 
       onResult?.({
         error: true,
@@ -523,15 +517,10 @@ export default function RegularPackageForm({
         const selectedRecipient = businessRecipients.find(
           (r) => String(r.id) === receiverId
         );
-        console.log("🔍 Selected recipient:", selectedRecipient);
         if (selectedRecipient) {
           paxelPayload.destination.province = selectedRecipient.province || "";
           paxelPayload.destination.city = selectedRecipient.regency || "";
           paxelPayload.destination.district = selectedRecipient.district || "";
-          console.log(
-            "🔍 Updated Paxel destination:",
-            paxelPayload.destination
-          );
         }
       }
 
@@ -549,16 +538,12 @@ export default function RegularPackageForm({
         dimension: !!paxelPayload.dimension && paxelPayload.dimension !== "x",
       };
 
-      console.log("🔍 Paxel payload:", paxelPayload);
-      console.log("🔍 Paxel validation:", paxelValidation);
-
       // Check if any required field is missing
       const missingFields = Object.entries(paxelValidation)
         .filter(([, value]) => !value)
         .map(([key]) => key);
 
       if (missingFields.length > 0) {
-        console.error("❌ Missing required fields for Paxel:", missingFields);
         onResult?.({
           error: true,
           message: `Data tidak lengkap untuk Paxel: ${missingFields.join(", ")}`,
@@ -576,17 +561,6 @@ export default function RegularPackageForm({
         `${selectedBusiness?.district || ""}, ${selectedBusiness?.regency || ""}`.trim();
       const cleanDestination =
         `${formData.district}, ${formData.regency}`.trim();
-
-      // Log the payload for debugging
-      console.log("🚀 Lion Parcel payload:", {
-        weight,
-        origin: cleanOrigin,
-        destination: cleanDestination,
-        commodity: "gen",
-        length: formData.length,
-        width: formData.width,
-        height: formData.height,
-      });
 
       const lionPayload = {
         weight,
@@ -631,8 +605,6 @@ export default function RegularPackageForm({
         }
       }
 
-      console.log("🚀 SAP payload:", sapPayload);
-
       // Prepare expedition address objects for GoSend, J&T Cargo, ID Express, and Pos Indonesia
       const senderAddress: ExpeditionAddress = {
         name: selectedBusiness?.senderName || "Default Sender",
@@ -643,8 +615,9 @@ export default function RegularPackageForm({
         city: selectedBusiness?.regency || "",
         district: selectedBusiness?.district || "",
         postal_code: "10110", // Default postal code
-        latitude: -6.2088, // Default Jakarta coordinates
-        longitude: 106.8456,
+        // Use business coordinates if available, otherwise use Jakarta coordinates
+        latitude: selectedBusiness?.latitude ? parseFloat(selectedBusiness.latitude) : -6.2088,
+        longitude: selectedBusiness?.longitude ? parseFloat(selectedBusiness.longitude) : 106.8456,
       };
 
       let receiverAddress: ExpeditionAddress;
@@ -661,8 +634,9 @@ export default function RegularPackageForm({
           city: selectedRecipient?.regency || "",
           district: selectedRecipient?.district || "",
           postal_code: "10110", // Default postal code
-          latitude: -6.2088, // Default coordinates
-          longitude: 106.8456,
+          // Use actual coordinates if available, otherwise use different default coordinates for receiver
+          latitude: selectedRecipient?.latitude ? parseFloat(selectedRecipient.latitude) : -6.2500, // Different default coordinates
+          longitude: selectedRecipient?.longitude ? parseFloat(selectedRecipient.longitude) : 106.9000,
         };
       } else {
         receiverAddress = {
@@ -674,8 +648,9 @@ export default function RegularPackageForm({
           city: formData.regency || "",
           district: formData.district || "",
           postal_code: "10110", // Default postal code
-          latitude: -6.2088, // Default coordinates
-          longitude: 106.8456,
+          // Use different default coordinates for receiver to avoid "same location" error
+          latitude: -6.2500, // Different from sender coordinates
+          longitude: 106.9000,
         };
       }
 
@@ -771,42 +746,6 @@ export default function RegularPackageForm({
         }),
       ]);
 
-      // Debug logging
-      console.log("🔍 JNT Result:", jntResult);
-      console.log("🔍 Paxel Result:", paxelResult);
-      console.log("🔍 Lion Result:", lionResult);
-      console.log("🔍 SAP Result:", sapResult);
-      console.log("🔍 GoSend Result:", gosendResult);
-      console.log("🔍 J&T Cargo Result:", jntCargoResult);
-      console.log("🔍 ID Express Result:", idExpressResult);
-      console.log("🔍 Pos Indonesia Result:", posIndonesiaResult);
-
-      // Handle individual API errors
-      if (jntResult.status === "rejected") {
-        console.error("❌ JNT API failed:", jntResult.reason);
-      }
-      if (paxelResult.status === "rejected") {
-        console.error("❌ Paxel API failed:", paxelResult.reason);
-      }
-      if (lionResult.status === "rejected") {
-        console.error("❌ Lion API failed:", lionResult.reason);
-      }
-      if (sapResult.status === "rejected") {
-        console.error("❌ SAP API failed:", sapResult.reason);
-      }
-      if (gosendResult.status === "rejected") {
-        console.error("❌ GoSend API failed:", gosendResult.reason);
-      }
-      if (jntCargoResult.status === "rejected") {
-        console.error("❌ J&T Cargo API failed:", jntCargoResult.reason);
-      }
-      if (idExpressResult.status === "rejected") {
-        console.error("❌ ID Express API failed:", idExpressResult.reason);
-      }
-      if (posIndonesiaResult.status === "rejected") {
-        console.error("❌ Pos Indonesia API failed:", posIndonesiaResult.reason);
-      }
-
       // Combine results from all APIs with vendor status and errors
       const combinedResult = {
         status: "success",
@@ -844,7 +783,6 @@ export default function RegularPackageForm({
 
       onResult?.(combinedResult);
     } catch (err) {
-      console.error("❌ RegularPackageForm - API call failed:", err);
       const errorResult = {
         error: true,
         message:

@@ -64,8 +64,8 @@ const EXPEDITION_CONFIG = [
   {
     key: 'jntcargo',
     name: 'J&T Cargo',
-    logo: '/images/jnt-cargo-logo.png',
-    fallbackLogo: '/images/jnt-cargo.png'
+    logo: '/images/jnt.png',
+    fallbackLogo: '/images/jnt.png'
   },
   {
     key: 'idexpress',

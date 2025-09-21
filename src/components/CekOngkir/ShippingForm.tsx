@@ -493,17 +493,6 @@ export default function ShippingForm({
         },
       };
 
-      // Enhanced logging for debugging
-      console.log("🔍 Enhanced API Results:", {
-        jnt: jntResult.status === "fulfilled" ? "✅ Success" : `❌ Failed: ${jntResult.status === "rejected" ? jntResult.reason : "Unknown"}`,
-        paxel: paxelResult.status === "fulfilled" ? "✅ Success" : `❌ Failed: ${paxelResult.status === "rejected" ? paxelResult.reason : "Unknown"}`,
-        lion: lionResult.status === "fulfilled" ? "✅ Success" : `❌ Failed: ${lionResult.status === "rejected" ? lionResult.reason : "Unknown"}`,
-        gosend: gosendResult.status === "fulfilled" ? "✅ Success" : `❌ Failed: ${gosendResult.status === "rejected" ? gosendResult.reason : "Unknown"}`,
-        jntcargo: jntCargoResult.status === "fulfilled" ? "✅ Success" : `❌ Failed: ${jntCargoResult.status === "rejected" ? jntCargoResult.reason : "Unknown"}`,
-        idexpress: idExpressResult.status === "fulfilled" ? "✅ Success" : `❌ Failed: ${idExpressResult.status === "rejected" ? idExpressResult.reason : "Unknown"}`,
-        posindonesia: posIndonesiaResult.status === "fulfilled" ? "✅ Success" : `❌ Failed: ${posIndonesiaResult.status === "rejected" ? posIndonesiaResult.reason : "Unknown"}`,
-      });
-
       onResult?.(combinedResult);
     } catch (err) {
       console.error("API Error:", err);

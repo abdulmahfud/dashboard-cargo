@@ -116,6 +116,7 @@ export interface ShippingOption {
   recommended?: boolean;
   available: boolean;
   tags?: Tag[];
+  error?: string; // Add error field for unavailable services
 }
 
 // Service types for tabs

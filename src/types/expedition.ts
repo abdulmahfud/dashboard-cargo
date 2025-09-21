@@ -82,17 +82,50 @@ export interface JntCargoCostResponse {
     status: string;
     message: string;
     data: {
-        service_type: string;
-        service_name: string;
-        estimated_cost: number;
-        estimated_delivery: string;
-        serviceable: boolean;
+        vendor: string;
+        origin: {
+            province: string;
+            city: string;
+            district: string;
+        };
+        destination: {
+            province: string;
+            city: string;
+            district: string;
+        };
+        weight: number;
+        services: Array<{
+            service_name: string;
+            service_code: string;
+            service_type: string;
+            available: boolean;
+            price?: number;
+            estimated_delivery?: string;
+            original_cost?: number;
+            freight_cost?: number;
+            insurance_cost?: number;
+            total_cost?: number;
+            discount_amount?: number;
+            discount_percentage?: number;
+            sla_days?: string;
+            sla_description?: string;
+            currency?: string;
+            error?: string;
+        }>;
+        coverage_check: {
+            origin_covered: boolean;
+            destination_covered: boolean;
+            service_available: boolean;
+        };
     };
     costs: Array<{
+        service_name: string;
+        service_code: string;
         service_type: string;
-        serviceable: boolean;
-        estimated_cost?: number;
+        available: boolean;
+        price?: number;
         estimated_delivery?: string;
+        error?: string;
     }>;
 }
 
@@ -256,7 +289,7 @@ export enum ExpeditionVendor {
 // Service types for each vendor
 export const VENDOR_SERVICES = {
     [ExpeditionVendor.GOSEND]: ['Instant', 'Same Day'],
-    [ExpeditionVendor.JNT_CARGO]: ['FT', 'LTL', 'Regular'],
+    [ExpeditionVendor.JNT_CARGO]: ['FT', 'AIR'],
     [ExpeditionVendor.ID_EXPRESS]: ['Regular', 'Express'],
     [ExpeditionVendor.JNT_EXPRESS]: ['EZ', 'REG'],
     [ExpeditionVendor.PAXEL]: ['PICKUP', 'DROPOFF'],

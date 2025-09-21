@@ -253,7 +253,7 @@ export default function CalculationResults({
       apiResult &&
       apiResult.status === "success" &&
       apiResult.data &&
-      ("jnt" in apiResult.data || "paxel" in apiResult.data || "lion" in apiResult.data || "gosend" in apiResult.data)
+      ("jnt" in apiResult.data || "paxel" in apiResult.data || "lion" in apiResult.data || "gosend" in apiResult.data || "jntcargo" in apiResult.data || "idexpress" in apiResult.data || "posindonesia" in apiResult.data)
     ) {
       const combinedData = apiResult.data as CombinedApiResult["data"];
       const options: ShippingOption[] = [];
@@ -285,8 +285,8 @@ export default function CalculationResults({
                 });
               });
             }
-          } catch (error) {
-            console.error("❌ Error parsing JNT options:", error);
+          } catch {
+            // Error parsing JNT options - silently continue
           }
         }
       }
@@ -296,8 +296,6 @@ export default function CalculationResults({
         const paxelData = combinedData.paxel.data?.data;
         if (paxelData?.fixed_price) {
           const fixedPrice = paxelData.fixed_price;
-
-          console.log("🔍 Paxel data received:", paxelData);
 
           // Add same-day service if available
           if (
@@ -364,8 +362,6 @@ export default function CalculationResults({
           const estimatedDays = lionData.estimated_days || 5;
           const productName = lionData.product || "REGPACK";
 
-          console.log("🔍 Lion data received:", lionData);
-
           options.push({
             id: "lion-regular",
             name: `Lion Parcel ${productName}`,
@@ -390,8 +386,6 @@ export default function CalculationResults({
           const estimatedDays = sapData.estimated_days || 3;
           const serviceType = sapData.service_type || "REGULER";
 
-          console.log("🔍 SAP data received:", sapData);
-
           options.push({
             id: "sap-regular",
             name: `SAP ${serviceType}`,
@@ -411,9 +405,19 @@ export default function CalculationResults({
       // Process GoSend results
       if (combinedData.gosend && combinedData.gosend.status === "success") {
         const gosendData = combinedData.gosend;
+
         if (gosendData.costs && Array.isArray(gosendData.costs)) {
-          gosendData.costs.forEach((service: { service_type: string; price: number; serviceable: boolean }) => {
-            if (service.serviceable && service.price > 0) {
+          gosendData.costs.forEach((service: {
+            service_type: string;
+            price: number;
+            serviceable: boolean;
+            description?: string;
+            distance?: number;
+          }) => {
+            // Only show GoSend services that are serviceable and have valid pricing
+            const isServiceable = service.serviceable && service.price > 0;
+
+            if (isServiceable) {
               options.push({
                 id: `gosend-${service.service_type.toLowerCase()}`,
                 name: `GoSend ${service.service_type}`,
@@ -431,31 +435,60 @@ export default function CalculationResults({
         }
       }
 
-      // Process J&T Cargo results
+      // Process J&T Cargo results - show services even if cost calculation fails
       if (combinedData.jntcargo && combinedData.jntcargo.status === "success") {
         const jntCargoData = combinedData.jntcargo;
+
         if (jntCargoData.costs && Array.isArray(jntCargoData.costs)) {
-          jntCargoData.costs.forEach((service: { service_name: string; available: boolean; error?: string }) => {
-            if (service.available) {
-              options.push({
-                id: `jntcargo-${service.service_name.toLowerCase().replace(/\s+/g, '-')}`,
-                name: service.service_name,
-                logo: "/images/jnt-cargo.png",
-                price: "Hubungi CS",
-                duration: "2-3 hari",
-                available: true,
-                recommended: false,
-                tags: [
-                  { label: "Kargo", type: "info" as const },
-                ],
-              });
-            }
+          jntCargoData.costs.forEach((service: { service_name: string; available: boolean; error?: string; price?: number; total_cost?: number }) => {
+            // Show all JNT Cargo services regardless of availability since service is reachable
+            const isAvailable = service.available && (service.price ?? 0) > 0;
+            const priceDisplay = isAvailable ? `Rp${service.price?.toLocaleString('id-ID')}` : "Hubungi CS";
+            const statusTag = isAvailable ? "Available" : "Layanan Tersedia";
+
+            options.push({
+              id: `jntcargo-${service.service_name.toLowerCase().replace(/\s+/g, '-')}`,
+              name: service.service_name,
+              logo: "/images/jnt-cargo-logo.png",
+              price: priceDisplay,
+              duration: isAvailable ? "2-3 hari" : "2-4 hari",
+              available: true, // Always true since service is reachable and can create orders
+              recommended: false,
+              tags: [
+                { label: statusTag, type: isAvailable ? "success" as const : "info" as const },
+                { label: "Kargo", type: "info" as const },
+              ],
+            });
           });
         }
       }
 
-      // Process ID Express results
-      if (combinedData.idexpress && combinedData.idexpress.success) {
+      // Fallback: Show JNT Cargo as available even if API call failed (service still reachable for orders)
+      if (!combinedData.jntcargo || combinedData.jntcargo.status !== "success") {
+        const defaultJntCargoServices = [
+          { name: "J&T FastTrack", code: "FT" },
+          { name: "J&T AIR", code: "AIR" }
+        ];
+
+        defaultJntCargoServices.forEach((service) => {
+          options.push({
+            id: `jntcargo-${service.code.toLowerCase()}`,
+            name: service.name,
+            logo: "/images/jnt.png",
+            price: "Hubungi CS",
+            duration: "2-4 hari",
+            available: true, // Service is reachable for order creation
+            recommended: false,
+            tags: [
+              { label: "Layanan Tersedia", type: "info" as const },
+              { label: "Kargo", type: "info" as const },
+            ],
+          });
+        });
+      }
+
+      // Process ID Express results  
+      if (combinedData.idexpress && combinedData.idexpress.success === true) {
         options.push({
           id: "idexpress-regular",
           name: "ID Express Regular",
@@ -471,7 +504,7 @@ export default function CalculationResults({
       }
 
       // Process Pos Indonesia results
-      if (combinedData.posindonesia && combinedData.posindonesia.success) {
+      if (combinedData.posindonesia && combinedData.posindonesia.success === true) {
         options.push({
           id: "posindonesia-regular",
           name: "Pos Indonesia Regular",
@@ -486,7 +519,6 @@ export default function CalculationResults({
         });
       }
 
-      console.log("🚀 Combined options created:", options);
       return options;
     }
 
@@ -518,11 +550,8 @@ export default function CalculationResults({
           }));
           return options;
         }
-      } catch (error) {
-        console.error(
-          "❌ CalculationResults - Error parsing shipping options:",
-          error
-        );
+      } catch {
+        // Error parsing shipping options - return empty array
         return [];
       }
     }
@@ -692,8 +721,8 @@ export default function CalculationResults({
       } else {
         setDiscountInfo(null);
       }
-    } catch (error) {
-      console.error("Error fetching discount:", error);
+    } catch {
+      // Error fetching discount - set to null
       setDiscountInfo(null);
     } finally {
       setIsLoadingDiscount(false);
@@ -779,13 +808,21 @@ export default function CalculationResults({
 
     // Build order data that will be used after payment
     const shippingData: Record<string, unknown> = {
-      vendor: selectedOption?.startsWith("paxel")
-        ? "paxel"
-        : selectedOption?.startsWith("lion")
-          ? "lion"
-          : selectedOption?.startsWith("sap")
-            ? "sap"
-            : "jntexpress", // Determine vendor from selected option
+      vendor: selectedOption?.startsWith("jntcargo")
+        ? "jntcargo"
+        : selectedOption?.startsWith("paxel")
+          ? "paxel"
+          : selectedOption?.startsWith("lion")
+            ? "lion"
+            : selectedOption?.startsWith("sap")
+              ? "sap"
+              : selectedOption?.startsWith("gosend")
+                ? "gosend"
+                : selectedOption?.startsWith("idexpress")
+                  ? "idexpress"
+                  : selectedOption?.startsWith("posindonesia")
+                    ? "posindonesia"
+                    : "jntexpress", // Determine vendor from selected option
       service_code: "1", // Default service code
       expresstype: "1",
       servicetype: formData.formData.deliveryType === "pickup" ? "1" : "6",
@@ -815,7 +852,11 @@ export default function CalculationResults({
     };
 
     // Add vendor-specific data
-    if (selectedOption?.startsWith("paxel")) {
+    if (selectedOption?.startsWith("jntcargo")) {
+      shippingData.vendor = "jntcargo";
+      shippingData.service_code = selectedOption?.includes("ft") ? "FT" : "AIR";
+      shippingData.expressType = selectedOption?.includes("ft") ? "FT" : "AIR";
+    } else if (selectedOption?.startsWith("paxel")) {
       shippingData.vendor = "paxel";
       shippingData.service_code = selectedOption?.includes("same-day")
         ? "SAMEDAY"
@@ -868,16 +909,6 @@ export default function CalculationResults({
       !formData?.formData ||
       !formData?.businessData
     ) {
-      const missingData = {
-        selectedShippingOption: !!selectedShippingOption,
-        formData: !!formData?.formData,
-        businessData: !!formData?.businessData,
-      };
-
-      console.error(
-        "❌ CalculationResults - Missing required data:",
-        missingData
-      );
       toast.error("Data tidak lengkap untuk melakukan order");
       return;
     }
@@ -906,8 +937,8 @@ export default function CalculationResults({
       } else {
         toast.error(orderResponse.message || "Gagal membuat order");
       }
-    } catch (error) {
-      console.error("Error creating order:", error);
+    } catch {
+      // Error creating order
       toast.error("Terjadi kesalahan saat membuat order");
     }
   };
@@ -945,11 +976,14 @@ export default function CalculationResults({
       {shippingOptions.map((option) => (
         <Card
           key={`${option.id}-${selectedOption === option.id ? "selected" : "unselected"}`}
-          className={`cursor-pointer transition-all duration-200 ${selectedOption === option.id
-            ? "border-blue-500 bg-blue-50"
-            : "border-gray-200 hover:border-gray-300"
+          className={`transition-all duration-200 ${option.available
+            ? `cursor-pointer ${selectedOption === option.id
+              ? "border-blue-500 bg-blue-50"
+              : "border-gray-200 hover:border-gray-300"
+            }`
+            : "border-orange-200 bg-orange-50 cursor-not-allowed opacity-75"
             }`}
-          onClick={() => handleShippingSelect(option.id)}
+          onClick={() => option.available && handleShippingSelect(option.id)}
         >
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -980,7 +1014,8 @@ export default function CalculationResults({
                         </span>
                       </div>
                     ) : (
-                      <span className="text-lg font-bold text-gray-900">
+                      <span className={`text-lg font-bold ${option.available ? "text-gray-900" : "text-orange-600"
+                        }`}>
                         {option.price}
                       </span>
                     )}
@@ -1018,6 +1053,16 @@ export default function CalculationResults({
                       </span>
                     </div>
                   )}
+
+                  {/* Show error message for unavailable services */}
+                  {!option.available && option.error && (
+                    <div className="mt-2 p-2 bg-orange-100 border border-orange-200 rounded text-xs">
+                      <span className="text-orange-700">
+                        ⚠️ {option.error}
+                      </span>
+                    </div>
+                  )}
+
                   {option.tags && option.tags.length > 0 && (
                     <div className="flex space-x-1 mt-1">
                       {option.tags.map((tag, index) => (
@@ -1025,7 +1070,9 @@ export default function CalculationResults({
                           key={index}
                           className={`text-xs px-2 py-1 rounded ${tag.type === "success"
                             ? "bg-green-100 text-green-700"
-                            : "bg-blue-100 text-blue-700"
+                            : tag.type === "warning"
+                              ? "bg-orange-100 text-orange-700"
+                              : "bg-blue-100 text-blue-700"
                             }`}
                         >
                           {tag.label}
@@ -1036,10 +1083,18 @@ export default function CalculationResults({
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-sm text-gray-600">{option.duration}</div>
-                {option.recommended && (
+                <div className={`text-sm ${option.available ? "text-gray-600" : "text-orange-600"
+                  }`}>
+                  {option.duration}
+                </div>
+                {option.recommended && option.available && (
                   <div className="text-xs text-green-600 font-medium">
                     Rekomendasi
+                  </div>
+                )}
+                {!option.available && (
+                  <div className="text-xs text-orange-600 font-medium">
+                    Tidak Tersedia
                   </div>
                 )}
               </div>

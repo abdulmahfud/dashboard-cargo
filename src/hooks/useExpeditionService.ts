@@ -84,13 +84,10 @@ export const useExpeditionService = (): UseExpeditionServiceReturn => {
         setError(null);
 
         try {
-            console.log(`🚀 Starting ${serviceName} service call`);
             const result = await serviceCall();
-            console.log(`✅ ${serviceName} service call completed successfully`, result);
             return result;
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : `${serviceName} failed`;
-            console.error(`❌ ${serviceName} service call failed:`, err);
             setError(errorMessage);
             return null;
         } finally {
