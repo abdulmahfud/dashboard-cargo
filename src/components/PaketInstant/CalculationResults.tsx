@@ -15,8 +15,6 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  serviceTypes,
-  shippingOptions,
   sortOptions,
 } from "@/lib/shipping-data";
 import { AnimatePresence, motion } from "framer-motion";
@@ -25,16 +23,51 @@ import { useMemo, useState, useEffect } from "react";
 import { ShippingCard } from "../ui/shipping-card";
 import { DiscountCalculation } from "@/types/discount";
 import { getAvailableDiscounts } from "@/lib/apiClient";
+import type { ShippingOption } from "@/lib/shipping-data";
+
+type GoSendApiResult = {
+  status: string;
+  message?: string;
+  data?: {
+    Instant?: {
+      shipment_method: string;
+      estimated_cost?: number;
+      estimated_delivery?: string;
+    };
+    SameDay?: {
+      shipment_method: string;
+      estimated_cost?: number;
+      estimated_delivery?: string;
+    };
+    InstantCar?: {
+      shipment_method: string;
+      estimated_cost?: number;
+      estimated_delivery?: string;
+    };
+  };
+  costs?: Array<{
+    service_type: string;
+    serviceable: boolean;
+    estimated_cost?: number;
+    estimated_delivery?: string;
+    price?: number;
+  }>;
+};
 
 interface CalculationResultsProps {
   isSearching: boolean;
+  result?: {
+    gosend?: GoSendApiResult;
+    searchData?: Record<string, unknown>;
+  };
 }
 
 export default function CalculationResults({
   isSearching,
+  result,
 }: CalculationResultsProps) {
-  const [selectedServiceType, setSelectedServiceType] = useState("regular");
-  const [sortBy, setSortBy] = useState("cheapest");
+  const [selectedServiceType, setSelectedServiceType] = useState("all");
+  const [sortBy, setSortBy] = useState("fastest");
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
   // Discount states
@@ -43,50 +76,148 @@ export default function CalculationResults({
   >(new Map());
   const [isLoadingDiscounts, setIsLoadingDiscounts] = useState(false);
 
-  // Simulasi filter berdasarkan service type
-  const filteredOptions = useMemo(() => {
-    if (selectedServiceType === "economy") {
-      return shippingOptions.filter((option) => {
-        const price = parseInt(option.price.replace(/\D/g, ""));
-        return price < 100000;
-      });
-    } else if (selectedServiceType === "regular") {
-      return shippingOptions.filter((option) => {
-        const price = parseInt(option.price.replace(/\D/g, ""));
-        return price >= 100000 && price <= 130000;
-      });
-    } else if (selectedServiceType === "cargo") {
-      return shippingOptions.filter((option) => {
-        const price = parseInt(option.price.replace(/\D/g, ""));
-        return price > 130000;
+  // Generate shipping options from GoSend API result
+  const shippingOptions = useMemo(() => {
+    const options: ShippingOption[] = [];
+
+    if (!result?.gosend || result.gosend.status !== "success") {
+      return options;
+    }
+
+    const gosendData = result.gosend;
+
+    // Process costs array from GoSend API
+    if (gosendData.costs && Array.isArray(gosendData.costs)) {
+      gosendData.costs.forEach((service) => {
+        if (service.serviceable && (service.estimated_cost || service.price)) {
+          const cost = service.estimated_cost || service.price || 0;
+
+          options.push({
+            id: `gosend-${service.service_type.toLowerCase()}`,
+            name: `GoSend ${service.service_type}`,
+            logo: "/images/gosend.png",
+            price: `Rp${cost.toLocaleString("id-ID")}`,
+            duration: getDurationLabel(service.service_type),
+            available: true,
+            recommended: service.service_type === "Instant",
+            tags: [
+              {
+                label: service.service_type === "Instant" ? "Super Cepat" :
+                  service.service_type === "InstantCar" ? "Mobil" : "Same Day",
+                type: service.service_type === "Instant" ? "info" : "default" as const
+              },
+            ],
+          });
+        }
       });
     }
+
+    // Fallback: Process data object from GoSend API
+    if (options.length === 0 && gosendData.data) {
+      Object.entries(gosendData.data).forEach(([serviceType, serviceData]: [string, { estimated_cost?: number }]) => {
+        if (serviceData && serviceData.estimated_cost) {
+          options.push({
+            id: `gosend-${serviceType.toLowerCase()}`,
+            name: `GoSend ${serviceType}`,
+            logo: "/images/gosend.png",
+            price: `Rp${serviceData.estimated_cost.toLocaleString("id-ID")}`,
+            duration: getDurationLabel(serviceType),
+            available: true,
+            recommended: serviceType === "Instant",
+            tags: [
+              {
+                label: serviceType === "Instant" ? "Super Cepat" :
+                  serviceType === "InstantCar" ? "Mobil" : "Same Day",
+                type: serviceType === "Instant" ? "info" : "default" as const
+              },
+            ],
+          });
+        }
+      });
+    }
+
+    return options;
+  }, [result]);
+
+  // Helper function to get duration label
+  const getDurationLabel = (serviceType: string): string => {
+    switch (serviceType) {
+      case "Instant":
+        return "1-2 Jam";
+      case "InstantCar":
+        return "1-2 Jam";
+      case "SameDay":
+        return "Hari yang sama";
+      default:
+        return "1-2 Jam";
+    }
+  };
+
+  // Filter options based on service type (for instant, all are economy/instant)
+  const filteredOptions = useMemo(() => {
+    if (shippingOptions.length === 0) return [];
+
+    // For instant packages, all GoSend options are considered economy/instant
+    if (selectedServiceType === "economy") {
+      return shippingOptions;
+    } else if (selectedServiceType === "regular") {
+      // No regular options for instant delivery
+      return [];
+    } else if (selectedServiceType === "cargo") {
+      // Only InstantCar for cargo-like deliveries
+      return shippingOptions.filter((option) => option.id.includes("instantcar"));
+    }
     return shippingOptions;
-  }, [selectedServiceType]);
+  }, [selectedServiceType, shippingOptions]);
+
+  // Filter options for instant service types
+  const filteredInstantOptions = useMemo(() => {
+    if (selectedServiceType === "instant") {
+      return filteredOptions.filter(option =>
+        option.id.includes("instant") && !option.id.includes("car")
+      );
+    } else if (selectedServiceType === "car") {
+      return filteredOptions.filter(option =>
+        option.id.includes("instantcar")
+      );
+    } else { // "all"
+      return filteredOptions;
+    }
+  }, [selectedServiceType, filteredOptions]);
 
   // Sort options based on sort criteria
   const sortedOptions = useMemo(() => {
+    const optionsToSort = filteredInstantOptions;
+
     if (sortBy === "cheapest") {
-      return [...filteredOptions].sort((a, b) => {
+      return [...optionsToSort].sort((a, b) => {
         const priceA = parseInt(a.price.replace(/\D/g, ""));
         const priceB = parseInt(b.price.replace(/\D/g, ""));
         return priceA - priceB;
       });
     } else if (sortBy === "fastest") {
-      return [...filteredOptions].sort((a, b) => {
-        const daysA = parseInt(a.duration.split("-")[0]);
-        const daysB = parseInt(b.duration.split("-")[0]);
-        return daysA - daysB;
+      return [...optionsToSort].sort((a, b) => {
+        // Handle different duration formats
+        const getDurationScore = (duration: string) => {
+          if (duration.includes("Jam")) return 1; // GoSend Instant (1-2 Jam)
+          if (duration.includes("yang sama")) return 2; // GoSend Same Day
+          const days = parseInt(duration.split("-")[0]);
+          return isNaN(days) ? 999 : days + 2; // Regular day-based durations
+        };
+
+        const scoreA = getDurationScore(a.duration);
+        const scoreB = getDurationScore(b.duration);
+        return scoreA - scoreB;
       });
     } else if (sortBy === "recommended") {
-      return [...filteredOptions].sort((a, b) => {
+      return [...optionsToSort].sort((a, b) => {
         if (a.recommended && !b.recommended) return -1;
         if (!a.recommended && b.recommended) return 1;
         return 0;
       });
     }
-    return filteredOptions;
-  }, [filteredOptions, sortBy]);
+    return optionsToSort;
+  }, [filteredInstantOptions, sortBy]);
 
   const featuredOption =
     sortedOptions.find((option) => option.recommended) || sortedOptions[0];
@@ -106,7 +237,7 @@ export default function CalculationResults({
 
           try {
             const discountResponse = await getAvailableDiscounts({
-              vendor: "JNTEXPRESS", // Default to JNT for instant package
+              vendor: "GOSEND", // All options are GoSend for instant packages
               order_value: shippingCost,
             });
 
@@ -132,10 +263,17 @@ export default function CalculationResults({
       }
     };
 
-    if (isSearching && sortedOptions.length > 0) {
+    if (sortedOptions.length > 0) {
       loadDiscounts();
     }
-  }, [sortedOptions, isSearching]);
+  }, [sortedOptions]);
+
+  // Instant-specific service types
+  const instantServiceTypes = [
+    { id: "instant", name: "Motor" },
+    { id: "car", name: "Mobil" },
+    { id: "all", name: "Semua" },
+  ];
 
   if (!isSearching) {
     return null;
@@ -193,12 +331,12 @@ export default function CalculationResults({
 
         <div className="px-6">
           <Tabs
-            defaultValue="regular"
+            defaultValue="all"
             value={selectedServiceType}
             onValueChange={setSelectedServiceType}
           >
             <TabsList className="grid grid-cols-3 mb-2">
-              {serviceTypes.map((type) => (
+              {instantServiceTypes.map((type) => (
                 <TabsTrigger key={type.id} value={type.id} className="text-sm">
                   {type.name}
                 </TabsTrigger>
@@ -206,13 +344,23 @@ export default function CalculationResults({
             </TabsList>
 
             {/* TabsContent untuk masing-masing tab */}
-            {serviceTypes.map((type) => (
+            {instantServiceTypes.map((type) => (
               <TabsContent key={type.id} value={type.id}>
                 <CardContent className="pt-2">
                   {sortedOptions.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      Tidak ada opsi pengiriman untuk kategori ini.
-                    </p>
+                    <div className="text-center py-8">
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {result?.gosend?.status === "error"
+                          ? "Gagal memuat data pengiriman instant."
+                          : !result?.gosend
+                            ? "Silakan isi form dan klik 'Cek Ongkir GoSend Instant' untuk melihat opsi pengiriman."
+                            : "Tidak ada layanan instant tersedia untuk rute ini."
+                        }
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {result?.gosend?.message || "Pastikan alamat tujuan berada dalam area layanan GoSend."}
+                      </p>
+                    </div>
                   ) : (
                     <div className="space-y-2.5 max-h-[500px] overflow-y-auto pr-2">
                       <AnimatePresence>
@@ -259,7 +407,7 @@ export default function CalculationResults({
             <span className="font-medium">
               {selectedOption
                 ? sortedOptions.find((opt) => opt.id === selectedOption)
-                    ?.name || "Pilih ekspedisi"
+                  ?.name || "Pilih ekspedisi"
                 : "Pilih ekspedisi"}
             </span>
           </div>

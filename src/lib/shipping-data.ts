@@ -17,13 +17,39 @@ export interface ShippingOption {
 
 export const shippingOptions: ShippingOption[] = [
   {
+    id: "gosend-instant",
+    name: "GoSend Instant",
+    logo: "/images/gosend.png",
+    price: "Rp25.000",
+    originalPrice: "Rp30.000",
+    duration: "1-2 Jam",
+    recommended: true,
+    available: true,
+    tags: [
+      { label: "Super Cepat", type: "info" },
+      { label: "Motor/Mobil", type: "default" }
+    ]
+  },
+  {
+    id: "gosend-sameday",
+    name: "GoSend Same Day",
+    logo: "/images/gosend.png",
+    price: "Rp18.000",
+    originalPrice: "Rp22.000",
+    duration: "Hari yang sama",
+    available: true,
+    tags: [
+      { label: "Same Day", type: "info" },
+      { label: "Motor/Mobil", type: "default" }
+    ]
+  },
+  {
     id: "jnt-cargo",
     name: "J&T Cargo Reguler",
     logo: "/imagess/jnt.png",
     price: "Rp194.040",
     originalPrice: "Rp198.000",
     duration: "14-16 Hari",
-    recommended: true,
     available: true,
     tags: [
       { label: "COD tidak tersedia", type: "warning" },
