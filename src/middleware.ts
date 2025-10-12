@@ -1,35 +1,23 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { jwtVerify, type JWTPayload } from "jose";
-
-const getJwtSecret = () => {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) throw new Error("JWT_SECRET is not defined");
-  return new TextEncoder().encode(secret);
-};
-
-async function verifyJwtToken(token: string): Promise<JWTPayload | null> {
-  try {
-    const { payload } = await jwtVerify(token, getJwtSecret());
-    return payload;
-  } catch {
-    return null;
-  }
-}
 
 async function isAuthenticated(request: NextRequest): Promise<boolean> {
   const token = request.cookies.get("token")?.value;
   if (!token) return false;
 
-  const payload = await verifyJwtToken(token);
-  if (
-    !payload ||
-    (payload.exp && payload.exp < Math.floor(Date.now() / 1000))
-  ) {
+  try {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.bhisakirim.com/api";
+    const res = await fetch(`${API_URL}/admin/me`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
+    return res.ok;
+  } catch {
     return false;
   }
-
-  return true;
 }
 
 async function isEmailVerified(request: NextRequest): Promise<boolean> {

@@ -1,7 +1,6 @@
 "use client";
 
 import { AppSidebar } from "@/components/app-sidebar";
-import CalculationResults from "@/components/PaketInstant/CalculationResults";
 import { SiteHeader } from "@/components/site-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -15,20 +14,37 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { getGoSendShipmentCost } from "@/lib/apiClient";
+import type { GoSendCostRequest, GoSendCostResponse } from "@/types/expedition";
 import InstantPackageForm from "../../../../components/PaketInstant/InstantPackageForm";
 import TopNav from "@/components/top-nav";
 
 const PaketInstant = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [goSendResult, setGoSendResult] = useState<GoSendCostResponse | null>(null);
 
-  const handleSearch = () => {
+  const handleSubmit = async (
+    payload: Omit<GoSendCostRequest, 'origin' | 'destination'> & {
+      origin: string;
+      destination: string;
+    }
+  ) => {
+    setError(null);
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    setIsSearching(false);
+    setGoSendResult(null);
+    try {
+      const res = await getGoSendShipmentCost(payload);
+      setGoSendResult(res);
       setIsSearching(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      setError(e?.response?.data?.message || "Gagal menghitung biaya GoSend");
+    } finally {
       setIsLoading(false);
-    }, 800);
+    }
   };
 
   // Initialize the 'framer-motion' module for animations
@@ -59,7 +75,7 @@ const PaketInstant = () => {
                   className="grid grid-cols-1 gap-6 md:grid-cols-2"
                 >
                   <div className="flex flex-col mx-2">
-                    <InstantPackageForm onSearch={handleSearch} />
+                    <InstantPackageForm onSubmit={handleSubmit} />
                   </div>
 
                   <AnimatePresence mode="wait">
@@ -107,9 +123,40 @@ const PaketInstant = () => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="flex flex-col w-full"
+                            className="flex flex-col w-full gap-3"
                           >
-                            <CalculationResults isSearching={isSearching} />
+                            {error && (
+                              <div className="text-sm text-red-600">{error}</div>
+                            )}
+                            {!error && goSendResult && (
+                              <div className="space-y-2">
+                                {(goSendResult.costs || [])
+                                  .filter((c) => c.serviceable)
+                                  .map((c, idx) => (
+                                    <div
+                                      key={`${c.service_type}-${idx}`}
+                                      className="flex items-center justify-between border rounded-lg p-3"
+                                    >
+                                      <div className="text-sm">
+                                        <div className="font-medium">GoSend {c.service_type}</div>
+                                        {c.estimated_delivery && (
+                                          <div className="text-muted-foreground">
+                                            ETA: {c.estimated_delivery}
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div className="text-blue-700 font-semibold">
+                                        {typeof c.estimated_cost === 'number'
+                                          ? `Rp ${c.estimated_cost.toLocaleString('id-ID')}`
+                                          : '-'}
+                                      </div>
+                                    </div>
+                                  ))}
+                                {(!goSendResult.costs || goSendResult.costs.length === 0) && (
+                                  <div className="text-sm text-gray-600">Tidak ada layanan tersedia.</div>
+                                )}
+                              </div>
+                            )}
                           </motion.div>
                         ) : (
                           <motion.div

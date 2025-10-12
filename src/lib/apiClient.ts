@@ -73,9 +73,8 @@ import type {
   ExpeditionAddress
 } from "@/types/expedition";
 
-// Ambil URL dari .env
+// Ambil URL dari .env (default disamakan dengan middleware)
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.bhisakirim.com/api";
-// const API_URL = "http://localhost:8000/api";
 
 
 const API_TIMEOUT = 30000;

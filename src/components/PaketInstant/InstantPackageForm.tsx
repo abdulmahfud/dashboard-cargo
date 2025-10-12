@@ -42,8 +42,43 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+interface GoSendFormPayload {
+  sender: {
+    name: string;
+    phone: string;
+    email: string;
+    address: string;
+    province: string;
+    city: string;
+    district: string;
+    postal_code: string;
+    latitude: number;
+    longitude: number;
+  };
+  receiver: {
+    name: string;
+    phone: string;
+    email: string;
+    address: string;
+    province: string;
+    city: string;
+    district: string;
+    postal_code: string;
+    latitude: number;
+    longitude: number;
+  };
+  package_weight: number;
+  package_length: number;
+  package_width: number;
+  package_height: number;
+  item_value: number;
+  shipment_method: string; // "Instant" | "Same Day"
+  origin: string; // "lat,lng"
+  destination: string; // "lat,lng"
+}
+
 interface InstantPackageFormProps {
-  onSearch: () => void;
+  onSubmit: (payload: GoSendFormPayload) => void;
 }
 interface Business {
   id: number;
@@ -52,9 +87,7 @@ interface Business {
   contact: string;
   address: string;
 }
-export default function InstantPackageForm({
-  onSearch,
-}: InstantPackageFormProps) {
+export default function InstantPackageForm({ onSubmit }: InstantPackageFormProps) {
   const [selectedBusiness, setSelectedBusiness] = useState(businessData[0]);
   const [open, setOpen] = useState(false);
   const [openRecipient, setOpenRecipient] = useState(false);
@@ -74,7 +107,12 @@ export default function InstantPackageForm({
     width: "",
     height: "",
     notes: "",
-    deliveryType: "mobil",
+    deliveryType: "motor",
+    // Minimal coordinates for GoSend
+    originLat: "",
+    originLng: "",
+    destLat: "",
+    destLng: "",
   });
 
   const handleSelectAddress = (business: Business) => {
@@ -88,8 +126,45 @@ export default function InstantPackageForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch();
-    console.log("Form Data:", formData);
+    const origin = `${formData.originLat || 0},${formData.originLng || 0}`;
+    const destination = `${formData.destLat || 0},${formData.destLng || 0}`;
+
+    const payload: GoSendFormPayload = {
+      sender: {
+        name: selectedBusiness.senderName,
+        phone: selectedBusiness.contact,
+        email: "sender@example.com",
+        address: selectedBusiness.address,
+        province: "",
+        city: "",
+        district: "",
+        postal_code: "",
+        latitude: Number(formData.originLat || 0),
+        longitude: Number(formData.originLng || 0),
+      },
+      receiver: {
+        name: formData.receiverName,
+        phone: formData.receiverPhone,
+        email: "receiver@example.com",
+        address: formData.receiverAddress,
+        province: "",
+        city: "",
+        district: "",
+        postal_code: "",
+        latitude: Number(formData.destLat || 0),
+        longitude: Number(formData.destLng || 0),
+      },
+      package_weight: Number(formData.weight || 0),
+      package_length: Number(formData.length || 0),
+      package_width: Number(formData.width || 0),
+      package_height: Number(formData.height || 0),
+      item_value: Number(formData.itemValue || 0),
+      shipment_method: formData.deliveryType === "motor" ? "Instant" : "Same Day",
+      origin,
+      destination,
+    };
+
+    onSubmit(payload);
   };
 
   const filteredRecipients = businessRecipients.filter((recipient) =>
@@ -323,20 +398,28 @@ export default function InstantPackageForm({
               />
             </div>
 
-            {/* Alamat Lengkap */}
-            <div>
-              <Label htmlFor="receiverAddress">
-                Alamat Lengkap <span className="text-red-500">*</span>
-              </Label>
-              <Textarea
-                id="receiverAddress"
-                placeholder="Masukkan alamat lengkap"
-                value={formData.receiverAddress}
-                onChange={(e) =>
-                  handleChange("receiverAddress", e.target.value)
-                }
-                className="min-h-[100px]"
-              />
+            {/* Koordinat Asal */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="originLat">Latitude Asal *</Label>
+                <Input
+                  id="originLat"
+                  placeholder="-6.2"
+                  type="number"
+                  value={formData.originLat}
+                  onChange={(e) => handleChange("originLat", e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="originLng">Longitude Asal *</Label>
+                <Input
+                  id="originLng"
+                  placeholder="106.8"
+                  type="number"
+                  value={formData.originLng}
+                  onChange={(e) => handleChange("originLng", e.target.value)}
+                />
+              </div>
             </div>
           </div>
         </Card>
@@ -409,19 +492,43 @@ export default function InstantPackageForm({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
                 <Label htmlFor="weight">Berat (gram) *</Label>
-                <Input id="weight" placeholder="1000" type="number" />
+                <Input
+                  id="weight"
+                  placeholder="1000"
+                  type="number"
+                  value={formData.weight}
+                  onChange={(e) => handleChange("weight", e.target.value)}
+                />
               </div>
               <div>
                 <Label htmlFor="length">Panjang (cm) *</Label>
-                <Input id="length" placeholder="25" type="number" />
+                <Input
+                  id="length"
+                  placeholder="25"
+                  type="number"
+                  value={formData.length}
+                  onChange={(e) => handleChange("length", e.target.value)}
+                />
               </div>
               <div>
                 <Label htmlFor="width">Lebar (cm) *</Label>
-                <Input id="width" placeholder="25" type="number" />
+                <Input
+                  id="width"
+                  placeholder="25"
+                  type="number"
+                  value={formData.width}
+                  onChange={(e) => handleChange("width", e.target.value)}
+                />
               </div>
               <div>
                 <Label htmlFor="height">Tinggi (cm) *</Label>
-                <Input id="height" placeholder="25" type="number" />
+                <Input
+                  id="height"
+                  placeholder="25"
+                  type="number"
+                  value={formData.height}
+                  onChange={(e) => handleChange("height", e.target.value)}
+                />
               </div>
             </div>
 

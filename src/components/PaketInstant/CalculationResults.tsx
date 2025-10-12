@@ -88,8 +88,21 @@ export default function CalculationResults({
     return filteredOptions;
   }, [filteredOptions, sortBy]);
 
+  // Filter by availability and log unavailable ones
+  const { availableOptions } = useMemo(() => {
+    const available = sortedOptions.filter((o) => o.available !== false);
+    const unavailable = sortedOptions.filter((o) => o.available === false);
+    // Log once per render cycle
+    if (unavailable.length) {
+      // eslint-disable-next-line no-console
+      console.log("Unavailable expedition options:", unavailable);
+    }
+    return { availableOptions: available };
+  }, [sortedOptions]);
+
+  // Featured option must be available
   const featuredOption =
-    sortedOptions.find((option) => option.recommended) || sortedOptions[0];
+    availableOptions.find((option) => option.recommended) || availableOptions[0];
 
   // Load discounts for all options when component mounts or when options change
   useEffect(() => {
@@ -216,7 +229,7 @@ export default function CalculationResults({
                   ) : (
                     <div className="space-y-2.5 max-h-[500px] overflow-y-auto pr-2">
                       <AnimatePresence>
-                        {sortedOptions.map((option, index) => (
+                        {availableOptions.map((option, index) => (
                           <motion.div
                             key={option.id}
                             initial={{ opacity: 0, y: 10 }}
